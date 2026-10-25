@@ -422,44 +422,53 @@ summary {
   outline: none;
 }
 
-/* --- stage D: display panels (project list / project screen) ---
-   Opaque replacement for the baked start-screen content. Sits inside the
-   screen glass area only; the baked bottom tab row stays visible. The
-   gradient is deliberately restrained: same dark-green family as the
-   approved screen, faint top sheen — no new bright "glass". */
+/* --- stage D: shared clean display surface ---
+   One physical display, one surface, one glass: screen-surface.png is
+   derived from the approved reference (start content removed, header/tab
+   row/glass effects kept baked) and covers the exact screen region, so its
+   edges are the same pixels as the master — no seam, no overlay card.
+   Mode contents are transparent HTML laid directly on the surface. */
 
-.screen-panel {
+.screen-surface {
   position: absolute;
-  z-index: 3;
+  z-index: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.projects-view,
+.project-view {
+  position: absolute;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: 0.8cqw;
-  padding: 1.6cqw 2cqw 0.8cqw;
-  /* Corners follow the screen glass curvature; bottom corners are tighter
-     because the panel meets the empty strip above the baked tab row. */
-  border-radius: 0.85cqw 0.85cqw 0.7cqw 0.7cqw;
-  /* Same surface family as the baked screen: dark green, soft center glow,
-     vignette to the edges, faint top sheen. No card border, no outer shadow. */
-  background:
-    linear-gradient(180deg, rgba(160, 210, 170, 0.05), rgba(160, 210, 170, 0) 13%),
-    radial-gradient(ellipse at 50% 34%, #102b1c 0%, #0a1d12 52%, #06140c 100%);
-  box-shadow: inset 0 0 3cqw rgba(0, 0, 0, 0.35);
+  /* Top padding clears the common baked header; side/bottom paddings keep
+     the content off the glass edges and the baked tab row. */
+  padding: 4.2cqw 2.3cqw 0.8cqw;
+  min-height: 0;
   color: #83bd99;
   font-family: monospace;
+  /* Pure layout over the shared surface: empty areas must not intercept
+     clicks aimed at the baked tab row or other controls underneath. */
+  pointer-events: none;
 }
 
-.screen-panel[hidden] {
-  display: none;
+.projects-view :is(button, a, input, textarea, select),
+.project-view :is(button, a, input, textarea, select) {
+  pointer-events: auto;
 }
 
-.screen-panel h2 {
+.projects-view h2,
+.project-view h2 {
   margin: 0;
   font-size: 1.5cqw;
   letter-spacing: 0.28em;
   color: #9ccaab;
 }
 
-.screen-panel small {
+.projects-view small,
+.project-view small {
   font-size: 0.55cqw;
   letter-spacing: 0.14em;
   color: #52755b;
@@ -473,16 +482,8 @@ summary {
   min-height: 0;
 }
 
-/* Flex children must not grow past the fixed panel height (the baked tab
+/* Flex children must not grow past the fixed surface height (the baked tab
    row below must stay clickable) — content adapts, boxes clip. */
-.projects-view,
-.project-view {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-}
-
 .projects-body > *,
 .project-body > * {
   min-height: 0;

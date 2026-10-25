@@ -6,7 +6,7 @@
 // overlays drawn by CSS on the controls — never whole-fragment brightening.
 
 import type { Bounds, SceneFile, SceneNode } from './types';
-import { MASKED_FACES, MASTER_ASSET, ROTOR_MASKED, resolveAsset } from './assets';
+import { MASKED_FACES, MASTER_ASSET, ROTOR_MASKED, deviceAsset, resolveAsset } from './assets';
 import { device } from './state';
 import { DEFAULT_DIRECTION } from '../data/demo';
 import { PROJECTS } from '../data/projects';
@@ -225,10 +225,14 @@ export function masterAsset(): string {
   return MASTER_ASSET;
 }
 
-// Panel covers the ENTIRE inner display area (full screen glass rect minus a
-// 2px hair of the dark inner edge), stopping above the baked bottom tab row —
-// the boundary passes through empty screen, never through start-content.
-const PANEL_BOUNDS: Bounds = [1254, 592, 3334, 1744];
+// The shared clean display surface: derived from the approved reference
+// (mode-specific start content removed, header/tab row/glass kept baked).
+// Covers the EXACT screen region so its edges are the same pixels as the
+// master underneath — seam-free by construction.
+const SCREEN_SURFACE_BOUNDS: Bounds = [1250, 588, 3338, 1942];
+// Mode content lives BETWEEN the common baked header and the common baked
+// tab row, so it never clips or overlaps them.
+const SCREEN_CONTENT_BOUNDS: Bounds = [1250, 588, 3338, 1744];
 const SCHEMA_CIRCLES: Array<{ cx: number; cy: number; r: number }> = [
   { cx: 22, cy: 44, r: 16 },
   { cx: 50, cy: 44, r: 18 },
@@ -259,27 +263,33 @@ function schematicSvg(width: number, height: number, dim: boolean): SVGSVGElemen
 }
 
 /**
- * Stage D: opaque screen panel covering the baked start screen content
- * (profile twin/nodes/card) whenever the display shows the project list or
- * the project screen. Sits inside the screen glass area, above the baked
- * bottom tab row (tabs stay visible and clickable in every mode).
+ * Stage D: the shared clean display surface (screen-surface.png, derived
+ * from the approved reference) plus the transparent mode contents
+ * (project list / project screen) laid over it. The surface covers the
+ * exact screen region — same pixels as the master at its edges — while the
+ * baked bottom tab row stays visible and clickable in every mode.
  */
 export function mountScreenPanels(container: HTMLElement): void {
-  const panel = document.createElement('section');
-  panel.className = 'screen-panel';
-  panel.dataset.id = 'screen-panel';
-  panel.dataset.screen = 'panel';
-  panel.hidden = true;
-  panel.setAttribute('aria-label', 'Содержимое дисплея');
-  place(panel, PANEL_BOUNDS);
-  device.registerElement('panel', panel);
+  // Shared surface: one display, one glass — only the information changes.
+  const surface = document.createElement('img');
+  surface.className = 'screen-surface';
+  surface.dataset.id = 'screen-surface';
+  surface.dataset.screen = 'panel';
+  surface.src = deviceAsset('screen-surface.png');
+  surface.alt = '';
+  surface.draggable = false;
+  surface.hidden = true;
+  place(surface, SCREEN_SURFACE_BOUNDS);
+  container.append(surface);
+  device.registerElement('screen-surface', surface);
 
-  // --- projects list + preview ---
+  // --- projects list + preview (transparent content over the surface) ---
   const projectsView = document.createElement('section');
   projectsView.className = 'projects-view';
   projectsView.dataset.screen = 'projects';
   projectsView.hidden = true;
   projectsView.setAttribute('aria-label', 'Список проектов');
+  place(projectsView, SCREEN_CONTENT_BOUNDS);
   const listTitle = document.createElement('h2');
   listTitle.textContent = 'ПРОЕКТЫ';
   const body = document.createElement('div');
@@ -323,7 +333,7 @@ export function mountScreenPanels(container: HTMLElement): void {
   const demoNote = document.createElement('small');
   demoNote.textContent = 'ДЕМОНСТРАЦИОННЫЕ ДАННЫЕ';
   projectsView.append(listTitle, body, demoNote);
-  panel.append(projectsView);
+  container.append(projectsView);
   device.registerElement('projects-view', projectsView);
 
   // --- single project screen ---
@@ -414,13 +424,12 @@ export function mountScreenPanels(container: HTMLElement): void {
   const projectNote = document.createElement('small');
   projectNote.textContent = 'ДЕМОНСТРАЦИОННЫЕ ДАННЫЕ';
   projectView.append(head, projectBody, projectNote);
-  panel.append(projectView);
+  place(projectView, SCREEN_CONTENT_BOUNDS);
+  container.append(projectView);
   device.registerElement('project-view', projectView);
   device.registerElement('project-title', title);
   device.registerElement('component-info', componentInfo);
   device.registerElement('project-tab-text', tabText);
-
-  container.append(panel);
 }
 
 /** Editable source library: every tree fragment that owns a raster asset. */
