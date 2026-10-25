@@ -1,0 +1,16 @@
+---
+// Screen interactivity over the continuous master: four direction nodes,
+// bottom tabs, open-projects control and the live HTML card (non-LLM),
+// plus the stage-D display panels (project list / project screen).
+// Highlights are shape-following transparent overlays (CSS), not rectangles.
+---
+
+<script>
+  import { mountScreenControls, mountScreenPanels } from '../scene/renderer';
+
+  const container = document.getElementById('device');
+  if (container) {
+    mountScreenControls(container);
+    mountScreenPanels(container);
+  }
+</script>

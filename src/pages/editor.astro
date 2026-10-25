@@ -1,0 +1,39 @@
+---
+// DEV-only layer lab page. In production builds (import.meta.env.DEV ===
+// false) the editor is not rendered — the page ships as an empty shell and
+// the public site never links here.
+import '../styles/global.css';
+import DeviceStage from '../components/DeviceStage.astro';
+import Display from '../components/Display.astro';
+import SectionButtons from '../components/SectionButtons.astro';
+import RotaryKnob from '../components/RotaryKnob.astro';
+import LayerEditor from '../components/LayerEditor.astro';
+
+const dev = import.meta.env.DEV;
+---
+
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>SDINC — редактор слоёв (dev)</title>
+    <link rel="icon" href="data:," />
+  </head>
+  <body>
+    <main>
+      <h1 class="sr-only">SDINC — исходные элементы и редактирование (инструмент разработки)</h1>
+      <DeviceStage />
+      <Display />
+      <SectionButtons />
+      <RotaryKnob />
+      {dev && <LayerEditor />}
+      {!dev && <p class="note">Редактор доступен только в режиме разработки (npm run dev).</p>}
+      <p class="note">
+        Статичный корпус отображается единой подложкой. Исходные фрагменты — библиотека для
+        редактирования, не накладываются на корпус.
+      </p>
+    </main>
+  </body>
+</html>

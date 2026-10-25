@@ -1,0 +1,21 @@
+# Dependencies & build output
+node_modules/
+dist/
+.astro/
+
+# Service directories
+.playwright-mcp/
+.omo/
+
+# External reference packages (source materials, not product)
+/sdinc-fidelity-v2/
+/sdinc-fidelity-v3/
+/sdinc-fidelity-v4.1-desktop/
+/sdinc-fidelity-v5-desktop/
+/sdinc-fidelity-v6-desktop/
+/sdinc-fidelity-v7-desktop/
+/sdinc-starter/
+
+# Diagnostic screenshots and working artifacts in repo root
+/*.png
+!/SDINC_fallout_inspired_sketch.png

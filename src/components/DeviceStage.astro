@@ -1,0 +1,16 @@
+---
+// Root stage: viewport wrapper with horizontal scroll on narrow screens,
+// device container locked to the 4K reference aspect ratio (3:2).
+// The static body mounts as ONE continuous master image — no fragments.
+---
+
+<div class="viewport">
+  <div id="device" class="device"></div>
+</div>
+
+<script>
+  import { mountMaster } from '../scene/renderer';
+
+  const container = document.getElementById('device');
+  if (container) mountMaster(container);
+</script>

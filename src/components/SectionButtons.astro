@@ -1,0 +1,11 @@
+---
+// Hardware section buttons: transparent hit-areas; masked face overlays
+// appear only while pressed. Plates and labels live in the master.
+---
+
+<script>
+  import { mountSectionControls } from '../scene/renderer';
+
+  const container = document.getElementById('device');
+  if (container) mountSectionControls(container);
+</script>

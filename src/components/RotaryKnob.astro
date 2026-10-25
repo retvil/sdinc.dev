@@ -1,0 +1,11 @@
+---
+// Rotary dial: hit-area with click/arrow/wheel/Enter stepping; the masked
+// rotor overlay appears only after rotation (neutral state stays raster).
+---
+
+<script>
+  import { mountDial } from '../scene/renderer';
+
+  const container = document.getElementById('device');
+  if (container) mountDial(container);
+</script>

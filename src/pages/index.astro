@@ -1,0 +1,42 @@
+---
+// SDINC — start screen. Desktop-only composition: the approved 4K reference
+// renders as ONE continuous master; only interactive layers mount on top
+// (V7 strategy — no static fragment patches). Narrow screens scroll
+// horizontally inside the container.
+import '../styles/global.css';
+import DeviceStage from '../components/DeviceStage.astro';
+import Display from '../components/Display.astro';
+import SectionButtons from '../components/SectionButtons.astro';
+import RotaryKnob from '../components/RotaryKnob.astro';
+---
+
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="SDINC — персональная система." />
+    <title>SDINC / Personal System</title>
+    <link rel="icon" href="data:," />
+  </head>
+  <body>
+    <main>
+      <h1 class="sr-only">SDINC — персональная система</h1>
+      <DeviceStage />
+      <!-- Interactive layers mount over the master in stacking order -->
+      <Display />
+      <SectionButtons />
+      <RotaryKnob />
+      <p id="status" class="sr-only" role="status">Исходный профиль. Корпус отображается единым слоем.</p>
+    </main>
+
+    <script>
+      // Runs after all component scripts (document order): controls are
+      // mounted, overlays registered — safe to bind and init.
+      import { device } from '../scene/state';
+
+      device.bindStatus(document.getElementById('status'));
+      device.init();
+    </script>
+  </body>
+</html>

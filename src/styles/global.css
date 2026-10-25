@@ -1,0 +1,723 @@
+/* SDINC — page shell + interactive overlay styles.
+   V7 strategy: static body = one continuous master image; only interactive
+   layers mount on top. Highlights (hover/focus/active/selected) are
+   shape-following transparent overlays drawn on the controls — never
+   whole-fragment brightening and never rectangular halos over the master. */
+
+* {
+  box-sizing: border-box;
+}
+
+/* The hidden attribute must always win over author display rules. */
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #111210;
+  color: #bdc6b1;
+  font: 14px system-ui, sans-serif;
+}
+
+main {
+  max-width: 3840px;
+  margin: auto;
+}
+
+.viewport {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.device {
+  position: relative;
+  width: 100%;
+  min-width: 960px;
+  aspect-ratio: 3 / 2;
+  container-type: inline-size;
+  isolation: isolate;
+}
+
+/* --- continuous static master --- */
+
+.master {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+/* --- interactive controls (transparent hit-areas) --- */
+
+.control {
+  position: absolute;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  z-index: 2;
+  color: transparent;
+}
+
+.control:focus-visible {
+  outline: 2px solid #d3dda5;
+  outline-offset: 3px;
+}
+
+.show-bounds .control {
+  outline: 1px solid #dfb16080;
+  background: #dcb4550a;
+}
+
+/* --- direction nodes: ring follows the circle, not the crop rectangle --- */
+
+.node-control::before,
+.node-control::after {
+  content: "";
+  position: absolute;
+  left: 8%;
+  top: 4%;
+  width: 84%;
+  height: 66%;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  pointer-events: none;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+/* hover: soft green ring over the node circle; disappears on leave */
+.node-control:hover::before {
+  border-color: #a4d7aa80;
+  box-shadow: 0 0 6px #87c69330;
+}
+
+/* active: brief press reaction */
+.node-control:active::before {
+  border-color: #cdeecf;
+  box-shadow: 0 0 10px #87c69360;
+}
+
+/* keyboard focus: distinct, brighter ring */
+.node-control:focus-visible::before {
+  border-color: #d3dda5;
+  box-shadow: 0 0 9px #c3e2a855;
+}
+
+/* selected: constant bright ring + glow (co-exists with hover on others) */
+.node-control.selected::after {
+  border-color: #a4d7aa;
+  box-shadow: 0 0 8px #87c69340;
+}
+
+/* --- open-projects button: frame follows the raster button outline --- */
+
+.open-control::before {
+  content: "";
+  position: absolute;
+  inset: 4% 3%;
+  border: 1px solid transparent;
+  border-radius: 0.9cqw;
+  pointer-events: none;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.open-control:hover::before {
+  border-color: #7ebc96aa;
+  box-shadow: 0 0 6px #74b98f40;
+}
+
+.open-control:active::before {
+  border-color: #b9e3c4;
+  box-shadow: 0 0 10px #74b98f66;
+}
+
+.open-control:focus-visible::before {
+  border-color: #d3dda5;
+  box-shadow: 0 0 8px #c3e2a855;
+}
+
+/* --- bottom tabs: thin frame over the tab area --- */
+
+.tab-control::before {
+  content: "";
+  position: absolute;
+  inset: 12% 6%;
+  border: 1px solid transparent;
+  border-radius: 0.5cqw;
+  pointer-events: none;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.tab-control:hover::before {
+  border-color: #7ebc9673;
+  box-shadow: 0 0 5px #74b98f33;
+}
+
+.tab-control:active::before {
+  border-color: #b9e3c4;
+  box-shadow: 0 0 8px #74b98f55;
+}
+
+.tab-control:focus-visible::before {
+  border-color: #d3dda5;
+  box-shadow: 0 0 7px #c3e2a855;
+}
+
+/* --- masked moving overlays (visible only during interaction) --- */
+
+.moving-face {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.moving-face[hidden] {
+  display: none;
+}
+
+.moving-face img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.moving-face.pressed {
+  transform: translateY(1px);
+  filter: brightness(0.8);
+}
+
+.rotor-art {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  display: none;
+  transform: rotate(var(--angle, 0deg));
+  transform-origin: 50% 50%;
+}
+
+.rotor-art.active {
+  display: block;
+}
+
+.rotor-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* --- live HTML card (non-LLM directions) --- */
+
+.live-card {
+  position: absolute;
+  z-index: 4;
+  background: radial-gradient(ellipse at top, #0a2014, #031209);
+  border: 1px solid #355f42;
+  border-radius: 1cqw;
+  color: #83bd99;
+  padding: 1.3cqw 1.2cqw;
+  display: flex;
+  flex-direction: column;
+  font-family: monospace;
+}
+
+.live-card[hidden] {
+  display: none;
+}
+
+.live-card h2 {
+  font-size: 1.55cqw;
+  line-height: 1.2;
+  margin: 0 0 1cqw;
+}
+
+.live-card p {
+  font: 1.02cqw/1.55 system-ui, sans-serif;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.live-card small {
+  font-size: 0.55cqw;
+  color: #52755b;
+  margin-top: 1cqw;
+}
+
+.live-card button {
+  margin-top: auto;
+  color: #9ccaab;
+  background: transparent;
+  border: 1px solid #679974;
+  border-radius: 0.6cqw;
+  padding: 0.7cqw;
+  font: 1.1cqw monospace;
+  cursor: pointer;
+}
+
+.live-card button:hover {
+  border-color: #8ec39c;
+  box-shadow: 0 0 6px #74b98f40;
+}
+
+/* --- editor page chrome (DEV-only) --- */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 16px;
+}
+
+.toolbar b {
+  font: 12px monospace;
+  color: #9fb68a;
+}
+
+button,
+select,
+input,
+textarea {
+  font: inherit;
+}
+
+.control {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.toolbar button,
+.toolbar select,
+.toolbar input,
+.editor button,
+.editor select,
+.editor input,
+.editor textarea {
+  background: #252d20;
+  color: #c5cfb6;
+  border: 1px solid #596447;
+  border-radius: 5px;
+  padding: 8px 10px;
+}
+
+.toolbar button:focus-visible,
+.toolbar select:focus-visible,
+.toolbar input:focus-visible,
+.editor button:focus-visible,
+.editor select:focus-visible,
+.editor input:focus-visible,
+.editor textarea:focus-visible {
+  outline: 2px solid #cddda4;
+  outline-offset: 3px;
+}
+
+#status {
+  text-align: center;
+  padding: 0 16px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.sr-only#status {
+  padding: 0;
+}
+
+.note {
+  text-align: center;
+  padding: 0 16px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #859279;
+}
+
+details {
+  margin: 20px 16px;
+  padding: 14px;
+  border: 1px solid #45503a;
+  border-radius: 8px;
+}
+
+summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.editor {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 24px;
+  margin-top: 14px;
+}
+
+.editor h2 {
+  font: 16px monospace;
+  color: #9fc190;
+}
+
+.editor label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 12px 0;
+}
+
+.editor p {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #9aa68c;
+}
+
+.editor input[type="checkbox"] {
+  align-self: flex-start;
+}
+
+.editor textarea {
+  resize: vertical;
+  width: 100%;
+}
+
+.editor select {
+  max-width: 100%;
+}
+
+.editor button {
+  margin: 4px 0;
+  min-height: 40px;
+}
+
+#source-preview {
+  max-width: 100%;
+  max-height: 220px;
+  border: 1px solid #45503a;
+  border-radius: 6px;
+  background: #0c0f0a;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Elements with shape-following focus frames (circle / rounded frame)
+   must not also draw the rectangular outline around the crop bounds.
+   Kept last so no later rule re-enables the rectangle. */
+.node-control:focus-visible,
+.open-control:focus-visible,
+.tab-control:focus-visible {
+  outline: none;
+}
+
+/* --- stage D: display panels (project list / project screen) ---
+   Opaque replacement for the baked start-screen content. Sits inside the
+   screen glass area only; the baked bottom tab row stays visible. The
+   gradient is deliberately restrained: same dark-green family as the
+   approved screen, faint top sheen — no new bright "glass". */
+
+.screen-panel {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8cqw;
+  padding: 1.6cqw 2cqw 0.8cqw;
+  /* Corners follow the screen glass curvature; bottom corners are tighter
+     because the panel meets the empty strip above the baked tab row. */
+  border-radius: 0.85cqw 0.85cqw 0.7cqw 0.7cqw;
+  /* Same surface family as the baked screen: dark green, soft center glow,
+     vignette to the edges, faint top sheen. No card border, no outer shadow. */
+  background:
+    linear-gradient(180deg, rgba(160, 210, 170, 0.05), rgba(160, 210, 170, 0) 13%),
+    radial-gradient(ellipse at 50% 34%, #102b1c 0%, #0a1d12 52%, #06140c 100%);
+  box-shadow: inset 0 0 3cqw rgba(0, 0, 0, 0.35);
+  color: #83bd99;
+  font-family: monospace;
+}
+
+.screen-panel[hidden] {
+  display: none;
+}
+
+.screen-panel h2 {
+  margin: 0;
+  font-size: 1.5cqw;
+  letter-spacing: 0.28em;
+  color: #9ccaab;
+}
+
+.screen-panel small {
+  font-size: 0.55cqw;
+  letter-spacing: 0.14em;
+  color: #52755b;
+  margin-top: 0.5cqw;
+}
+
+.projects-body {
+  display: flex;
+  gap: 2cqw;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Flex children must not grow past the fixed panel height (the baked tab
+   row below must stay clickable) — content adapts, boxes clip. */
+.projects-view,
+.project-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.projects-body > *,
+.project-body > * {
+  min-height: 0;
+}
+
+.project-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 34%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7cqw;
+  overflow: hidden;
+}
+
+.project-item {
+  width: 100%;
+  text-align: left;
+  background: rgba(53, 95, 66, 0.16);
+  color: #9ccaab;
+  border: 1px solid #355f42;
+  border-radius: 0.6cqw;
+  padding: 0.85cqw 1cqw;
+  font: 1.05cqw monospace;
+  cursor: pointer;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.project-item:hover {
+  border-color: #7ebc96aa;
+  box-shadow: 0 0 6px #74b98f40;
+}
+
+.project-item:active {
+  border-color: #b9e3c4;
+}
+
+.project-item.selected {
+  border-color: #a4d7aa;
+  box-shadow: 0 0 8px #87c69340;
+  color: #c1e2c8;
+}
+
+.project-item:focus-visible {
+  outline: none;
+  border-color: #d3dda5;
+  box-shadow: 0 0 9px #c3e2a855;
+}
+
+.project-preview {
+  flex: 1;
+  border: 1px solid #2c4f38;
+  border-radius: 0.9cqw;
+  padding: 1.2cqw 1.4cqw;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7cqw;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.project-preview h3 {
+  margin: 0;
+  font-size: 1.25cqw;
+  color: #b7ddc0;
+}
+
+.project-preview p {
+  margin: 0;
+  font: 0.95cqw/1.5 system-ui, sans-serif;
+  color: #83bd99;
+}
+
+.schematic {
+  display: block;
+}
+
+.panel-button {
+  align-self: flex-start;
+  margin-top: auto;
+  background: transparent;
+  color: #9ccaab;
+  border: 1px solid #679974;
+  border-radius: 0.6cqw;
+  padding: 0.65cqw 1.1cqw;
+  font: 1cqw monospace;
+  cursor: pointer;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.panel-button:hover {
+  border-color: #8ec39c;
+  box-shadow: 0 0 6px #74b98f40;
+}
+
+.panel-button:active {
+  border-color: #b9e3c4;
+  box-shadow: 0 0 9px #74b98f66;
+}
+
+.panel-button:focus-visible {
+  outline: none;
+  border-color: #d3dda5;
+  box-shadow: 0 0 9px #c3e2a855;
+}
+
+/* --- project screen --- */
+
+.project-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5cqw;
+}
+
+.project-head h2 {
+  letter-spacing: 0.12em;
+  font-size: 1.45cqw;
+}
+
+.project-head h2:focus-visible {
+  outline: none;
+  color: #d3dda5;
+}
+
+.project-body {
+  display: flex;
+  gap: 2cqw;
+  flex: 1;
+  min-height: 0;
+}
+
+.project-schematic {
+  position: relative;
+  width: 55%;
+}
+
+.component-control {
+  border-radius: 50%;
+}
+
+.component-control::before,
+.component-control::after {
+  content: "";
+  position: absolute;
+  inset: 4%;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  pointer-events: none;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.component-control:hover::before {
+  border-color: #a4d7aa80;
+  box-shadow: 0 0 6px #87c69330;
+}
+
+.component-control:active::before {
+  border-color: #cdeecf;
+  box-shadow: 0 0 10px #87c69360;
+}
+
+.component-control:focus-visible {
+  outline: none;
+}
+
+.component-control:focus-visible::before {
+  border-color: #d3dda5;
+  box-shadow: 0 0 9px #c3e2a855;
+}
+
+.component-control.selected::after {
+  border-color: #a4d7aa;
+  box-shadow: 0 0 8px #87c69340;
+}
+
+.project-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1cqw;
+  min-width: 0;
+}
+
+.component-info {
+  margin: 0;
+  min-height: 2.4cqw;
+  font: 1.05cqw/1.5 system-ui, sans-serif;
+  color: #a9d3b4;
+}
+
+.project-tabs {
+  display: flex;
+  gap: 0.6cqw;
+}
+
+.project-tab {
+  background: transparent;
+  color: #7ea88a;
+  border: 1px solid #2c4f38;
+  border-radius: 0.6cqw;
+  padding: 0.55cqw 1cqw;
+  font: 0.95cqw monospace;
+  cursor: pointer;
+  transition: border-color 0.12s, box-shadow 0.12s, color 0.12s;
+}
+
+.project-tab:hover {
+  border-color: #7ebc96aa;
+  color: #9ccaab;
+}
+
+.project-tab:focus-visible {
+  outline: none;
+  border-color: #d3dda5;
+  box-shadow: 0 0 9px #c3e2a855;
+}
+
+.project-tab.active-tab {
+  border-color: #a4d7aa;
+  color: #c1e2c8;
+  box-shadow: 0 0 6px #87c69330;
+}
+
+.project-tab-text {
+  margin: 0;
+  font: 1cqw/1.55 system-ui, sans-serif;
+  color: #9cc4a6;
+  white-space: pre-wrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

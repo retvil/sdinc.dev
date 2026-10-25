@@ -1,0 +1,189 @@
+---
+// DEV-only layer lab (V7 style): source-fragment library (preview/download),
+// card content editing, interactive-layer inspector and JSON export.
+// Never rendered on the public site — editor.astro gates this component
+// behind import.meta.env.DEV. No autosave, no import.
+---
+
+<section class="toolbar" aria-label="Управление прототипом">
+  <b>FIDELITY V7 · DESKTOP</b>
+  <label><input id="bounds" type="checkbox" /> Области управления</label>
+  <button id="reset" type="button">Исходное состояние</button>
+  <button id="previous" type="button">← Узел</button>
+  <button id="next" type="button">Узел →</button>
+</section>
+
+<details id="inspector">
+  <summary>Исходные элементы и редактирование</summary>
+  <div class="editor">
+    <section>
+      <h2>Графические исходники</h2>
+      <label>Элемент <select id="source-select"></select></label>
+      <img id="source-preview" alt="Выбранный исходный фрагмент" />
+      <p id="source-info"></p>
+      <a id="source-download" download>Сохранить фрагмент PNG</a>
+      <p>Выбор фрагмента не накладывает его на корпус. Неподвижные изменения нужно собирать в общую подложку.</p>
+    </section>
+    <section>
+      <h2>Содержимое карточки</h2>
+      <label>Направление <select id="node-select"></select></label>
+      <label>Заголовок <input id="node-title" maxlength="80" /></label>
+      <label>Описание <textarea id="node-description" rows="4" maxlength="300"></textarea></label>
+      <button id="apply" type="button">Показать HTML-карточку</button>
+      <button id="export" type="button">Экспорт данных JSON</button>
+      <p>HTML-карточка — отдельный редактируемый слой поверх цельного мастера. Данные демонстрационные.</p>
+    </section>
+    <section>
+      <h2>Слои управления</h2>
+      <label>Элемент <select id="layer-select"></select></label>
+      <label><input id="layer-visible" type="checkbox" checked /> Видимость</label>
+      <label>Непрозрачность <input id="layer-opacity" type="range" min="0" max="100" value="100" /></label>
+      <label>Смещение X, пиксели референса <input id="layer-x" type="number" value="0" step="1" /></label>
+      <label>Смещение Y, пиксели референса <input id="layer-y" type="number" value="0" step="1" /></label>
+      <p id="layer-info"></p>
+    </section>
+  </div>
+</details>
+
+<script>
+  import { device } from '../scene/state';
+  import { masterAsset, sourceFragments, sourceUrl } from '../scene/renderer';
+  import { DIRECTION_KEYS } from '../data/demo';
+
+  const container = document.getElementById('device');
+  const statusEl = document.getElementById('status');
+
+  device.bindStatus(statusEl);
+  device.init();
+
+  // --- toolbar ---
+  document.querySelector('#bounds')?.addEventListener('change', (event) => {
+    const checkbox = event.currentTarget as HTMLInputElement;
+    container?.classList.toggle('show-bounds', checkbox.checked);
+  });
+  document.querySelector('#previous')?.addEventListener('click', () => device.step(-1));
+  document.querySelector('#next')?.addEventListener('click', () => device.step(1));
+  document.querySelector('#reset')?.addEventListener('click', () => {
+    device.resetView();
+    syncCardEditor();
+    device.status('Исходное состояние. Статичный корпус — единая подложка без накладных фрагментов.');
+  });
+
+  // --- source fragment library (preview + download, never overlaid) ---
+  const sourceSelect = document.querySelector<HTMLSelectElement>('#source-select');
+  const fragments = sourceFragments();
+  for (const fragment of fragments) {
+    if (!sourceSelect) break;
+    const option = document.createElement('option');
+    option.value = fragment.id;
+    option.textContent = `${fragment.name} / ${fragment.id}`;
+    sourceSelect.append(option);
+  }
+  function syncSource(): void {
+    if (!sourceSelect) return;
+    const fragment = fragments.find((item) => item.id === sourceSelect.value);
+    if (!fragment) return;
+    const url = sourceUrl(fragment);
+    const preview = document.querySelector<HTMLImageElement>('#source-preview');
+    const info = document.querySelector<HTMLParagraphElement>('#source-info');
+    const download = document.querySelector<HTMLAnchorElement>('#source-download');
+    if (preview) preview.src = url;
+    if (info) info.textContent = `${fragment.asset} · ${fragment.bounds.join(', ')}`;
+    if (download) download.href = url;
+  }
+  sourceSelect?.addEventListener('change', syncSource);
+  syncSource();
+
+  // --- card content editor ---
+  const nodeSelect = document.querySelector<HTMLSelectElement>('#node-select');
+  for (const key of DIRECTION_KEYS) {
+    if (!nodeSelect) break;
+    const option = document.createElement('option');
+    option.value = key;
+    option.textContent = device.getDirections()[key].title;
+    nodeSelect.append(option);
+  }
+  function syncCardEditor(): void {
+    if (!nodeSelect) return;
+    const copy = device.getDirections()[nodeSelect.value as keyof ReturnType<typeof device.getDirections>];
+    const title = document.querySelector<HTMLInputElement>('#node-title');
+    const description = document.querySelector<HTMLTextAreaElement>('#node-description');
+    if (copy && title) title.value = copy.title;
+    if (copy && description) description.value = copy.description;
+  }
+  nodeSelect?.addEventListener('change', syncCardEditor);
+  nodeSelect.value = 'llm';
+  syncCardEditor();
+  document.querySelector('#apply')?.addEventListener('click', () => {
+    if (!nodeSelect) return;
+    const key = nodeSelect.value as Parameters<typeof device.setDirectionCopy>[0];
+    device.setDirectionCopy(
+      key,
+      document.querySelector<HTMLInputElement>('#node-title')?.value ?? '',
+      document.querySelector<HTMLTextAreaElement>('#node-description')?.value ?? '',
+    );
+    device.selectNode(key, true);
+    device.status('HTML-карточка показана. Исходная растровая карточка LLM не изменяется.');
+  });
+  document.querySelector('#export')?.addEventListener('click', () => {
+    const payload = { version: 7, nodes: device.getDirections(), overrides: device.overrides };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'sdinc-v7-content.json';
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    device.status('Данные экспортированы в JSON. Графические файлы не изменены.');
+  });
+
+  // --- interactive layer inspector ---
+  const layerSelect = document.querySelector<HTMLSelectElement>('#layer-select');
+  for (const [id, node] of device.nodes) {
+    if (!layerSelect) break;
+    const option = document.createElement('option');
+    option.value = id;
+    option.textContent = `${node.name} / ${id}`;
+    layerSelect.append(option);
+  }
+  function syncLayer(mark = false): void {
+    if (!layerSelect) return;
+    const id = layerSelect.value;
+    const node = device.nodes.get(id);
+    const override = device.overrides[id];
+    const visible = document.querySelector<HTMLInputElement>('#layer-visible');
+    const opacity = document.querySelector<HTMLInputElement>('#layer-opacity');
+    const x = document.querySelector<HTMLInputElement>('#layer-x');
+    const yInput = document.querySelector<HTMLInputElement>('#layer-y');
+    const info = document.querySelector<HTMLParagraphElement>('#layer-info');
+    if (visible) visible.checked = override ? override.visible !== false : true;
+    if (opacity) opacity.value = String(Math.round((override?.opacity ?? 1) * 100));
+    if (x) x.value = String(override?.x || 0);
+    if (yInput) yInput.value = String(override?.y || 0);
+    if (info && node) info.textContent = `${node.bounds.join(', ')} — координаты исходного 4K-референса`;
+    if (mark) device.elements.get(id)?.classList.add('selected-layer');
+  }
+  function editLayer(): void {
+    if (!layerSelect) return;
+    const id = layerSelect.value;
+    device.overrides[id] = {
+      visible: document.querySelector<HTMLInputElement>('#layer-visible')?.checked ?? true,
+      opacity: Number(document.querySelector<HTMLInputElement>('#layer-opacity')?.value ?? 100) / 100,
+      x: Number(document.querySelector<HTMLInputElement>('#layer-x')?.value) || 0,
+      y: Number(document.querySelector<HTMLInputElement>('#layer-y')?.value) || 0,
+    };
+    device.applyOverride(id);
+  }
+  layerSelect?.addEventListener('change', () => syncLayer(true));
+  for (const control of ['layer-visible', 'layer-opacity', 'layer-x', 'layer-y']) {
+    document.querySelector(`#${control}`)?.addEventListener('input', editLayer);
+  }
+  document.querySelector('#inspector')?.addEventListener('toggle', (event) => {
+    const details = event.currentTarget as HTMLDetailsElement;
+    if (!details.open) {
+      for (const el of device.elements.values()) el.classList.remove('selected-layer');
+    }
+  });
+  syncLayer(false);
+  void masterAsset;
+</script>

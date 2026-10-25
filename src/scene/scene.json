@@ -1,0 +1,859 @@
+{
+  "version": "5-desktop",
+  "reference": {
+    "width": 3840,
+    "height": 2560,
+    "asset": "assets/SDINC_reference_4K_conservative.png"
+  },
+  "scene": {
+    "id": "device",
+    "name": "Прибор",
+    "bounds": [
+      0,
+      0,
+      3840,
+      2560
+    ],
+    "children": [
+      {
+        "id": "screen",
+        "name": "Дисплей",
+        "bounds": [
+          1250,
+          588,
+          3338,
+          1942
+        ],
+        "children": [
+          {
+            "id": "screen-title",
+            "name": "Заголовок дисплея",
+            "bounds": [
+              1765,
+              630,
+              2740,
+              728
+            ],
+            "children": [],
+            "textKey": "screen_title",
+            "asset": "assets/screen-title.png",
+            "cleanAsset": "assets/screen-title-clean.png"
+          },
+          {
+            "id": "diagram",
+            "name": "Схема человека и направлений",
+            "bounds": [
+              1370,
+              788,
+              2575,
+              1668
+            ],
+            "children": [
+              {
+                "id": "node-vision",
+                "name": "Узел VISION",
+                "bounds": [
+                  1370,
+                  808,
+                  1615,
+                  1112
+                ],
+                "children": [
+                  {
+                    "id": "node-vision-icon",
+                    "name": "Пиктограмма VISION",
+                    "bounds": [
+                      1432,
+                      855,
+                      1552,
+                      978
+                    ],
+                    "children": [],
+                    "asset": "assets/node-vision-icon.png"
+                  },
+                  {
+                    "id": "node-vision-label",
+                    "name": "Название VISION",
+                    "bounds": [
+                      1372,
+                      1035,
+                      1612,
+                      1112
+                    ],
+                    "children": [],
+                    "textKey": "node_vision",
+                    "asset": "assets/node-vision-label.png",
+                    "cleanAsset": "assets/node-vision-label-clean.png"
+                  }
+                ],
+                "action": "node:vision",
+                "asset": "assets/node-vision.png"
+              },
+              {
+                "id": "node-llm",
+                "name": "Узел LLM",
+                "bounds": [
+                  2295,
+                  808,
+                  2532,
+                  1112
+                ],
+                "children": [
+                  {
+                    "id": "node-llm-icon",
+                    "name": "Пиктограмма LLM",
+                    "bounds": [
+                      2354,
+                      855,
+                      2474,
+                      978
+                    ],
+                    "children": [],
+                    "asset": "assets/node-llm-icon.png"
+                  },
+                  {
+                    "id": "node-llm-label",
+                    "name": "Название LLM",
+                    "bounds": [
+                      2298,
+                      1035,
+                      2530,
+                      1112
+                    ],
+                    "children": [],
+                    "textKey": "node_llm",
+                    "asset": "assets/node-llm-label.png",
+                    "cleanAsset": "assets/node-llm-label-clean.png"
+                  }
+                ],
+                "action": "node:llm",
+                "asset": "assets/node-llm.png"
+              },
+              {
+                "id": "node-auto",
+                "name": "Узел AUTO",
+                "bounds": [
+                  1370,
+                  1352,
+                  1615,
+                  1652
+                ],
+                "children": [
+                  {
+                    "id": "node-auto-icon",
+                    "name": "Пиктограмма AUTO",
+                    "bounds": [
+                      1432,
+                      1400,
+                      1552,
+                      1522
+                    ],
+                    "children": [],
+                    "asset": "assets/node-auto-icon.png"
+                  },
+                  {
+                    "id": "node-auto-label",
+                    "name": "Название AUTO",
+                    "bounds": [
+                      1372,
+                      1580,
+                      1612,
+                      1652
+                    ],
+                    "children": [],
+                    "textKey": "node_auto",
+                    "asset": "assets/node-auto-label.png",
+                    "cleanAsset": "assets/node-auto-label-clean.png"
+                  }
+                ],
+                "action": "node:auto",
+                "asset": "assets/node-auto.png"
+              },
+              {
+                "id": "node-system",
+                "name": "Узел SYSTEM",
+                "bounds": [
+                  2295,
+                  1352,
+                  2542,
+                  1652
+                ],
+                "children": [
+                  {
+                    "id": "node-system-icon",
+                    "name": "Пиктограмма SYSTEM",
+                    "bounds": [
+                      2359,
+                      1400,
+                      2479,
+                      1522
+                    ],
+                    "children": [],
+                    "asset": "assets/node-system-icon.png"
+                  },
+                  {
+                    "id": "node-system-label",
+                    "name": "Название SYSTEM",
+                    "bounds": [
+                      2298,
+                      1580,
+                      2540,
+                      1652
+                    ],
+                    "children": [],
+                    "textKey": "node_system",
+                    "asset": "assets/node-system-label.png",
+                    "cleanAsset": "assets/node-system-label-clean.png"
+                  }
+                ],
+                "action": "node:system",
+                "asset": "assets/node-system.png"
+              },
+              {
+                "id": "human",
+                "name": "Силуэт человека — маскированный растр",
+                "bounds": [
+                  1842,
+                  890,
+                  2090,
+                  1612
+                ],
+                "children": [],
+                "asset": "assets/human.png"
+              },
+              {
+                "id": "ring-outer",
+                "name": "Внешнее кольцо",
+                "bounds": [
+                  1685,
+                  932,
+                  2245,
+                  1495
+                ],
+                "children": [],
+                "asset": "assets/ring-outer.png"
+              },
+              {
+                "id": "ring-inner",
+                "name": "Внутреннее кольцо",
+                "bounds": [
+                  1740,
+                  988,
+                  2195,
+                  1445
+                ],
+                "children": [],
+                "asset": "assets/ring-inner.png"
+              },
+              {
+                "id": "connection-vision",
+                "name": "Соединение VISION",
+                "bounds": [
+                  1625,
+                  910,
+                  1798,
+                  1032
+                ],
+                "children": [],
+                "asset": "assets/connection-vision.png"
+              },
+              {
+                "id": "connection-llm",
+                "name": "Соединение LLM",
+                "bounds": [
+                  2128,
+                  910,
+                  2285,
+                  1032
+                ],
+                "children": [],
+                "asset": "assets/connection-llm.png"
+              },
+              {
+                "id": "connection-auto",
+                "name": "Соединение AUTO",
+                "bounds": [
+                  1625,
+                  1375,
+                  1800,
+                  1502
+                ],
+                "children": [],
+                "asset": "assets/connection-auto.png"
+              },
+              {
+                "id": "connection-system",
+                "name": "Соединение SYSTEM",
+                "bounds": [
+                  2128,
+                  1375,
+                  2285,
+                  1502
+                ],
+                "children": [],
+                "asset": "assets/connection-system.png"
+              }
+            ],
+            "asset": "assets/diagram.png"
+          },
+          {
+            "id": "card",
+            "name": "Карточка выбранного направления",
+            "bounds": [
+              2695,
+              820,
+              3275,
+              1610
+            ],
+            "children": [
+              {
+                "id": "card-icon",
+                "name": "Пиктограмма карточки",
+                "bounds": [
+                  2745,
+                  875,
+                  2885,
+                  1015
+                ],
+                "children": [],
+                "asset": "assets/card-icon.png"
+              },
+              {
+                "id": "card-title",
+                "name": "Название карточки",
+                "bounds": [
+                  2745,
+                  1045,
+                  3210,
+                  1125
+                ],
+                "children": [],
+                "textKey": "card_title",
+                "asset": "assets/card-title.png",
+                "cleanAsset": "assets/card-title-clean.png"
+              },
+              {
+                "id": "card-description",
+                "name": "Описание карточки",
+                "bounds": [
+                  2745,
+                  1150,
+                  3232,
+                  1278
+                ],
+                "children": [],
+                "textKey": "card_description",
+                "asset": "assets/card-description.png",
+                "cleanAsset": "assets/card-description-clean.png"
+              },
+              {
+                "id": "card-open",
+                "name": "Кнопка открытия проектов",
+                "bounds": [
+                  2748,
+                  1400,
+                  3220,
+                  1545
+                ],
+                "children": [
+                  {
+                    "id": "card-open-label",
+                    "name": "Подпись открытия",
+                    "bounds": [
+                      2810,
+                      1438,
+                      3102,
+                      1512
+                    ],
+                    "children": [],
+                    "textKey": "open_projects",
+                    "asset": "assets/card-open-label.png",
+                    "cleanAsset": "assets/card-open-label-clean.png"
+                  },
+                  {
+                    "id": "card-open-arrow",
+                    "name": "Стрелка открытия",
+                    "bounds": [
+                      3102,
+                      1438,
+                      3185,
+                      1512
+                    ],
+                    "children": [],
+                    "asset": "assets/card-open-arrow.png"
+                  }
+                ],
+                "action": "section:projects",
+                "asset": "assets/card-open.png"
+              }
+            ],
+            "asset": "assets/card.png"
+          },
+          {
+            "id": "tab-profile",
+            "name": "Вкладка Профиль",
+            "bounds": [
+              1442,
+              1778,
+              1832,
+              1888
+            ],
+            "children": [
+              {
+                "id": "tab-profile-label",
+                "name": "Подпись вкладки Профиль",
+                "bounds": [
+                  1562,
+                  1795,
+                  1815,
+                  1872
+                ],
+                "children": [],
+                "textKey": "tab_profile",
+                "asset": "assets/tab-profile-label.png",
+                "cleanAsset": "assets/tab-profile-label-clean.png"
+              }
+            ],
+            "action": "section:profile",
+            "asset": "assets/tab-profile.png"
+          },
+          {
+            "id": "tab-projects",
+            "name": "Вкладка Проекты",
+            "bounds": [
+              2092,
+              1778,
+              2492,
+              1888
+            ],
+            "children": [
+              {
+                "id": "tab-projects-label",
+                "name": "Подпись вкладки Проекты",
+                "bounds": [
+                  2222,
+                  1795,
+                  2462,
+                  1872
+                ],
+                "children": [],
+                "textKey": "tab_projects",
+                "asset": "assets/tab-projects-label.png",
+                "cleanAsset": "assets/tab-projects-label-clean.png"
+              }
+            ],
+            "action": "section:projects",
+            "asset": "assets/tab-projects.png"
+          },
+          {
+            "id": "tab-contact",
+            "name": "Вкладка Связь",
+            "bounds": [
+              2772,
+              1778,
+              3082,
+              1888
+            ],
+            "children": [
+              {
+                "id": "tab-contact-label",
+                "name": "Подпись вкладки Связь",
+                "bounds": [
+                  2895,
+                  1795,
+                  3080,
+                  1872
+                ],
+                "children": [],
+                "textKey": "tab_contact",
+                "asset": "assets/tab-contact-label.png",
+                "cleanAsset": "assets/tab-contact-label-clean.png"
+              }
+            ],
+            "action": "section:contact",
+            "asset": "assets/tab-contact.png"
+          }
+        ],
+        "asset": "assets/screen.png"
+      },
+      {
+        "id": "portrait",
+        "name": "Портретный модуль",
+        "bounds": [
+          385,
+          610,
+          878,
+          962
+        ],
+        "children": [
+          {
+            "id": "portrait-image",
+            "name": "Изображение портрета",
+            "bounds": [
+              432,
+              652,
+              828,
+              935
+            ],
+            "children": [],
+            "asset": "assets/portrait-image.png"
+          }
+        ],
+        "asset": "assets/portrait.png"
+      },
+      {
+        "id": "meter",
+        "name": "Аналоговый прибор",
+        "bounds": [
+          428,
+          335,
+          845,
+          580
+        ],
+        "children": [
+          {
+            "id": "meter-face",
+            "name": "Шкала с запечённой стрелкой",
+            "bounds": [
+              470,
+              375,
+              805,
+              535
+            ],
+            "children": [],
+            "asset": "assets/meter-face.png"
+          }
+        ],
+        "asset": "assets/meter.png"
+      },
+      {
+        "id": "sys",
+        "name": "Индикатор SYS",
+        "bounds": [
+          900,
+          362,
+          972,
+          440
+        ],
+        "children": [
+          {
+            "id": "sys-core",
+            "name": "Светящаяся сердцевина",
+            "bounds": [
+              921,
+              386,
+              951,
+              416
+            ],
+            "children": [],
+            "kind": "lamp",
+            "asset": "assets/sys-core.png"
+          }
+        ],
+        "asset": "assets/sys.png"
+      },
+      {
+        "id": "net",
+        "name": "Индикатор NET",
+        "bounds": [
+          900,
+          462,
+          972,
+          540
+        ],
+        "children": [
+          {
+            "id": "net-core",
+            "name": "Светящаяся сердцевина",
+            "bounds": [
+              921,
+              486,
+              951,
+              516
+            ],
+            "children": [],
+            "kind": "lamp",
+            "asset": "assets/net-core.png"
+          }
+        ],
+        "asset": "assets/net.png"
+      },
+      {
+        "id": "button-profile",
+        "name": "Кнопка Профиль",
+        "bounds": [
+          370,
+          992,
+          870,
+          1150
+        ],
+        "children": [
+          {
+            "id": "button-profile-face",
+            "name": "Подвижная лицевая часть",
+            "bounds": [
+              398,
+              1020,
+              490,
+              1112
+            ],
+            "children": [],
+            "kind": "face",
+            "asset": "assets/button-profile-face.png"
+          },
+          {
+            "id": "button-profile-label",
+            "name": "Подпись Профиль",
+            "bounds": [
+              545,
+              1030,
+              802,
+              1095
+            ],
+            "children": [],
+            "textKey": "button_profile",
+            "asset": "assets/button-profile-label.png",
+            "cleanAsset": "assets/button-profile-label-clean.png"
+          }
+        ],
+        "action": "section:profile",
+        "asset": "assets/button-profile.png"
+      },
+      {
+        "id": "button-projects",
+        "name": "Кнопка Проекты",
+        "bounds": [
+          370,
+          1152,
+          870,
+          1312
+        ],
+        "children": [
+          {
+            "id": "button-projects-face",
+            "name": "Подвижная лицевая часть",
+            "bounds": [
+              398,
+              1185,
+              490,
+              1278
+            ],
+            "children": [],
+            "kind": "face",
+            "asset": "assets/button-projects-face.png"
+          },
+          {
+            "id": "button-projects-label",
+            "name": "Подпись Проекты",
+            "bounds": [
+              545,
+              1195,
+              802,
+              1260
+            ],
+            "children": [],
+            "textKey": "button_projects",
+            "asset": "assets/button-projects-label.png",
+            "cleanAsset": "assets/button-projects-label-clean.png"
+          }
+        ],
+        "action": "section:projects",
+        "asset": "assets/button-projects.png"
+      },
+      {
+        "id": "button-contact",
+        "name": "Кнопка Связь",
+        "bounds": [
+          370,
+          1315,
+          870,
+          1478
+        ],
+        "children": [
+          {
+            "id": "button-contact-face",
+            "name": "Подвижная лицевая часть",
+            "bounds": [
+              398,
+              1348,
+              490,
+              1440
+            ],
+            "children": [],
+            "kind": "face",
+            "asset": "assets/button-contact-face.png"
+          },
+          {
+            "id": "button-contact-label",
+            "name": "Подпись Связь",
+            "bounds": [
+              545,
+              1358,
+              802,
+              1422
+            ],
+            "children": [],
+            "textKey": "button_contact",
+            "asset": "assets/button-contact-label.png",
+            "cleanAsset": "assets/button-contact-label-clean.png"
+          }
+        ],
+        "action": "section:contact",
+        "asset": "assets/button-contact.png"
+      },
+      {
+        "id": "dial",
+        "name": "Регулятор",
+        "bounds": [
+          328,
+          1502,
+          880,
+          2052
+        ],
+        "children": [
+          {
+            "id": "dial-rotor",
+            "name": "Вращающаяся ручка",
+            "bounds": [
+              422,
+              1630,
+              752,
+              1960
+            ],
+            "children": [],
+            "kind": "rotor",
+            "asset": "assets/dial-rotor.png"
+          }
+        ],
+        "action": "dial",
+        "asset": "assets/dial.png"
+      },
+      {
+        "id": "badge",
+        "name": "Шильдик SDINC",
+        "bounds": [
+          1378,
+          360,
+          1742,
+          448
+        ],
+        "children": [],
+        "asset": "assets/badge.png"
+      },
+      {
+        "id": "serial",
+        "name": "Серийная табличка",
+        "bounds": [
+          1750,
+          368,
+          2290,
+          448
+        ],
+        "children": [
+          {
+            "id": "serial-text",
+            "name": "Серийный номер",
+            "bounds": [
+              1775,
+              378,
+              2045,
+              430
+            ],
+            "children": [],
+            "textKey": "serial",
+            "asset": "assets/serial-text.png",
+            "cleanAsset": "assets/serial-text-clean.png"
+          }
+        ],
+        "asset": "assets/serial.png"
+      },
+      {
+        "id": "mod-label",
+        "name": "Обозначение модели",
+        "bounds": [
+          3122,
+          408,
+          3392,
+          480
+        ],
+        "children": [],
+        "textKey": "mod",
+        "asset": "assets/mod-label.png",
+        "cleanAsset": "assets/mod-label-clean.png"
+      },
+      {
+        "id": "grip-left",
+        "name": "Левая резиновая накладка",
+        "bounds": [
+          62,
+          625,
+          222,
+          1665
+        ],
+        "children": [],
+        "asset": "assets/grip-left.png"
+      },
+      {
+        "id": "grip-right",
+        "name": "Правая резиновая накладка",
+        "bounds": [
+          3595,
+          762,
+          3778,
+          1905
+        ],
+        "children": [],
+        "asset": "assets/grip-right.png"
+      },
+      {
+        "id": "display-bezel",
+        "name": "Объёмная рамка дисплея",
+        "bounds": [
+          1080,
+          475,
+          3495,
+          2045
+        ],
+        "children": [],
+        "asset": "assets/display-bezel.png"
+      }
+    ],
+    "asset": "assets/device.png"
+  },
+  "content": {
+    "screen_title": "SDINC / PERSONAL SYSTEM",
+    "serial": "S/N 0427-316",
+    "mod": "MOD 1.0",
+    "button_profile": "ПРОФИЛЬ",
+    "button_projects": "ПРОЕКТЫ",
+    "button_contact": "СВЯЗЬ",
+    "node_vision": "VISION",
+    "node_llm": "LLM",
+    "node_auto": "AUTO",
+    "node_system": "SYSTEM",
+    "card_title": "LLM SYSTEMS",
+    "card_description": "Языковые модели\nв прикладных системах",
+    "open_projects": "ПРОЕКТЫ",
+    "tab_profile": "ПРОФИЛЬ",
+    "tab_projects": "ПРОЕКТЫ",
+    "tab_contact": "СВЯЗЬ"
+  },
+  "nodes": {
+    "vision": {
+      "title": "VISION",
+      "description": "Компьютерное зрение.\nДемонстрационные данные."
+    },
+    "llm": {
+      "title": "LLM SYSTEMS",
+      "description": "Языковые модели\nв прикладных системах"
+    },
+    "auto": {
+      "title": "AUTOMATION",
+      "description": "Автоматизация процессов.\nДемонстрационные данные."
+    },
+    "system": {
+      "title": "SYSTEM DESIGN",
+      "description": "Архитектура систем.\nДемонстрационные данные."
+    }
+  }
+}

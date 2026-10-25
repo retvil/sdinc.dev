@@ -1,0 +1,18 @@
+<svg width="160" height="200" viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bustGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2e5c3d" />
+      <stop offset="100%" stop-color="#16301f" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="1.5" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <!-- голова: эллипс rx22/ry26 -->
+  <ellipse cx="80" cy="56" rx="22" ry="26" fill="url(#bustGrad)" stroke="#5aee85" stroke-width="1.5" filter="url(#glow)" />
+  <!-- шея -->
+  <path d="M 70 80 L 70 92 L 90 92 L 90 80 Z" fill="url(#bustGrad)" stroke="#5aee85" stroke-width="1.5" filter="url(#glow)" />
+  <!-- плечи / торс: один скруглённый трапециевидный путь -->
+  <path d="M 42 92 Q 42 110 62 110 L 98 110 Q 118 110 118 92 L 118 150 L 42 150 Z" fill="url(#bustGrad)" stroke="#5aee85" stroke-width="1.5" filter="url(#glow)" />
+</svg>

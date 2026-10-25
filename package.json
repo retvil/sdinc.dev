@@ -1,0 +1,16 @@
+{
+  "name": "sdinc.dev",
+  "private": true,
+  "version": "1.0.0",
+  "description": "SDINC — ретрофутуристический персональный сайт-прибор (Pip-Boy inspired)",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "astro": "^5.0.0"
+  },
+  "devDependencies": {}
+}
