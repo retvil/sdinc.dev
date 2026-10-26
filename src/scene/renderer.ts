@@ -11,6 +11,9 @@ import { device } from './state';
 import { DEFAULT_DIRECTION } from '../data/demo';
 import { CONTACTS } from '../data/contacts';
 import { DEMO_PROJECT, PROJECTS } from '../data/projects';
+import { setScreenHost } from '../projects/registry';
+import { mountPreviewScenes } from '../projects/previews';
+import '../projects/screens';
 import { parseScene } from './parse';
 import sceneFile from './scene.json';
 
@@ -316,7 +319,16 @@ export function mountScreenPanels(container: HTMLElement): void {
   });
   const preview = document.createElement('div');
   preview.className = 'project-preview';
-  preview.append(schematicSvg(100, 42, true));
+  // Demo item keeps its static schematic preview; direction items show a
+  // unique interactive preview scene (level 1 of the presentation).
+  const previewSchematic = document.createElement('div');
+  previewSchematic.id = 'preview-schematic';
+  previewSchematic.dataset.screen = 'projects';
+  previewSchematic.append(schematicSvg(100, 42, true));
+  const previewStage = document.createElement('div');
+  previewStage.className = 'pv-stage';
+  previewStage.id = 'preview-stage';
+  previewStage.dataset.screen = 'projects';
   const previewTitle = document.createElement('h3');
   previewTitle.id = 'project-preview-title';
   const previewDesc = document.createElement('p');
@@ -332,8 +344,14 @@ export function mountScreenPanels(container: HTMLElement): void {
   openButton.id = 'project-open';
   openButton.textContent = 'Открыть →';
   openButton.addEventListener('click', () => device.openSelectedProject());
-  preview.append(previewTitle, previewDesc, previewKind, openButton);
+  preview.append(previewSchematic, previewStage, previewTitle, previewDesc, previewKind, openButton);
+  // Unique preview scenes mount eagerly (they are tiny); the returned
+  // switcher toggles visibility per selected item.
+  const showPreviewScene = mountPreviewScenes(previewStage, previewSchematic);
+  device.bindPreviewSwitcher(showPreviewScene);
   body.append(list, preview);
+  device.registerElement('preview-schematic', previewSchematic);
+  device.registerElement('preview-stage', previewStage);
   device.registerElement('project-preview-title', previewTitle);
   device.registerElement('project-preview-desc', previewDesc);
   device.registerElement('project-preview-kind', previewKind);
@@ -360,7 +378,16 @@ export function mountScreenPanels(container: HTMLElement): void {
   backButton.id = 'project-back';
   backButton.textContent = '← К списку';
   backButton.addEventListener('click', () => device.handleAction('section:projects'));
-  head.append(title, backButton);
+  // Visible only inside a demonstration: returns to the project description
+  // (level 2), keeping the project open.
+  const demoBackButton = document.createElement('button');
+  demoBackButton.type = 'button';
+  demoBackButton.className = 'panel-button';
+  demoBackButton.id = 'project-demo-back';
+  demoBackButton.textContent = '← К описанию';
+  demoBackButton.hidden = true;
+  demoBackButton.addEventListener('click', () => device.backToProjectDetail());
+  head.append(title, demoBackButton, backButton);
   const projectBody = document.createElement('div');
   projectBody.className = 'project-body';
   const schematic = document.createElement('div');
@@ -404,12 +431,8 @@ export function mountScreenPanels(container: HTMLElement): void {
   const side = document.createElement('div');
   side.className = 'project-side';
   // Direction projects have no confirmed schematic components or task/role/
-  // result materials — the screen shows the direction description instead
-  // (visibility is switched in state.updateProjectScreen).
-  const projectDesc = document.createElement('p');
-  projectDesc.id = 'project-desc';
-  projectDesc.className = 'project-desc';
-  projectDesc.dataset.screen = 'project';
+  // result materials — their screen area is owned by the detail page and the
+  // demonstration (visibility is switched in state.updateProjectView).
   const componentInfo = document.createElement('p');
   componentInfo.id = 'component-info';
   componentInfo.className = 'component-info';
@@ -437,23 +460,93 @@ export function mountScreenPanels(container: HTMLElement): void {
   tabText.id = 'project-tab-text';
   tabText.className = 'project-tab-text';
   tabText.dataset.screen = 'project';
-  side.append(projectDesc, componentInfo, tabs, tabText);
+  side.append(componentInfo, tabs, tabText);
   projectBody.append(schematic, side);
+  // Shared host for the eight direction screens (lazy-mounted by registry).
+  const screenHost = document.createElement('div');
+  screenHost.className = 'project-screen-host';
+  screenHost.id = 'project-screen-host';
+  screenHost.dataset.screen = 'project';
+  screenHost.hidden = true;
+  projectBody.append(screenHost);
+  setScreenHost(screenHost);
+  // --- level 2: project description page (shown before any demonstration) ---
+  // One section set, four composition variants — the pages do not repeat the
+  // same six rectangles; CSS re-arranges the sections per layout class.
+  const projectDetail = document.createElement('div');
+  projectDetail.className = 'project-detail';
+  projectDetail.id = 'project-detail';
+  projectDetail.dataset.screen = 'project';
+  projectDetail.hidden = true;
+  const essence = document.createElement('p');
+  essence.className = 'detail-essence';
+  essence.id = 'project-detail-essence';
+  const problemSection = document.createElement('section');
+  problemSection.className = 'detail-section detail-problem';
+  const problemHeading = document.createElement('h3');
+  problemHeading.textContent = 'Какую задачу решаем';
+  const problemText = document.createElement('p');
+  problemText.id = 'project-detail-problem';
+  problemSection.append(problemHeading, problemText);
+  const approachSection = document.createElement('section');
+  approachSection.className = 'detail-section detail-approach';
+  const approachHeading = document.createElement('h3');
+  approachHeading.textContent = 'Как устроено решение';
+  const approachText = document.createElement('p');
+  approachText.id = 'project-detail-approach';
+  approachSection.append(approachHeading, approachText);
+  const capabilitiesSection = document.createElement('section');
+  capabilitiesSection.className = 'detail-section detail-capabilities';
+  const capabilitiesHeading = document.createElement('h3');
+  capabilitiesHeading.textContent = 'Основные возможности';
+  const capabilitiesList = document.createElement('ul');
+  capabilitiesList.id = 'project-detail-capabilities';
+  capabilitiesSection.append(capabilitiesHeading, capabilitiesList);
+  const outcomeSection = document.createElement('section');
+  outcomeSection.className = 'detail-section detail-outcome';
+  const outcomeHeading = document.createElement('h3');
+  outcomeHeading.textContent = 'Что получает пользователь';
+  const outcomeText = document.createElement('p');
+  outcomeText.id = 'project-detail-outcome';
+  outcomeSection.append(outcomeHeading, outcomeText);
+  const demoOpenButton = document.createElement('button');
+  demoOpenButton.type = 'button';
+  demoOpenButton.className = 'panel-button detail-demo-open';
+  demoOpenButton.id = 'project-demo-open';
+  demoOpenButton.textContent = 'Посмотреть демонстрацию →';
+  demoOpenButton.addEventListener('click', () => device.showProjectDemo());
+  projectDetail.append(
+    essence,
+    problemSection,
+    approachSection,
+    capabilitiesSection,
+    outcomeSection,
+    demoOpenButton,
+  );
   // Honesty marker for the OPEN project: kind switches text in state.
   const projectNote = document.createElement('small');
   projectNote.id = 'project-kind-note';
   projectNote.textContent = 'ДЕМОНСТРАЦИОННЫЕ ДАННЫЕ';
   projectNote.dataset.screen = 'project';
-  projectView.append(head, projectBody, projectNote);
+  projectView.append(head, projectDetail, projectBody, projectNote);
   place(projectView, SCREEN_CONTENT_BOUNDS);
   container.append(projectView);
   device.registerElement('project-view', projectView);
   device.registerElement('project-title', title);
   device.registerElement('project-schematic', schematic);
-  device.registerElement('project-desc', projectDesc);
+  device.registerElement('project-detail', projectDetail);
+  device.registerElement('project-detail-essence', essence);
+  device.registerElement('project-detail-problem', problemText);
+  device.registerElement('project-detail-approach', approachText);
+  device.registerElement('project-detail-capabilities', capabilitiesList);
+  device.registerElement('project-detail-outcome', outcomeText);
+  device.registerElement('project-demo-open', demoOpenButton);
+  device.registerElement('project-demo-back', demoBackButton);
+  device.registerElement('project-side', side);
   device.registerElement('component-info', componentInfo);
   device.registerElement('project-tabs', tabs);
   device.registerElement('project-tab-text', tabText);
+  device.registerElement('project-screen-host', screenHost);
   device.registerElement('project-kind-note', projectNote);
 
   // --- contact: real, user-confirmed contacts on the shared surface ---

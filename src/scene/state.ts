@@ -15,6 +15,13 @@ import {
 } from '../data/demo';
 import { PROJECTS, type ProjectInfo } from '../data/projects';
 import { CONTACTS } from '../data/contacts';
+import {
+  activateScreen,
+  confirmActiveScreen,
+  deactivateScreens,
+  stepActiveScreen,
+} from '../projects/registry';
+import '../projects/screens';
 
 type DirectionCopy = Record<DirectionKey, DirectionInfo>;
 export type ScreenMode = 'profile' | 'projects' | 'project' | 'contact';
@@ -51,6 +58,8 @@ class DeviceState {
   private liveCardEl: HTMLElement | null = null;
   private liveTitleEl: HTMLElement | null = null;
   private liveDescEl: HTMLElement | null = null;
+  /** Projects-list preview scene switcher (bound by the renderer). */
+  private previewSwitcher: ((id: ProjectInfo['screen']) => void) | null = null;
 
   // --- stage D: display mode machine ---
   private mode: ScreenMode = 'profile';
@@ -87,6 +96,11 @@ class DeviceState {
 
   bindRotor(el: HTMLElement): void {
     this.rotorEl = el;
+  }
+
+  /** Renderer hands over the projects-list preview scene switcher. */
+  bindPreviewSwitcher(show: (id: ProjectInfo['screen']) => void): void {
+    this.previewSwitcher = show;
   }
 
   bindLiveCard(card: HTMLElement, title: HTMLElement, description: HTMLElement): void {
@@ -196,6 +210,8 @@ class DeviceState {
   }
 
   // --- stage D: projects ---
+  /** Open-project presentation: 'detail' (level 2) or 'demo' (level 3). */
+  private projectView: 'detail' | 'demo' = 'detail';
 
   selectProject(index: number): void {
     const count = PROJECTS.length;
@@ -215,44 +231,109 @@ class DeviceState {
     if (previewKind) {
       previewKind.textContent = project.kind === 'direction' ? 'НАПРАВЛЕНИЕ РАБОТ' : 'ДЕМОНСТРАЦИОННЫЕ ДАННЫЕ';
     }
+    // Unique preview scene for directions; the demo item keeps its schematic.
+    this.previewSwitcher?.(project.screen);
     this.status(`Проект выбран: ${project.title}. Демонстрационные данные.`);
   }
 
   /**
-   * Fills the OPEN project screen for the selected item. Direction projects
-   * show their description and an honesty marker; schematic components and
-   * task/role/result tabs exist only for the demonstrational sample.
+   * Level 2/3 visibility inside the OPEN project: directions show the
+   * description page first, the demonstration only on explicit request.
+   * The demo sample keeps its built-in schematic view at all times.
    */
-  private updateProjectScreen(): void {
+  private updateProjectView(): void {
     const project = PROJECTS[this.selectedProject];
     const isDirection = project.kind === 'direction';
+    const view = this.projectView;
+    const showDemo = isDirection && view === 'demo';
     const title = this.elements.get('project-title');
-    const desc = this.elements.get('project-desc');
     const kindNote = this.elements.get('project-kind-note');
     const schematic = this.elements.get('project-schematic');
     const tabs = this.elements.get('project-tabs');
     const tabText = this.elements.get('project-tab-text');
     const compInfo = this.elements.get('component-info');
+    const screenHost = this.elements.get('project-screen-host');
+    const side = this.elements.get('project-side');
+    const detail = this.elements.get('project-detail');
+    const demoBack = this.elements.get('project-demo-back');
     if (title) title.textContent = project.title;
-    if (desc) {
-      desc.textContent = project.shortDescription;
-      desc.hidden = !isDirection;
-    }
     if (kindNote) {
       kindNote.textContent = isDirection ? 'НАПРАВЛЕНИЕ РАБОТ' : 'ДЕМОНСТРАЦИОННЫЕ ДАННЫЕ';
     }
+    // Description page (directions only).
+    if (detail) {
+      detail.hidden = !isDirection || showDemo;
+      if (isDirection && project.detail) {
+        detail.className = `project-detail detail--${project.detail.layout}`;
+        const set = (id: string, value: string) => {
+          const el = this.elements.get(id);
+          if (el) el.textContent = value;
+        };
+        set('project-detail-essence', project.detail.essence);
+        set('project-detail-problem', project.detail.problem);
+        set('project-detail-approach', project.detail.approach);
+        set('project-detail-outcome', project.detail.outcome);
+        const list = this.elements.get('project-detail-capabilities');
+        if (list) {
+          list.replaceChildren(
+            ...project.detail.capabilities.map((item) => {
+              const li = document.createElement('li');
+              li.textContent = item;
+              return li;
+            }),
+          );
+        }
+      }
+    }
+    // Demo sample chrome vs direction screen host.
     if (schematic) schematic.hidden = isDirection;
     if (tabs) tabs.hidden = isDirection;
     if (tabText) tabText.hidden = isDirection;
     if (compInfo) compInfo.hidden = isDirection;
+    if (side) side.hidden = isDirection;
+    if (screenHost) screenHost.hidden = !showDemo;
+    if (demoBack) demoBack.hidden = !showDemo;
+    // Body hosts either the demo schematic or the demonstration screen.
+    if (isDirection) {
+      const body = screenHost?.parentElement ?? null;
+      if (body) body.hidden = view !== 'demo';
+    }
+    if (showDemo && project.screen !== 'demo') {
+      activateScreen(project.screen);
+    } else if (isDirection) {
+      // Leaving the demonstration keeps its mounted state for the next visit.
+      deactivateScreens();
+    }
+  }
+
+  /** Opens the level-2 description page (always first after opening). */
+  showProjectDemo(): void {
+    const project = PROJECTS[this.selectedProject];
+    if (project.kind !== 'direction') return;
+    this.projectView = 'demo';
+    this.updateProjectView();
+    this.status(`Демонстрация: ${project.title}. Возврат — «К описанию».`);
+    this.elements.get('project-demo-back')?.focus();
+  }
+
+  /** Returns from the demonstration to the description, restoring focus. */
+  backToProjectDetail(): void {
+    const project = PROJECTS[this.selectedProject];
+    if (project.kind !== 'direction') return;
+    this.projectView = 'detail';
+    this.updateProjectView();
+    this.status(`Описание: ${project.title}.`);
+    this.elements.get('project-demo-open')?.focus();
   }
 
   openSelectedProject(): void {
     this.selectedComponent = 0;
     this.activeTab = 'task';
+    // Opening ALWAYS lands on the description (level 2), never on a demo.
+    this.projectView = 'detail';
     this.setMode('project');
     const project = PROJECTS[this.selectedProject];
-    this.status(`Открыт ${project.title}. Демонстрационные данные.`);
+    this.status(`Открыт ${project.title}. Описание и демонстрация отдельно.`);
   }
 
   selectComponent(index: number): void {
@@ -319,6 +400,8 @@ class DeviceState {
     // browser drops focus to body and the previous holder is lost.
     const previous = document.activeElement;
     this.mode = mode;
+    // Leaving the project mode hands control back from direction screens.
+    if (mode !== 'project') deactivateScreens();
     for (const el of this.elements.values()) {
       const screen = el.dataset.screen;
       if (!screen) continue;
@@ -333,7 +416,7 @@ class DeviceState {
       this.refocusAfterModeChange(previous, `project-item-${this.selectedProject}`);
     } else if (mode === 'project') {
       for (const hook of this.layoutHooks) hook();
-      this.updateProjectScreen();
+      this.updateProjectView();
       this.selectComponent(this.selectedComponent);
       if (PROJECTS[this.selectedProject].details) this.setProjectTab(this.activeTab);
       this.refocusAfterModeChange(previous, 'project-title');
@@ -361,6 +444,14 @@ class DeviceState {
     if (this.mode === 'projects') {
       this.selectProject(this.selectedProject + delta);
     } else if (this.mode === 'project') {
+      const project = PROJECTS[this.selectedProject];
+      if (project.kind === 'direction') {
+        // The rotor serves the demonstration only; on the description page it
+        // stays inert — never mapped to random detail interactions.
+        if (this.projectView !== 'demo') return;
+        stepActiveScreen(delta);
+        return;
+      }
       this.selectComponent(this.selectedComponent + delta);
     } else if (this.mode === 'contact') {
       this.selectContact(this.selectedContact + delta);
@@ -377,8 +468,9 @@ class DeviceState {
       this.openSelectedProject();
     } else if (this.mode === 'project') {
       const project = PROJECTS[this.selectedProject];
-      if (project.components.length === 0) {
-        this.status(`Направление работ: ${project.title}.`);
+      if (project.kind === 'direction') {
+        if (this.projectView !== 'demo') return;
+        confirmActiveScreen();
         return;
       }
       const component = project.components[this.selectedComponent];
@@ -449,6 +541,12 @@ class DeviceState {
   init(): void {
     this.userSelected = false;
     this.selectNode(DEFAULT_DIRECTION, false);
+    // Direction screens request section navigation via one document-level
+    // event (chatbot's explicit "open section" buttons). Single listener.
+    document.addEventListener('sdinc:navigate', (event) => {
+      const action = (event as CustomEvent<{ action?: string }>).detail?.action;
+      if (typeof action === 'string') this.handleAction(action);
+    });
   }
 }
 
