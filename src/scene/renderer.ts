@@ -10,7 +10,7 @@ import { MASKED_FACES, MASTER_ASSET, ROTOR_MASKED, deviceAsset, resolveAsset } f
 import { device } from './state';
 import { DEFAULT_DIRECTION } from '../data/demo';
 import { CONTACTS } from '../data/contacts';
-import { PROJECTS } from '../data/projects';
+import { DEMO_PROJECT, PROJECTS } from '../data/projects';
 import { parseScene } from './parse';
 import sceneFile from './scene.json';
 
@@ -321,19 +321,23 @@ export function mountScreenPanels(container: HTMLElement): void {
   previewTitle.id = 'project-preview-title';
   const previewDesc = document.createElement('p');
   previewDesc.id = 'project-preview-desc';
+  // Honesty marker per item kind: directions are lines of work, the demo
+  // sample is demonstrational — never presented as finished products.
+  const previewKind = document.createElement('small');
+  previewKind.id = 'project-preview-kind';
+  previewKind.dataset.screen = 'projects';
   const openButton = document.createElement('button');
   openButton.type = 'button';
   openButton.className = 'panel-button';
   openButton.id = 'project-open';
   openButton.textContent = 'Открыть →';
   openButton.addEventListener('click', () => device.openSelectedProject());
-  preview.append(previewTitle, previewDesc, openButton);
+  preview.append(previewTitle, previewDesc, previewKind, openButton);
   body.append(list, preview);
   device.registerElement('project-preview-title', previewTitle);
   device.registerElement('project-preview-desc', previewDesc);
-  const demoNote = document.createElement('small');
-  demoNote.textContent = 'ДЕМОНСТРАЦИОННЫЕ ДАННЫЕ';
-  projectsView.append(listTitle, body, demoNote);
+  device.registerElement('project-preview-kind', previewKind);
+  projectsView.append(listTitle, body);
   container.append(projectsView);
   device.registerElement('projects-view', projectsView);
 
@@ -348,7 +352,7 @@ export function mountScreenPanels(container: HTMLElement): void {
   const title = document.createElement('h2');
   title.id = 'project-title';
   title.tabIndex = -1;
-  title.textContent = PROJECTS[0].title;
+  title.textContent = DEMO_PROJECT.title;
   title.dataset.screen = 'project';
   const backButton = document.createElement('button');
   backButton.type = 'button';
@@ -361,9 +365,13 @@ export function mountScreenPanels(container: HTMLElement): void {
   projectBody.className = 'project-body';
   const schematic = document.createElement('div');
   schematic.className = 'project-schematic';
+  schematic.id = 'project-schematic';
+  schematic.dataset.screen = 'project';
   schematic.append(schematicSvg(100, 100, false));
   const componentButtons: Array<{ button: HTMLButtonElement; circle: (typeof SCHEMA_CIRCLES)[number] }> = [];
-  PROJECTS[0].components.forEach((component, index) => {
+  // Schematic components belong to the demo sample only — directions have
+  // none (their screen shows the description instead).
+  DEMO_PROJECT.components.forEach((component, index) => {
     const nodeButton = document.createElement('button');
     nodeButton.type = 'button';
     nodeButton.className = 'control component-control';
@@ -395,11 +403,20 @@ export function mountScreenPanels(container: HTMLElement): void {
   device.addLayoutHook(layoutComponentNodes);
   const side = document.createElement('div');
   side.className = 'project-side';
+  // Direction projects have no confirmed schematic components or task/role/
+  // result materials — the screen shows the direction description instead
+  // (visibility is switched in state.updateProjectScreen).
+  const projectDesc = document.createElement('p');
+  projectDesc.id = 'project-desc';
+  projectDesc.className = 'project-desc';
+  projectDesc.dataset.screen = 'project';
   const componentInfo = document.createElement('p');
   componentInfo.id = 'component-info';
   componentInfo.className = 'component-info';
   const tabs = document.createElement('div');
   tabs.className = 'project-tabs';
+  tabs.id = 'project-tabs';
+  tabs.dataset.screen = 'project';
   tabs.setAttribute('role', 'tablist');
   tabs.setAttribute('aria-label', 'Сведения о проекте');
   const tabLabels: Record<string, string> = { task: 'Задача', role: 'Моя роль', result: 'Результат' };
@@ -420,17 +437,24 @@ export function mountScreenPanels(container: HTMLElement): void {
   tabText.id = 'project-tab-text';
   tabText.className = 'project-tab-text';
   tabText.dataset.screen = 'project';
-  side.append(componentInfo, tabs, tabText);
+  side.append(projectDesc, componentInfo, tabs, tabText);
   projectBody.append(schematic, side);
+  // Honesty marker for the OPEN project: kind switches text in state.
   const projectNote = document.createElement('small');
+  projectNote.id = 'project-kind-note';
   projectNote.textContent = 'ДЕМОНСТРАЦИОННЫЕ ДАННЫЕ';
+  projectNote.dataset.screen = 'project';
   projectView.append(head, projectBody, projectNote);
   place(projectView, SCREEN_CONTENT_BOUNDS);
   container.append(projectView);
   device.registerElement('project-view', projectView);
   device.registerElement('project-title', title);
+  device.registerElement('project-schematic', schematic);
+  device.registerElement('project-desc', projectDesc);
   device.registerElement('component-info', componentInfo);
+  device.registerElement('project-tabs', tabs);
   device.registerElement('project-tab-text', tabText);
+  device.registerElement('project-kind-note', projectNote);
 
   // --- contact: real, user-confirmed contacts on the shared surface ---
   // Plain ul/li semantics: a native select button per contact (aria-pressed,

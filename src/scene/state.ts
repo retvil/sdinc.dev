@@ -209,9 +209,42 @@ class DeviceState {
     }
     const previewTitle = this.elements.get('project-preview-title');
     const previewDesc = this.elements.get('project-preview-desc');
+    const previewKind = this.elements.get('project-preview-kind');
     if (previewTitle) previewTitle.textContent = project.title;
     if (previewDesc) previewDesc.textContent = project.shortDescription;
+    if (previewKind) {
+      previewKind.textContent = project.kind === 'direction' ? 'НАПРАВЛЕНИЕ РАБОТ' : 'ДЕМОНСТРАЦИОННЫЕ ДАННЫЕ';
+    }
     this.status(`Проект выбран: ${project.title}. Демонстрационные данные.`);
+  }
+
+  /**
+   * Fills the OPEN project screen for the selected item. Direction projects
+   * show their description and an honesty marker; schematic components and
+   * task/role/result tabs exist only for the demonstrational sample.
+   */
+  private updateProjectScreen(): void {
+    const project = PROJECTS[this.selectedProject];
+    const isDirection = project.kind === 'direction';
+    const title = this.elements.get('project-title');
+    const desc = this.elements.get('project-desc');
+    const kindNote = this.elements.get('project-kind-note');
+    const schematic = this.elements.get('project-schematic');
+    const tabs = this.elements.get('project-tabs');
+    const tabText = this.elements.get('project-tab-text');
+    const compInfo = this.elements.get('component-info');
+    if (title) title.textContent = project.title;
+    if (desc) {
+      desc.textContent = project.shortDescription;
+      desc.hidden = !isDirection;
+    }
+    if (kindNote) {
+      kindNote.textContent = isDirection ? 'НАПРАВЛЕНИЕ РАБОТ' : 'ДЕМОНСТРАЦИОННЫЕ ДАННЫЕ';
+    }
+    if (schematic) schematic.hidden = isDirection;
+    if (tabs) tabs.hidden = isDirection;
+    if (tabText) tabText.hidden = isDirection;
+    if (compInfo) compInfo.hidden = isDirection;
   }
 
   openSelectedProject(): void {
@@ -225,6 +258,8 @@ class DeviceState {
   selectComponent(index: number): void {
     const project = PROJECTS[this.selectedProject];
     const count = project.components.length;
+    // Direction projects carry no schematic components — nothing to select.
+    if (count === 0) return;
     this.selectedComponent = ((index % count) + count) % count;
     for (const [id, el] of this.elements) {
       if (!id.startsWith('component-node-')) continue;
@@ -237,8 +272,11 @@ class DeviceState {
   }
 
   setProjectTab(tab: ProjectTab): void {
-    this.activeTab = tab;
     const project = PROJECTS[this.selectedProject];
+    // Only the demo sample carries task/role/result materials.
+    const details = project.details;
+    if (!details) return;
+    this.activeTab = tab;
     for (const t of PROJECT_TABS) {
       const button = this.elements.get(`project-tab-${t}`);
       if (!button) continue;
@@ -246,7 +284,7 @@ class DeviceState {
       button.classList.toggle('active-tab', t === tab);
     }
     const text = this.elements.get('project-tab-text');
-    if (text) text.textContent = project.details[tab];
+    if (text) text.textContent = details[tab];
     // Switching tabs must not reset the selected component — separate state.
   }
 
@@ -295,8 +333,9 @@ class DeviceState {
       this.refocusAfterModeChange(previous, `project-item-${this.selectedProject}`);
     } else if (mode === 'project') {
       for (const hook of this.layoutHooks) hook();
+      this.updateProjectScreen();
       this.selectComponent(this.selectedComponent);
-      this.setProjectTab(this.activeTab);
+      if (PROJECTS[this.selectedProject].details) this.setProjectTab(this.activeTab);
       this.refocusAfterModeChange(previous, 'project-title');
     } else if (mode === 'contact') {
       this.refocusAfterModeChange(previous, `contact-select-${this.selectedContact}`);
@@ -338,6 +377,10 @@ class DeviceState {
       this.openSelectedProject();
     } else if (this.mode === 'project') {
       const project = PROJECTS[this.selectedProject];
+      if (project.components.length === 0) {
+        this.status(`Направление работ: ${project.title}.`);
+        return;
+      }
       const component = project.components[this.selectedComponent];
       this.status(`Компонент ${component.label}. ${component.description}`);
     } else if (this.mode === 'contact') {

@@ -615,10 +615,10 @@ summary {
   list-style: none;
   margin: 0;
   padding: 0;
-  width: 34%;
+  width: 40%;
   display: flex;
   flex-direction: column;
-  gap: 0.7cqw;
+  gap: 0.28cqw;
   overflow: hidden;
 }
 
@@ -629,7 +629,7 @@ summary {
   color: #9ccaab;
   border: 1px solid #355f42;
   border-radius: 0.6cqw;
-  padding: 0.85cqw 1cqw;
+  padding: 0.4cqw 0.9cqw;
   font: 1.05cqw monospace;
   cursor: pointer;
   transition: border-color 0.12s, box-shadow 0.12s;
@@ -679,6 +679,13 @@ summary {
   margin: 0;
   font: 0.95cqw/1.5 system-ui, sans-serif;
   color: #83bd99;
+}
+
+/* Direction projects: description instead of schematic/tabs. */
+.project-desc {
+  margin: 0;
+  font: 1.1cqw/1.6 system-ui, sans-serif;
+  color: #a9cbb3;
 }
 
 .schematic {
