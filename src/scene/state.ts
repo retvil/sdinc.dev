@@ -1,4 +1,4 @@
-// Device state: display mode machine (profile / projects / project),
+// Device state: display mode machine (profile / projects / project / contact),
 // direction selection, rotary dial, section actions, live card and layer
 // overrides (DEV-only editor). The static body is a single master; state
 // owns only interactive overlays. No global key interception: all keyboard
@@ -14,9 +14,10 @@ import {
   type DirectionKey,
 } from '../data/demo';
 import { PROJECTS, type ProjectInfo } from '../data/projects';
+import { CONTACTS } from '../data/contacts';
 
 type DirectionCopy = Record<DirectionKey, DirectionInfo>;
-export type ScreenMode = 'profile' | 'projects' | 'project';
+export type ScreenMode = 'profile' | 'projects' | 'project' | 'contact';
 export type ProjectTab = 'task' | 'role' | 'result';
 
 const PROJECT_TABS: ProjectTab[] = ['task', 'role', 'result'];
@@ -37,6 +38,13 @@ class DeviceState {
 
   private directions: DirectionCopy = cloneDirections();
   private active: DirectionKey = DEFAULT_DIRECTION;
+  /**
+   * True only after an EXPLICIT user selection (node click, rotor step,
+   * dial confirm). First open and programmatic restores stay neutral:
+   * the selected ring returns to the profile only when the user actually
+   * chose a direction. Cleared by init/resetView.
+   */
+  private userSelected = false;
   private angle = 0;
   private statusEl: HTMLElement | null = null;
   private rotorEl: HTMLElement | null = null;
@@ -49,6 +57,8 @@ class DeviceState {
   private selectedProject = 0;
   private selectedComponent = 0;
   private activeTab: ProjectTab = 'task';
+  /** «Связь» screen: selected contact, survives mode switches (start: Email). */
+  private selectedContact = 0;
   /** Layout hooks run when a hidden screen becomes visible (geometry needed). */
   private readonly layoutHooks: Array<() => void> = [];
 
@@ -103,6 +113,12 @@ class DeviceState {
 
   // --- selection: directions (profile screen) ---
 
+  /**
+   * Sets the active direction. `mark` distinguishes explicit user selection
+   * (true: ring + status + userSelected flag) from programmatic sync
+   * (false: title/card content only, graphics stay neutral). aria-pressed
+   * always follows the active direction.
+   */
   selectNode(key: string, mark = true): void {
     if (!Object.hasOwn(DIRECTIONS, key)) return;
     this.active = key as DirectionKey;
@@ -115,9 +131,67 @@ class DeviceState {
     const info = this.directions[key as DirectionKey];
     if (this.liveTitleEl) this.liveTitleEl.textContent = info.title;
     if (this.liveDescEl) this.liveDescEl.textContent = info.description;
-    if (this.liveCardEl) this.liveCardEl.hidden = key === 'llm';
+    this.syncLiveCard();
     if (mark) {
+      this.userSelected = true;
       this.status(`Выбран ${info.title}. Данные демонстрационные.`);
+    }
+  }
+
+  // --- stage D: contacts («Связь») ---
+
+  /**
+   * Highlights exactly one contact (rotator cycles through all three).
+   * Selection alone never opens a link.
+   */
+  selectContact(index: number): void {
+    const count = CONTACTS.length;
+    this.selectedContact = ((index % count) + count) % count;
+    for (const [id, el] of this.elements) {
+      if (!id.startsWith('contact-select-')) continue;
+      const itemIndex = Number(id.replace('contact-select-', ''));
+      el.classList.toggle('selected', itemIndex === this.selectedContact);
+      el.setAttribute('aria-pressed', String(itemIndex === this.selectedContact));
+    }
+    this.status(`Выбран ${CONTACTS[this.selectedContact].channel}.`);
+  }
+
+  /**
+   * Rotator confirmation: initiates the primary action of the selected
+   * contact by clicking its native anchor inside the user-gesture context
+   * (dial click / Enter). The browser and the OS decide how to handle the
+   * protocol — the site does not claim any delivery or external-app result.
+   */
+  private confirmContact(): void {
+    this.elements.get(`contact-action-${this.selectedContact}`)?.click();
+  }
+
+  /**
+   * Copy button: navigator.clipboard only (no legacy fallback). The result
+   * line (role=status, polite) is updated after the operation settles —
+   «Скопировано» only on real success; on failure the exact value plus a
+   * manual-copy hint, never a success claim.
+   */
+  async requestContactCopy(index: number): Promise<void> {
+    const count = CONTACTS.length;
+    const contact = CONTACTS[((index % count) + count) % count];
+    const resultEl = this.elements.get('contact-result');
+    const clipboard = typeof navigator !== 'undefined' ? navigator.clipboard : undefined;
+    try {
+      if (!clipboard || typeof clipboard.writeText !== 'function') {
+        throw new Error('Clipboard API unavailable');
+      }
+      await clipboard.writeText(contact.copyValue);
+      const message = `Скопировано: ${contact.copyValue}`;
+      if (resultEl) resultEl.textContent = message;
+      this.status(message);
+    } catch (error) {
+      console.warn('Clipboard write failed:', error);
+      const message =
+        `Не удалось скопировать. Выделите и скопируйте вручную — ` +
+        `${contact.valueNoun}: ${contact.copyValue}`;
+      if (resultEl) resultEl.textContent = message;
+      this.status(`Копирование не выполнено: ${contact.copyValue}`);
     }
   }
 
@@ -176,8 +250,36 @@ class DeviceState {
     // Switching tabs must not reset the selected component — separate state.
   }
 
-  /** Switches the display mode. Hidden screens lose focus automatically. */
+  /**
+   * SINGLE visibility rule for the direction live card: it belongs to the
+   * profile mode only, and follows the raster/live rule (hidden for LLM,
+   * whose card is baked in the master). No other code path may show/hide it.
+   */
+  private syncLiveCard(): void {
+    if (this.liveCardEl) this.liveCardEl.hidden = !(this.mode === 'profile' && this.active !== 'llm');
+  }
+
+  /**
+   * Focus after a mode switch. If the trigger control is persistent chrome
+   * (baked tab row / physical section buttons — visible in every mode),
+   * focus stays on it. Otherwise the trigger hid together with its screen,
+   * so focus moves to a suitable element of the new screen — never left on
+   * body, so keyboard navigation has a clear next step.
+   */
+  private refocusAfterModeChange(previous: Element | null, targetId: string): void {
+    const prev = previous instanceof HTMLElement ? previous : null;
+    const persistent = prev !== null
+      && document.contains(prev)
+      && !prev.hidden
+      && (prev.classList.contains('tab-control') || prev.classList.contains('section-control'));
+    if (!persistent) this.elements.get(targetId)?.focus();
+  }
+
+  /** Switches the display mode and repairs focus across hidden screens. */
   setMode(mode: ScreenMode): void {
+    // Capture BEFORE the hide loop: once a focused element hides, the
+    // browser drops focus to body and the previous holder is lost.
+    const previous = document.activeElement;
     this.mode = mode;
     for (const el of this.elements.values()) {
       const screen = el.dataset.screen;
@@ -186,22 +288,27 @@ class DeviceState {
       else if (screen === 'panel') el.hidden = mode === 'profile';
       else if (screen === 'projects') el.hidden = mode !== 'projects';
       else if (screen === 'project') el.hidden = mode !== 'project';
+      else if (screen === 'contact') el.hidden = mode !== 'contact';
     }
     if (mode === 'projects') {
       this.selectProject(this.selectedProject);
-      this.elements.get(`project-item-${this.selectedProject}`)?.focus();
+      this.refocusAfterModeChange(previous, `project-item-${this.selectedProject}`);
     } else if (mode === 'project') {
       for (const hook of this.layoutHooks) hook();
       this.selectComponent(this.selectedComponent);
       this.setProjectTab(this.activeTab);
-      this.elements.get('project-title')?.focus();
+      this.refocusAfterModeChange(previous, 'project-title');
+    } else if (mode === 'contact') {
+      this.refocusAfterModeChange(previous, `contact-select-${this.selectedContact}`);
     } else {
-      // profile: no stray focus inside now-hidden screens; restore the
-      // direction-owned visuals (live card follows the active direction)
-      const active = document.activeElement;
-      if (active instanceof HTMLElement && active.dataset.screen) active.blur();
-      this.selectNode(this.active, false);
+      // profile: direction-owned visuals return with the ring ONLY if the
+      // user explicitly selected a node (first open stays neutral). Focus:
+      // a persistent trigger keeps it; anything else lands on the selected
+      // node control — a clear keyboard continuation, never body.
+      this.selectNode(this.active, this.userSelected);
+      this.refocusAfterModeChange(previous, `node-${this.active}`);
     }
+    this.syncLiveCard();
   }
 
   // --- rotary dial and actions ---
@@ -216,6 +323,8 @@ class DeviceState {
       this.selectProject(this.selectedProject + delta);
     } else if (this.mode === 'project') {
       this.selectComponent(this.selectedComponent + delta);
+    } else if (this.mode === 'contact') {
+      this.selectContact(this.selectedContact + delta);
     } else {
       const index = DIRECTION_KEYS.indexOf(this.active);
       const next = DIRECTION_KEYS[(index + delta + DIRECTION_KEYS.length) % DIRECTION_KEYS.length];
@@ -231,6 +340,8 @@ class DeviceState {
       const project = PROJECTS[this.selectedProject];
       const component = project.components[this.selectedComponent];
       this.status(`Компонент ${component.label}. ${component.description}`);
+    } else if (this.mode === 'contact') {
+      this.confirmContact();
     } else {
       this.selectNode(this.active);
     }
@@ -254,7 +365,8 @@ class DeviceState {
       this.setMode('projects');
       this.status('Список проектов. Демонстрационные данные.');
     } else {
-      this.status('Раздел «Связь» пока не реализован.');
+      this.setMode('contact');
+      this.status(`Связь. Выбран ${CONTACTS[this.selectedContact].channel}.`);
     }
   }
 
@@ -277,6 +389,10 @@ class DeviceState {
 
   /** Neutral view state: rotor hidden back into the master, LLM raster card. */
   resetView(): void {
+    // Back to the neutral first-open state: the user-selection flag clears
+    // BEFORE setMode so the profile returns without the selected ring.
+    this.userSelected = false;
+    this.selectedContact = 0;
     this.angle = 0;
     if (this.rotorEl) {
       this.rotorEl.classList.remove('active');
@@ -288,6 +404,7 @@ class DeviceState {
 
   /** Initial state once all interactive layers are mounted. */
   init(): void {
+    this.userSelected = false;
     this.selectNode(DEFAULT_DIRECTION, false);
   }
 }

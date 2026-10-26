@@ -9,6 +9,7 @@ import type { Bounds, SceneFile, SceneNode } from './types';
 import { MASKED_FACES, MASTER_ASSET, ROTOR_MASKED, deviceAsset, resolveAsset } from './assets';
 import { device } from './state';
 import { DEFAULT_DIRECTION } from '../data/demo';
+import { CONTACTS } from '../data/contacts';
 import { PROJECTS } from '../data/projects';
 import { parseScene } from './parse';
 import sceneFile from './scene.json';
@@ -430,6 +431,90 @@ export function mountScreenPanels(container: HTMLElement): void {
   device.registerElement('project-title', title);
   device.registerElement('component-info', componentInfo);
   device.registerElement('project-tab-text', tabText);
+
+  // --- contact: real, user-confirmed contacts on the shared surface ---
+  // Plain ul/li semantics: a native select button per contact (aria-pressed,
+  // exactly one selected), a separate native action link and a separate copy
+  // button — no interactive nesting, no listbox roles over mixed content.
+  const contactView = document.createElement('section');
+  contactView.className = 'contact-view';
+  contactView.dataset.screen = 'contact';
+  contactView.hidden = true;
+  contactView.setAttribute('aria-label', 'Раздел «Связь»');
+  const contactTitle = document.createElement('h2');
+  contactTitle.id = 'contact-title';
+  contactTitle.tabIndex = -1;
+  contactTitle.dataset.screen = 'contact';
+  contactTitle.textContent = 'СВЯЗЬ';
+  const contactList = document.createElement('ul');
+  contactList.className = 'contact-list';
+  contactList.dataset.screen = 'contact';
+  CONTACTS.forEach((contact, index) => {
+    const li = document.createElement('li');
+    li.className = 'contact-item';
+    li.dataset.screen = 'contact';
+
+    const select = document.createElement('button');
+    select.type = 'button';
+    select.className = 'contact-select';
+    select.id = `contact-select-${index}`;
+    select.dataset.screen = 'contact';
+    select.setAttribute('aria-pressed', String(index === 0));
+    select.classList.toggle('selected', index === 0);
+    select.setAttribute('aria-label', `Выбрать ${contact.channel}`);
+    const channel = document.createElement('span');
+    channel.className = 'contact-channel';
+    channel.textContent = contact.channel;
+    const value = document.createElement('span');
+    value.className = 'contact-value';
+    value.textContent = contact.display;
+    select.append(channel, value);
+    select.addEventListener('click', () => device.selectContact(index));
+
+    const actions = document.createElement('div');
+    actions.className = 'contact-actions';
+    actions.dataset.screen = 'contact';
+    const action = document.createElement('a');
+    action.className = 'contact-action';
+    action.id = `contact-action-${index}`;
+    action.dataset.screen = 'contact';
+    action.href = contact.href;
+    if (contact.external) {
+      action.target = '_blank';
+      action.rel = 'noopener noreferrer';
+    }
+    action.setAttribute('aria-label', contact.actionAria);
+    action.textContent = contact.actionLabel;
+    const copy = document.createElement('button');
+    copy.type = 'button';
+    copy.className = 'contact-copy';
+    copy.id = `contact-copy-${index}`;
+    copy.dataset.screen = 'contact';
+    copy.setAttribute('aria-label', contact.copyAria);
+    copy.textContent = contact.copyLabel;
+    copy.addEventListener('click', () => device.requestContactCopy(index));
+    actions.append(action, copy);
+
+    li.append(select, actions);
+    contactList.append(li);
+    device.registerElement(`contact-select-${index}`, select);
+    device.registerElement(`contact-action-${index}`, action);
+    device.registerElement(`contact-copy-${index}`, copy);
+  });
+  // Result line: polite live region — announces copy results without moving
+  // focus. Empty until the first copy attempt.
+  const contactResult = document.createElement('p');
+  contactResult.id = 'contact-result';
+  contactResult.className = 'contact-result';
+  contactResult.dataset.screen = 'contact';
+  contactResult.setAttribute('role', 'status');
+  contactResult.setAttribute('aria-live', 'polite');
+  contactView.append(contactTitle, contactList, contactResult);
+  place(contactView, SCREEN_CONTENT_BOUNDS);
+  container.append(contactView);
+  device.registerElement('contact-view', contactView);
+  device.registerElement('contact-title', contactTitle);
+  device.registerElement('contact-result', contactResult);
 }
 
 /** Editable source library: every tree fragment that owns a raster asset. */
