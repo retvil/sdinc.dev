@@ -263,27 +263,7 @@ class DeviceState {
     // Description page (directions only).
     if (detail) {
       detail.hidden = !isDirection || showDemo;
-      if (isDirection && project.detail) {
-        detail.className = `project-detail detail--${project.detail.layout}`;
-        const set = (id: string, value: string) => {
-          const el = this.elements.get(id);
-          if (el) el.textContent = value;
-        };
-        set('project-detail-essence', project.detail.essence);
-        set('project-detail-problem', project.detail.problem);
-        set('project-detail-approach', project.detail.approach);
-        set('project-detail-outcome', project.detail.outcome);
-        const list = this.elements.get('project-detail-capabilities');
-        if (list) {
-          list.replaceChildren(
-            ...project.detail.capabilities.map((item) => {
-              const li = document.createElement('li');
-              li.textContent = item;
-              return li;
-            }),
-          );
-        }
-      }
+      if (isDirection) this.applyProjectDetail(detail, project);
     }
     // Demo sample chrome vs direction screen host.
     if (schematic) schematic.hidden = isDirection;
@@ -303,6 +283,30 @@ class DeviceState {
     } else if (isDirection) {
       // Leaving the demonstration keeps its mounted state for the next visit.
       deactivateScreens();
+    }
+  }
+
+  /** Fills the level-2 description page for the selected direction. */
+  private applyProjectDetail(detail: HTMLElement, project: ProjectInfo): void {
+    if (!project.detail) return;
+    detail.className = `project-detail detail--${project.detail.layout}`;
+    const set = (id: string, value: string) => {
+      const el = this.elements.get(id);
+      if (el) el.textContent = value;
+    };
+    set('project-detail-essence', project.detail.essence);
+    set('project-detail-problem', project.detail.problem);
+    set('project-detail-approach', project.detail.approach);
+    set('project-detail-outcome', project.detail.outcome);
+    const list = this.elements.get('project-detail-capabilities');
+    if (list) {
+      list.replaceChildren(
+        ...project.detail.capabilities.map((item) => {
+          const li = document.createElement('li');
+          li.textContent = item;
+          return li;
+        }),
+      );
     }
   }
 
