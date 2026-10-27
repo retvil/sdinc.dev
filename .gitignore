@@ -25,3 +25,7 @@ dist/
 
 # Local dev server logs
 preview.log
+
+# Playwright test artifacts (regenerated on each run)
+e2e/test-results/
+
