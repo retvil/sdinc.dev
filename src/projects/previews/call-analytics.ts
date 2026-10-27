@@ -1,57 +1,30 @@
-// Call analytics preview: two participant tracks with segments. Picking a
-// segment shows the matching replica. Synthetic transcript only — no real
-// personal data, no live recordings.
+// Call-analytics preview: two abstract participants linked by a speech wave,
+// with a small transcription motif beneath. Visually distinct from the general
+// media-audio illustration (single frame + wave). No real recordings.
 
-import { noteLine, originTag, pick, selectOnly } from './index';
+import { illustration } from './index';
 import { registerPreview } from './registry';
 import type { ProjectPreview } from './types';
 
-const SEGMENTS = [
-  { lane: 'operator', width: 30, replica: 'Оператор: «Здравствуйте! Чем можем помочь?»' },
-  { lane: 'client', width: 45, replica: 'Клиент: «Хочу уточнить статус моего запроса.»' },
-  { lane: 'operator', width: 25, replica: 'Оператор: «Проверяю — ответ направим сегодня.»' },
-] as const;
+const SVG =
+  '<svg viewBox="0 0 100 56" preserveAspectRatio="xMidYMid meet">' +
+  // two participants (head + shoulders silhouettes)
+  '<circle cx="18" cy="16" r="6" fill="none" stroke="#3f7a52" stroke-width="1.4"/>' +
+  '<path d="M9 32 q9 -8 18 0" fill="none" stroke="#3f7a52" stroke-width="1.4"/>' +
+  '<circle cx="82" cy="16" r="6" fill="none" stroke="#3f7a52" stroke-width="1.4"/>' +
+  '<path d="M73 32 q9 -8 18 0" fill="none" stroke="#3f7a52" stroke-width="1.4"/>' +
+  // speech wave between them
+  '<path d="M30 22 q3 -5 6 0 t6 0 t6 0" fill="none" stroke="#9cc4a6" stroke-width="1.5" stroke-linecap="round"/>' +
+  // small transcription motif (short staggered bars)
+  '<line x1="34" y1="44" x2="52" y2="44" stroke="#4f8f63" stroke-width="1.6" stroke-linecap="round"/>' +
+  '<line x1="34" y1="48" x2="60" y2="48" stroke="#3f7a52" stroke-width="1.4" stroke-linecap="round"/>' +
+  '<line x1="34" y1="52" x2="48" y2="52" stroke="#3f7a52" stroke-width="1.4" stroke-linecap="round" opacity="0.7"/>' +
+  '</svg>';
 
 export const callAnalyticsPreview: ProjectPreview = {
   id: 'call-analytics',
   mount(root) {
-    const layout = document.createElement('div');
-    layout.className = 'pv-calls-layout';
-
-    const lanes = document.createElement('div');
-    lanes.className = 'pv-calls-lanes';
-    const labels = ['Оператор', 'Клиент'];
-    for (const label of labels) {
-      const lane = document.createElement('div');
-      lane.className = 'pv-calls-lane';
-      const name = document.createElement('span');
-      name.className = 'pv-calls-name';
-      name.textContent = label;
-      const line = document.createElement('span');
-      line.className = 'pv-calls-line';
-      lane.append(name, line);
-      lanes.append(lane);
-    }
-
-    const picks = document.createElement('div');
-    picks.className = 'pv-picks';
-    const note = noteLine();
-    note.textContent = 'Выберите сегмент разговора.';
-    const buttons = SEGMENTS.map((segment, index) => {
-      const button = pick(`Сегмент ${index + 1}`, `Показать реплику сегмента ${index + 1}`);
-      button.style.setProperty('--w', `${segment.width}%`);
-      button.addEventListener('click', () => {
-        selectOnly(buttons, button);
-        const laneEls = lanes.querySelectorAll<HTMLElement>('.pv-calls-lane');
-        laneEls.forEach((lane, i) => lane.classList.toggle('lit', i === (segment.lane === 'operator' ? 0 : 1)));
-        note.textContent = segment.replica;
-      });
-      return button;
-    });
-    picks.append(...buttons, note, originTag('УСЛОВНЫЙ ТРАНСКРИПТ'));
-
-    layout.append(lanes, picks);
-    root.append(layout);
+    illustration(root, SVG, 'УСЛОВНЫЙ ТРАНСКРИПТ');
   },
 };
 

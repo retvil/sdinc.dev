@@ -1,62 +1,32 @@
-// RAG preview: a question, three documents and a short answer. Picking a
-// source highlights its marker inside the answer and shows the fragment
-// link. The marked training example only — not a live retrieval system.
+// RAG preview: a few document fragments converging into one answer element.
+// No full search interface or chat — the working retrieval stays in the
+// level-3 demonstration.
 
-import { noteLine, originTag, pick, selectOnly } from './index';
+import { illustration } from './index';
 import { registerPreview } from './registry';
 import type { ProjectPreview } from './types';
 
-const DOCS = [
-  { name: 'Документ 1', marker: '1', fragment: 'Фрагмент 1: определение задачи поиска по материалам.' },
-  { name: 'Документ 2', marker: '2', fragment: 'Фрагмент 2: правило ссылаться на источник ответа.' },
-  { name: 'Документ 3', marker: '3', fragment: 'Фрагмент 3: отказ, если материала в базе нет.' },
-] as const;
+const SVG =
+  '<svg viewBox="0 0 100 56" preserveAspectRatio="xMidYMid meet">' +
+  // three document fragments on the left (sheets with a folded corner)
+  '<path d="M12 10 h16 v22 h-16 z" fill="none" stroke="#3f7a52" stroke-width="1.3"/>' +
+  '<path d="M28 22 l4 -4 v4 z" fill="#1d3f2a" stroke="#3f7a52" stroke-width="1.1"/>' +
+  '<path d="M12 36 h16 v12 h-16 z" fill="none" stroke="#3f7a52" stroke-width="1.1" opacity="0.7"/>' +
+  '<path d="M22 4 h16 v22 h-16 z" fill="none" stroke="#3f7a52" stroke-width="1.1" opacity="0.7"/>' +
+  // converging lines into one answer element
+  '<line x1="38" y1="21" x2="62" y2="28" stroke="#4f8f63" stroke-width="1.2"/>' +
+  '<line x1="38" y1="42" x2="62" y2="30" stroke="#4f8f63" stroke-width="1.2"/>' +
+  '<line x1="38" y1="15" x2="62" y2="26" stroke="#4f8f63" stroke-width="1.2"/>' +
+  // one answer element
+  '<rect x="62" y="20" width="24" height="16" rx="2.5" fill="#1d3f2a" stroke="#9cc4a6" stroke-width="1.6"/>' +
+  '<line x1="66" y1="26" x2="82" y2="26" stroke="#4f8f63" stroke-width="1.4"/>' +
+  '<line x1="66" y1="30" x2="78" y2="30" stroke="#3f7a52" stroke-width="1.2"/>' +
+  '</svg>';
 
 export const ragPreview: ProjectPreview = {
   id: 'rag',
   mount(root) {
-    const layout = document.createElement('div');
-    layout.className = 'pv-rag-layout';
-
-    const question = document.createElement('p');
-    question.className = 'pv-rag-question';
-    question.textContent = 'Вопрос: как система отвечает по материалам?';
-
-    const docs = document.createElement('div');
-    docs.className = 'pv-rag-docs';
-    const buttons = DOCS.map((doc) => {
-      const button = pick(doc.name, `${doc.name}: показать связь с ответом`);
-      button.addEventListener('click', () => {
-        selectOnly(buttons, button);
-        for (const marker of markers) {
-          marker.classList.toggle('lit', marker.dataset.marker === doc.marker);
-        }
-        answer.classList.add('active');
-        note.textContent = doc.fragment;
-      });
-      return button;
-    });
-    docs.append(...buttons);
-
-    const answer = document.createElement('p');
-    answer.className = 'pv-rag-answer';
-    answer.append(
-      'Ответ опирается на отмеченные фрагменты ',
-      ...DOCS.map((doc) => {
-        const marker = document.createElement('span');
-        marker.className = 'pv-rag-marker';
-        marker.dataset.marker = doc.marker;
-        marker.textContent = `[${doc.marker}]`;
-        return marker;
-      }),
-      ' — каждое утверждение можно проверить по источнику.',
-    );
-    const markers = [...answer.querySelectorAll<HTMLElement>('.pv-rag-marker')];
-
-    const note = noteLine();
-    note.textContent = 'Выберите источник слева.';
-    layout.append(question, docs, answer, note, originTag('УЧЕБНЫЙ ПРИМЕР'));
-    root.append(layout);
+    illustration(root, SVG, 'УЧЕБНЫЙ ПРИМЕР');
   },
 };
 

@@ -1570,8 +1570,79 @@ summary {
   white-space: pre-wrap;
 }
 
+/* --- internal scrollbars: styled to match the display, native behavior kept ---
+   Targets only the actual scrollable areas inside the device (description
+   pages and direction-screen columns). The native scroll engine is untouched —
+   wheel, touchpad and keyboard scrolling all keep working. */
+.project-detail,
+.dir-game-right,
+.dir-open-catalog,
+.dir-open-passport,
+.dir-rag-left,
+.dir-rag-right,
+.dir-chat-log {
+  scrollbar-width: thin;
+  scrollbar-color: #4f8f63 rgba(44, 90, 60, 0.22);
+}
+
+.project-detail::-webkit-scrollbar,
+.dir-game-right::-webkit-scrollbar,
+.dir-open-catalog::-webkit-scrollbar,
+.dir-open-passport::-webkit-scrollbar,
+.dir-rag-left::-webkit-scrollbar,
+.dir-rag-right::-webkit-scrollbar,
+.dir-chat-log::-webkit-scrollbar {
+  width: 9px;
+}
+
+.project-detail::-webkit-scrollbar-track,
+.dir-game-right::-webkit-scrollbar-track,
+.dir-open-catalog::-webkit-scrollbar-track,
+.dir-open-passport::-webkit-scrollbar-track,
+.dir-rag-left::-webkit-scrollbar-track,
+.dir-rag-right::-webkit-scrollbar-track,
+.dir-chat-log::-webkit-scrollbar-track {
+  background: rgba(44, 90, 60, 0.22);
+  border-radius: 5px;
+  margin: 0.4cqw 0;
+}
+
+.project-detail::-webkit-scrollbar-thumb,
+.dir-game-right::-webkit-scrollbar-thumb,
+.dir-open-catalog::-webkit-scrollbar-thumb,
+.dir-open-passport::-webkit-scrollbar-thumb,
+.dir-rag-left::-webkit-scrollbar-thumb,
+.dir-rag-right::-webkit-scrollbar-thumb,
+.dir-chat-log::-webkit-scrollbar-thumb {
+  background: #4f8f63;
+  border-radius: 5px;
+  border: 2px solid #0c1f14;
+  transition: background 0.15s;
+}
+
+.project-detail::-webkit-scrollbar-thumb:hover,
+.dir-game-right::-webkit-scrollbar-thumb:hover,
+.dir-open-catalog::-webkit-scrollbar-thumb:hover,
+.dir-open-passport::-webkit-scrollbar-thumb:hover,
+.dir-rag-left::-webkit-scrollbar-thumb:hover,
+.dir-rag-right::-webkit-scrollbar-thumb:hover,
+.dir-chat-log::-webkit-scrollbar-thumb:hover {
+  background: #7ebc96;
+}
+
+.project-detail::-webkit-scrollbar-thumb:active,
+.dir-game-right::-webkit-scrollbar-thumb:active,
+.dir-open-catalog::-webkit-scrollbar-thumb:active,
+.dir-open-passport::-webkit-scrollbar-thumb:active,
+.dir-rag-left::-webkit-scrollbar-thumb:active,
+.dir-rag-right::-webkit-scrollbar-thumb:active,
+.dir-chat-log::-webkit-scrollbar-thumb:active {
+  background: #9cc4a6;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
+    animation: none !important;
   }
 }
