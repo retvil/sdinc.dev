@@ -35,7 +35,7 @@ function cloneDirections(): DirectionCopy {
   ) as DirectionCopy;
 }
 
-class DeviceState {
+export class DeviceState {
   /** Registered interactive layers (controls + overlays) for the editor. */
   readonly nodes = new Map<string, SceneNode>();
   readonly elements = new Map<string, HTMLElement>();
@@ -289,7 +289,7 @@ class DeviceState {
   /** Fills the level-2 description page for the selected direction. */
   private applyProjectDetail(detail: HTMLElement, project: ProjectInfo): void {
     if (!project.detail) return;
-    detail.className = `project-detail detail--${project.detail.layout}`;
+    detail.setAttribute('data-layout', project.detail.layout);
     const set = (id: string, value: string) => {
       const el = this.elements.get(id);
       if (el) el.textContent = value;

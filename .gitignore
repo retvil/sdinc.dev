@@ -19,3 +19,9 @@ dist/
 # Diagnostic screenshots and working artifacts in repo root
 /*.png
 !/SDINC_fallout_inspired_sketch.png
+
+# Scratch work area (screenshot comparisons, CSS extracts)
+.scratch/
+
+# Local dev server logs
+preview.log

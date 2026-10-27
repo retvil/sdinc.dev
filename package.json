@@ -7,10 +7,18 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "test:visual": "playwright test",
+    "test:visual:update": "playwright test --update-snapshots"
   },
   "dependencies": {
     "astro": "^5.0.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@playwright/test": "1.53",
+    "jsdom": "^29.1.1",
+    "vitest": "^4.1.12"
+  }
 }

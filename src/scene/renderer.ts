@@ -478,6 +478,7 @@ export function mountScreenPanels(container: HTMLElement): void {
   projectDetail.id = 'project-detail';
   projectDetail.dataset.screen = 'project';
   projectDetail.hidden = true;
+  projectDetail.setAttribute('aria-describedby', 'project-detail-essence');
   const essence = document.createElement('p');
   essence.className = 'detail-essence';
   essence.id = 'project-detail-essence';

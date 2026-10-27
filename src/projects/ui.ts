@@ -40,13 +40,11 @@ export function selectButton(
 export function markSelected(
   buttons: readonly HTMLElement[],
   selected: HTMLElement | null,
-  attribute: 'aria-pressed' | 'aria-selected',
+  attribute: 'aria-pressed' | 'aria-selected' = 'aria-pressed',
 ): void {
   for (const b of buttons) {
     const isSel = b === selected;
     b.classList.toggle('selected', isSel);
-    if (b.hasAttribute(attribute) || attribute === 'aria-pressed') {
-      b.setAttribute(attribute, String(isSel));
-    }
+    b.setAttribute(attribute, String(isSel));
   }
 }

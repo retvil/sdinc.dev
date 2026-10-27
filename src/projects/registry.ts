@@ -49,8 +49,9 @@ export function activateScreen(id: ProjectScreenId): void {
 /** Hides any active screen when the project mode is left. State is kept. */
 export function deactivateScreens(): void {
   if (!activeId) return;
-  instances.get(activeId)?.leave();
-  const el = instances.get(activeId) ? screenElement(instances.get(activeId) as ProjectScreen) : null;
+  const active = instances.get(activeId);
+  if (active) active.leave();
+  const el = active ? screenElement(active) : null;
   if (el) el.hidden = true;
   activeId = null;
 }
