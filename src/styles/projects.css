@@ -110,7 +110,7 @@
 /* compare: problem → solution side by side */
 .project-detail[data-layout="compare"] {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 0.7cqw 1cqw;
   align-content: start;
 }
@@ -178,7 +178,7 @@
 /* split: explanation column + capabilities column */
 .project-detail[data-layout="split"] {
   display: grid;
-  grid-template-columns: 1.1fr 1fr;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
   gap: 0.7cqw 1.2cqw;
   align-content: start;
 }

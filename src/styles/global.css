@@ -6,7 +6,6 @@
 
 @import './projects.css';
 
-
 * {
   box-sizing: border-box;
 }
@@ -1466,7 +1465,13 @@ summary {
 }
 
 /* The body hosts either the demo schematic or the demonstration screen;
-   on the description page it is fully hidden (the detail page replaces it). */
+   on the description page it is fully hidden (the detail page replaces it).
+   overflow:hidden keeps screen content inside the glass frame instead of
+   spilling over the baked tab row. */
+.project-body {
+  overflow: hidden;
+}
+
 .project-body[hidden] {
   display: none;
 }
