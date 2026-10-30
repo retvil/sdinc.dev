@@ -49,13 +49,25 @@
 
 /* --- level 2: project description page (four composition variants) --- */
 
+/* The description page and the demonstration host are the only content
+   surfaces that can exceed the glass height at narrow widths. Both scroll
+   vertically inside the display frame instead of painting past it. */
+.project-detail,
+.project-screen-host {
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* The shared views block pointer events so clicks fall through to the
+     baked glass controls; the scroll containers opt back in so the mouse
+     wheel scrolls their inner content instead of the page. */
+  pointer-events: auto;
+}
+
 .project-detail {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 0.7cqw;
-  overflow-y: auto;
   padding: 0.2cqw 0.3cqw 0.4cqw 0;
 }
 
