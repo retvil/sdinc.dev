@@ -1676,7 +1676,14 @@ summary {
 .project-view.is-opening .vault-shutter {
   animation: vault-shutter-open 0.5s ease-out forwards;
 }
-.project-view.is-opening .project-view-content {
+/* Content reveal: fade + scale-in the actual children of the project view
+   (head, detail page, schematic/body, kind note) while the shutter opens.
+   The .vault-shutter bars sit at z-index 3 above these, so the content
+   reveal is only visible once the shutters start retracting (~0.15s delay). */
+.project-view.is-opening .project-head,
+.project-view.is-opening .project-detail,
+.project-view.is-opening .project-body,
+.project-view.is-opening .project-kind-note {
   animation: vault-content-in 0.5s ease-out 0.15s backwards;
 }
 
@@ -1758,10 +1765,17 @@ summary {
 /* --- mobile adaptation (sub-960px viewports) ---
    The device container keeps aspect-ratio 3/2 so the master raster stays
    proportional. Below the 640px container threshold the two-column layouts
-   stack to a single column and dense text gets a 0.8cqw floor (≈ 5px at
-   320px viewport, but the 640px container floor keeps it at ~5px+ readable).
-   The min-width was already dropped from 960px to 0 so the container can
-   shrink to fit the viewport. */
+   stack to a single column and dense text gets a floor so it stays readable.
+   The min-width was dropped from 960px to 0 so the container can shrink to
+   fit the viewport.
+
+   At 375px the container is ~375px wide, so 1cqw ≈ 3.75px and pure-cqw
+   fonts collapse to illegible sizes (captions ~2px, headings ~6px). The
+   floor below keeps every text element at a readable minimum. 12px is the
+   practical floor: small enough to still fit the display frame, large
+   enough to read on a phone. (The master raster art itself scales down and
+   gets soft — that is an accepted design consequence of a single static
+   image; the live HTML text stays sharp because it is real DOM.) */
 
 @container (max-width: 640px) {
   /* Direction screens: stack instead of side-by-side */
@@ -1781,17 +1795,38 @@ summary {
     grid-template-columns: 1fr;
   }
 
-  /* Text floors: prevent cqw-scaled fonts from dropping below readable size.
-     0.8cqw at 640px container = 5.12px — still small but legible. */
+  /* Text floor: keep all display content readable on a phone. The 12px
+     floor wins over the pure-cqw sizing whenever the container is narrow.
+     Headings keep a slightly larger floor so the hierarchy survives. */
+  .project-view p,
+  .project-view li,
+  .project-view small,
+  .projects-view p,
+  .projects-view li,
+  .projects-view small,
+  .contact-view p,
+  .contact-view li,
+  .contact-view small,
   .live-card p,
-  .contact-value,
-  .project-item,
-  .detail-essence,
-  .project-head h2,
   .pv-origin,
+  .dir-origin,
+  .dir-status,
   .dir-screen p,
-  .dir-screen li {
-    font-size: max(0.8cqw, 9px);
+  .dir-screen li,
+  .dir-screen small {
+    font-size: max(1cqw, 12px);
+  }
+  .project-view h2,
+  .project-view h3,
+  .projects-view h2,
+  .projects-view h3,
+  .contact-view h2 {
+    font-size: max(1.2cqw, 14px);
+  }
+  /* .project-item uses font shorthand with a unit — override with
+     !important so the 12px floor reliably wins at narrow widths. */
+  .project-item {
+    font-size: max(1cqw, 12px) !important;
   }
 
   /* Compact list spacing */

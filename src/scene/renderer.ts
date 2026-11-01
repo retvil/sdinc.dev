@@ -67,6 +67,10 @@ export function mountMaster(container: HTMLElement): void {
   master.className = 'master';
   master.src = MASTER_ASSET;
   master.alt = 'SDINC: цельный литой корпус, портрет слева, зелёный дисплей с цифровым двойником справа';
+  // The master is the LCP element — declare it high priority so the browser
+  // fetches it as soon as it sees the <img>, ahead of lower-priority assets
+  // (the hidden screen-surface, face overlays, etc.).
+  master.fetchPriority = 'high';
   container.append(master);
 }
 
@@ -181,15 +185,24 @@ export function mountSectionControls(container: HTMLElement): void {
     moving.className = 'moving-face';
     moving.dataset.id = `face-${key}`;
     place(moving, face.bounds);
+    // Lazy face overlay: the masked face PNG (≈40 KB total across the three
+    // section buttons) is only needed while a section button is physically
+    // pressed. Deferring the src until the first pointerdown removes it from
+    // the initial payload; the image is tiny enough to decode before the
+    // press is released.
     const img = document.createElement('img');
-    img.src = MASKED_FACES[key];
+    img.decoding = 'async';
     img.alt = '';
     moving.append(img);
     moving.hidden = true;
     container.append(moving);
     device.register(face, moving);
-
+    let faceLoaded = false;
     control.addEventListener('pointerdown', () => {
+      if (!faceLoaded) {
+        img.src = MASKED_FACES[key];
+        faceLoaded = true;
+      }
       moving.hidden = false;
       moving.classList.add('pressed');
     });
@@ -244,13 +257,30 @@ export function mountDial(container: HTMLElement): void {
   rotor.className = 'rotor-art';
   rotor.dataset.id = 'dial-rotor';
   place(rotor, rotorNode.bounds);
+  // Lazy: the masked rotor PNG (168 KB) is invisible until the first rotor
+  // step. Deferring src until step() is called removes it from the initial
+  // payload; the image is decoded async so the first rotation still shows
+  // the rotor smoothly.
   const img = document.createElement('img');
-  img.src = ROTOR_MASKED;
+  img.decoding = 'async';
   img.alt = '';
+  let rotorLoaded = false;
+  const loadRotor = (): void => {
+    if (!rotorLoaded) {
+      img.src = ROTOR_MASKED;
+      rotorLoaded = true;
+    }
+  };
   rotor.append(img);
   container.append(rotor);
   device.bindRotor(rotor);
   device.register(rotorNode, rotor);
+  // Load on first step: hook into the device's layout callback system via a
+  // one-shot MutationObserver on the rotor's class list (active is added by
+  // state.step()).
+  new MutationObserver(() => {
+    if (rotor.classList.contains('active')) loadRotor();
+  }).observe(rotor, { attributes: true, attributeFilter: ['class'] });
 }
 
 /** Reference asset path (master) — for the editor preview. */
@@ -317,13 +347,29 @@ export function mountScreenPanels(container: HTMLElement): void {
   surface.className = 'screen-surface';
   surface.dataset.id = 'screen-surface';
   surface.dataset.screen = 'panel';
-  surface.src = deviceAsset('screen-surface.png');
+  // Lazy: the surface (551 KB) is hidden in the profile mode and only shown
+  // for projects/project/contact. Defer its src until setMode makes a panel
+  // visible so it does not compete with the master image on first load.
   surface.alt = '';
   surface.draggable = false;
   surface.hidden = true;
+  surface.decoding = 'async';
+  let surfaceLoaded = false;
+  const loadSurface = (): void => {
+    if (!surfaceLoaded) {
+      surface.src = deviceAsset('screen-surface.png');
+      surfaceLoaded = true;
+    }
+  };
   place(surface, SCREEN_SURFACE_BOUNDS);
   container.append(surface);
   device.registerElement('screen-surface', surface);
+  // Load the surface when it becomes visible (first panel entry).
+  const surfaceObserver = new MutationObserver(() => {
+    if (!surface.hidden) loadSurface();
+  });
+  surfaceObserver.observe(surface, { attributes: true, attributeFilter: ['hidden'] });
+  device.addLayoutHook(loadSurface);
 
   // --- projects list + preview (transparent content over the surface) ---
   const projectsView = document.createElement('section');
@@ -490,11 +536,13 @@ export function mountScreenPanels(container: HTMLElement): void {
   // Re-align on any size change of the schematic container (window resize,
   // layout shift). The observer fires once on observe (initial geometry) and
   // on every subsequent resize while the element is in the DOM.
+  //
+  // `layoutComponentNodes` already early-returns when the schematic has zero
+  // size, so the visible-only guard below is a cheap pre-filter that avoids
+  // running the letterbox math while the project screen is hidden.
   if (typeof ResizeObserver !== 'undefined') {
+    const viewEl = document.getElementById('project-view');
     new ResizeObserver(() => {
-      // Only re-align when the project screen is visible — the observer
-      // would otherwise fire uselessly while the screen is hidden.
-      const viewEl = document.getElementById('project-view');
       if (viewEl && !viewEl.hidden) layoutComponentNodes();
     }).observe(schematic);
   }

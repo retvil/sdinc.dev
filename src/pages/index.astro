@@ -18,6 +18,10 @@ import RotaryKnob from '../components/RotaryKnob.astro';
     <meta name="description" content="SDINC — персональная система." />
     <title>SDINC / Personal System</title>
     <link rel="icon" href="data:," />
+    <!-- Preload the master device image: it is the LCP element and is otherwise
+         discovered only after ~40 KB of JS modules execute. fetchpriority=high
+         tells the browser to start it ahead of lower-priority assets. -->
+    <link rel="preload" as="image" href="/assets/device/SDINC_reference_4K_conservative.png" fetchpriority="high" />
   </head>
   <body>
     <main>

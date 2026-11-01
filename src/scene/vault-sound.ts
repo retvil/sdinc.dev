@@ -12,13 +12,22 @@
 
 type Ctor = typeof AudioContext;
 
-function webAudioContext(): AudioContext | null {
+// Cache a single AudioContext for the page's lifetime. Browsers cap the
+// number of concurrent contexts (~6–11); creating one per playVaultOpen()
+// would leak them and, past the cap, new contexts start suspended. The
+// context is created lazily on the first gesture and reused.
+let cachedCtx: AudioContext | null = null;
+
+function audioContext(): AudioContext | null {
+  if (cachedCtx) return cachedCtx;
   if (typeof window === 'undefined') return null;
   const AC: Ctor | undefined =
     window.AudioContext ??
     // Some older browsers expose only the WebKit-prefixed constructor.
     (window as Window & { webkitAudioContext?: Ctor }).webkitAudioContext;
-  return AC ? new AC() : null;
+  if (!AC) return null;
+  cachedCtx = new AC();
+  return cachedCtx;
 }
 
 let muted = false;
@@ -31,8 +40,11 @@ try {
 /** Play a short vault-door opening rumble. No-op when muted or no Web Audio. */
 export function playVaultOpen(): void {
   if (muted) return;
-  const ctx = webAudioContext();
+  const ctx = audioContext();
   if (!ctx) return;
+  // A context created outside a user gesture may start 'suspended'; resume
+  // it so the scheduled nodes actually sound.
+  if (ctx.state === 'suspended') void ctx.resume();
   const now = ctx.currentTime;
 
   // 1. Sub-bass thump (the "lock release").
