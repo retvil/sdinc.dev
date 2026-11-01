@@ -1,0 +1,203 @@
+/* SDINC — display effect layer.
+   All effects below are additive: they polish the visual experience
+   without changing the layout geometry, the master raster, or the
+   information content. Each respects `prefers-reduced-motion` via the
+   global rule that disables transitions/animations.
+
+   Visual principles:
+   - The display is a green phosphor CRT inside a steel chassis.
+   - Text should have a subtle glow (phosphor bloom) — NOT neon.
+   - The glass should have a very faint scanline pattern for texture.
+   - All motion should be slow, mechanical, and quiet.
+   */
+
+/* --- 1. Phosphor text glow on display content ---
+   Very subtle: 0.5px spread, warm green tint.
+   Only applies to text inside the display screens, NOT to body text.
+   0.12 opacity keeps it a hint of bloom, not neon. */
+
+.projects-view,
+.project-view,
+.contact-view {
+  text-shadow: 0 0 4px rgba(131, 189, 153, 0.12);
+}
+
+/* Slightly stronger glow for headings */
+.projects-view h2,
+.project-view h2,
+.contact-view h2,
+.project-preview h3 {
+  text-shadow: 0 0 6px rgba(131, 189, 153, 0.18);
+}
+
+/* --- 2. Subtle scanline overlay on the display surface ---
+   A repeating-linear-gradient with 3px period: very faint dark lines
+   that evoke a CRT raster. Opacity kept to 0.04 so it is felt, not
+   seen. Applied to .screen-surface via a pseudo-element. */
+
+.screen-surface::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.04) 2px,
+    rgba(0, 0, 0, 0.04) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* --- 3. Smooth rotor rotation ---
+   The rotor uses a CSS custom property --angle set by JS.
+   Add a short transition so the dial steps feel mechanical rather
+   than instant. */
+
+.rotor-art {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- 4. Screen-surface fade-in on first panel entry ---
+   The surface appears when the user moves from profile to
+   projects/project/contact. A quick opacity fade makes the transition
+   feel like the display powering on rather than a hard pop. */
+
+.screen-surface {
+  transition: opacity 0.3s ease-out;
+  opacity: 0;
+}
+
+.screen-surface:not([hidden]) {
+  opacity: 1;
+}
+
+/* --- 5. Status line fade ---
+   The status line (#status, role="status") updates frequently.
+   A subtle fade-in on each update makes the change perceptible
+   without being distracting. */
+
+.sr-only[role="status"] {
+  /* sr-only keeps it visually hidden but screen-reader accessible;
+     no visual fade needed here since it's not shown to sighted users.
+     This rule is a no-op placeholder for clarity. */
+}
+
+/* --- 6. Button press micro-interaction ---
+   Section controls and project items get a brief scale-down on press
+   for a tactile, mechanical feel. 0.98 scale is barely visible but
+   adds weight. */
+
+.section-control:active,
+.project-item:active,
+.panel-button:active {
+  transform: scale(0.98);
+}
+
+/* --- 7. Direction screen entry animation ---
+   When a direction screen first becomes visible (e.g., the media-
+   analytics demo), a subtle slide-up + fade makes the transition
+   feel intentional rather than abrupt. Only applied to the .dir-screen
+   containers; the content inside stays static. */
+
+.dir-screen {
+  animation: dir-screen-in 0.3s ease-out;
+}
+
+@keyframes dir-screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- 8. Component node selection pulse ---
+   When a schematic component node is selected, a one-time scale pulse
+   (1 → 1.08 → 1) draws attention to the selection without persistent
+   visual noise. */
+
+.component-control.selected {
+  animation: component-pulse 0.25s ease-out;
+}
+
+@keyframes component-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* --- 9. Contact item hover glow ---
+   Subtle glow on hover to show the item is interactive. */
+
+.contact-select:hover {
+  box-shadow: 0 0 12px rgba(131, 189, 153, 0.2);
+}
+
+/* --- 10. Detail page section reveal ---
+   When the level-2 description page loads, its sections fade in
+   sequentially (staggered delay) for a composed, editorial feel.
+   Only applies when .is-opening is set on the parent project-view.
+   The stagger is short (0.08s steps) so it reads as a single composed
+   reveal rather than a slow crawl. */
+
+.project-view.is-opening .detail-essence,
+.project-view.is-opening .detail-section,
+.project-view.is-opening .detail-demo-open {
+  animation: section-in 0.3s ease-out backwards;
+}
+
+.project-view.is-opening .detail-section:nth-child(1) { animation-delay: 0.12s; }
+.project-view.is-opening .detail-section:nth-child(2) { animation-delay: 0.2s; }
+.project-view.is-opening .detail-section:nth-child(3) { animation-delay: 0.28s; }
+.project-view.is-opening .detail-section:nth-child(4) { animation-delay: 0.36s; }
+
+@keyframes section-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- 11. Smooth scroll for internal overflow areas ---
+   The project-detail and screen-host scroll containers get a subtle
+   scroll-behavior so programmatic focus jumps feel composed rather
+   than instant. Respects reduced-motion via the global rule. */
+
+.project-detail,
+.project-screen-host,
+.dir-open-catalog,
+.dir-rag-left,
+.dir-rag-right,
+.dir-chat-log {
+  scroll-behavior: smooth;
+}
+
+/* --- 12. Rotor transition only on transform (already compositor-safe) ---
+   The .rotor-art transition is set above; ensure it does not animate
+   display/visibility (which would cause layout). */
+
+/* --- 13. Vault shutter: add a subtle perspective tilt for depth ---
+   The two shutter bars get a very slight perspective transform so the
+   opening feels like a physical door parting rather than a flat wipe.
+   400px perspective is barely perceptible. */
+
+.vault-shutter {
+  perspective: 400px;
+}
+
+.vault-shutter--top {
+  transform-origin: top center;
+}
+
+.vault-shutter--bottom {
+  transform-origin: bottom center;
+}

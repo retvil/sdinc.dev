@@ -5,6 +5,7 @@
    whole-fragment brightening and never rectangular halos over the master. */
 
 @import './projects.css';
+@import './effects.css';
 
 * {
   box-sizing: border-box;
