@@ -2,7 +2,16 @@
 // continuous master (the approved 4K reference) — individual fragments stay
 // in /assets/device/ as an editable source library, never stacked at runtime.
 // Replacing a graphic later means editing one entry here, not touching markup.
-
+//
+// ASSET_BASE is a root-absolute path. This matches:
+//   - astro.config.mjs (no `base` set) → dev server and built dist/ both
+//     serve from the web root, so `/assets/device/...` resolves correctly.
+//   - GitHub Pages with a sub-path (`retvil.github.io/sdinc.dev/`) →
+//     set `base: '/sdinc.dev/'` in astro.config.mjs AND change ASSET_BASE
+//     here to `${base}assets/device/` (or use import.meta.env.BASE_URL
+//     once the Vite client types are wired up).
+//
+// Until the sub-path deploy is active, keep ASSET_BASE at the root.
 const ASSET_BASE = '/assets/device/';
 const PACKAGE_PREFIX = 'assets/';
 

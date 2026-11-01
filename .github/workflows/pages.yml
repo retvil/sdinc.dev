@@ -1,0 +1,67 @@
+# GitHub Actions — publish dist/ to GitHub Pages.
+#
+# Pipeline: on push to main (or manual dispatch)
+#   1. Install dependencies + build Astro
+#   2. Deploy the dist/ folder to the gh-pages branch
+#
+# Pages setup (do ONCE, manually, after first workflow run):
+#   - In repo Settings → Pages, source: "Deploy from a branch", branch: gh-pages, folder: / (root).
+#   - After the first run, `retvil.github.io/sdinc.dev/` will serve the site.
+#   - To use a custom apex domain (sdinc.dev), add a CNAME file in public/
+#     containing "sdinc.dev" and configure DNS + Pages custom domain.
+
+name: Deploy to GitHub Pages
+
+on:
+  # Run on every push to main. Comment out the push trigger if you want
+  # manual-only deploys via workflow_dispatch.
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Allow one concurrent deploy at a time; cancel superseded runs.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Astro
+        run: npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/
+
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,18 +1,25 @@
 import { defineConfig } from 'astro/config';
 
-// GitHub Pages deployment target. The baseline doc states publishing is not
-// yet configured and changes to hosting settings require explicit owner
-// approval (docs/accepted-visual-baseline.md §"Правила дальнейших изменений").
+// Deployment config.
 //
-// When deploying to https://retvil.github.io/sdinc.dev/:
-//   1. Set `base: '/sdinc.dev/'` here.
-//   2. The hardcoded ASSET_BASE in src/scene/assets.ts ('/assets/device/')
-//      must become relative or use Astro's import.meta.env.BASE_URL so
-//      runtime-mounted <img> tags resolve under the sub-path.
-//   3. Push to `main` and enable Pages in the repo settings.
+// The site is built with absolute root URLs (`/assets/device/...`) —
+// see src/scene/assets.ts. These work when the built output is served
+// from the web root. Two deployment models work without code changes:
 //
-// Until then the config stays minimal and local dev continues to work with
-// absolute root paths.
+//   A. GitHub Pages on a sub-path (retvil.github.io/sdinc.dev/):
+//      Set `base: '/sdinc.dev/'` and also update ASSET_BASE in
+//      src/scene/assets.ts to match. Then enable Pages in the repo
+//      settings (branch: main, /docs or a workflow that publishes
+//      dist/ to gh-pages).
+//
+//   B. Custom domain at apex (sdinc.dev):
+//      Keep `base: '/'` and point the CNAME record at Pages. No code
+//      changes needed.
+//
+// For now we keep base: '/' so the local dev server and the built
+// dist/ both serve from root — matching the hardcoded ASSET_BASE.
+// Flip to option A when the Pages sub-path is actually being used.
 export default defineConfig({
+  site: 'https://sdinc.dev',
   integrations: [],
 });
