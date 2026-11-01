@@ -201,15 +201,15 @@ export function createRagScreen(): ProjectScreen {
       const aTitle = el('h4', 'dir-subtitle', 'Ответ');
       answerBox = el('div', 'dir-rag-answer');
       sourcePanel = el('p', 'dir-rag-source');
+      // Each screen owns its layout; the single live region is this screen's
+      // own status line (role=status, aria-live=polite). No duplicates.
       status = statusLine();
       right.append(fTitle, fragList, aTitle, answerBox, sourcePanel);
 
       layout.append(left, right);
-      root.append(steps, layout, statusLine(), originNote(
+      root.append(steps, layout, status, originNote(
         'Локальная демонстрация связи ответа с источниками. Модель не подключена.',
       ));
-      // The first status line instance is the screen's live region.
-      status = root.querySelector('.dir-status');
       container.append(root);
       sync();
     },

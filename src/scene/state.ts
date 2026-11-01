@@ -426,7 +426,12 @@ export class DeviceState {
       button.classList.toggle('active-tab', t === tab);
     }
     const text = this.elements.get('project-tab-text');
-    if (text) text.textContent = details[tab];
+    if (text) {
+      text.textContent = details[tab];
+      // Keep the tabpanel's labelledby in sync with the active tab so a
+      // screen reader announces which panel is open.
+      text.setAttribute('aria-labelledby', `project-tab-${tab}`);
+    }
     // Switching tabs must not reset the selected component — separate state.
   }
 

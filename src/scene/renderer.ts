@@ -338,7 +338,9 @@ export function mountScreenPanels(container: HTMLElement): void {
   body.className = 'projects-body';
   const list = document.createElement('ul');
   list.className = 'project-list';
-  list.setAttribute('role', 'listbox');
+  // Note: uses <ul>/<li> native semantics with aria-selected on each option
+  // (no listbox role — native list semantics keep screen-reader behavior
+  // correct; aria-selected is an additive attribute on role=option items).
   list.setAttribute('aria-label', 'Проекты');
   PROJECTS.forEach((project, index) => {
     const li = document.createElement('li');
@@ -357,6 +359,8 @@ export function mountScreenPanels(container: HTMLElement): void {
   });
   const preview = document.createElement('div');
   preview.className = 'project-preview';
+  preview.setAttribute('role', 'group');
+  preview.setAttribute('aria-label', 'Предпросмотр выбранного проекта');
   // Demo item keeps its static schematic preview; direction items show a
   // unique interactive preview scene (level 1 of the presentation).
   const previewSchematic = document.createElement('div');
@@ -517,6 +521,7 @@ export function mountScreenPanels(container: HTMLElement): void {
     tab.dataset.screen = 'project';
     tab.setAttribute('role', 'tab');
     tab.setAttribute('aria-selected', String(key === 'task'));
+    tab.setAttribute('aria-controls', 'project-tab-text');
     tab.textContent = label;
     tab.addEventListener('click', () => device.setProjectTab(key as 'task' | 'role' | 'result'));
     tabs.append(tab);
@@ -526,6 +531,8 @@ export function mountScreenPanels(container: HTMLElement): void {
   tabText.id = 'project-tab-text';
   tabText.className = 'project-tab-text';
   tabText.dataset.screen = 'project';
+  tabText.setAttribute('role', 'tabpanel');
+  tabText.setAttribute('aria-labelledby', 'project-tab-task');
   side.append(componentInfo, tabs, tabText);
   projectBody.append(schematic, side);
   // Shared host for the eight direction screens (lazy-mounted by registry).

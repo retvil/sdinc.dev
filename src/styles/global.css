@@ -246,7 +246,7 @@ main {
 
 .live-card small {
   font-size: 0.55cqw;
-  color: #52755b;
+  color: #9cc4a6;
   margin-top: 1cqw;
 }
 
@@ -596,7 +596,7 @@ summary {
 .project-view small {
   font-size: 0.55cqw;
   letter-spacing: 0.14em;
-  color: #52755b;
+  color: #9cc4a6;
   margin-top: 0.5cqw;
 }
 
@@ -720,7 +720,7 @@ summary {
   margin: 0;
   font: 0.6cqw/1.4 system-ui, sans-serif;
   letter-spacing: 0.1em;
-  color: #52755b;
+  color: #9cc4a6;
 }
 
 .dir-status {
@@ -990,7 +990,7 @@ summary {
   margin: 0;
   font: 0.8cqw monospace;
   letter-spacing: 0.2em;
-  color: #52755b;
+  color: #9cc4a6;
 }
 
 .dir-rag-layout {
@@ -1282,7 +1282,7 @@ summary {
 
 .dir-pipeline-arrow,
 .dir-pipeline-turn {
-  color: #52755b;
+  color: #9cc4a6;
   font-size: 1cqw;
 }
 
@@ -1543,7 +1543,7 @@ summary {
 
 .project-tab {
   background: transparent;
-  color: #7ea88a;
+  color: #9cc4a6;
   border: 1px solid #2c4f38;
   border-radius: 0.6cqw;
   padding: 0.55cqw 1cqw;
