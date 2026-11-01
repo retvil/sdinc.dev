@@ -52,7 +52,6 @@ export function createCallAnalyticsScreen(): ProjectScreen {
   let trackButtons: HTMLButtonElement[] = [];
   let transcriptRows: HTMLButtonElement[] = [];
   let card: HTMLElement | null = null;
-  let summaryBox: HTMLElement | null = null;
   let talkPane: HTMLElement | null = null;
   let summaryPane: HTMLElement | null = null;
   let status: HTMLParagraphElement | null = null;

@@ -50,8 +50,6 @@ export function createGameScreen(): ProjectScreen {
   const CELL = 34;
   const PAD = 3;
 
-  const key = (x: number, y: number): string => `${x}:${y}`;
-
   function neighbor(): { x: number; y: number } | null {
     const d = DIRS[selectedDir];
     const x = pos[0] + d.dx;

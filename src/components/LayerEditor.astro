@@ -112,7 +112,7 @@
     if (copy && description) description.value = copy.description;
   }
   nodeSelect?.addEventListener('change', syncCardEditor);
-  nodeSelect.value = 'llm';
+  if (nodeSelect) nodeSelect.value = 'llm';
   syncCardEditor();
   document.querySelector('#apply')?.addEventListener('click', () => {
     if (!nodeSelect) return;

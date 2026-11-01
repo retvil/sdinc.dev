@@ -69,7 +69,6 @@ const EMPHASIS_LABELS: ReadonlyArray<{ id: Emphasis; label: string }> = [
 export function createMediaAnalyticsScreen(): ProjectScreen {
   let selectedEventId = EVENTS[0].id;
   let emphasis: Emphasis = 'both';
-  let host: HTMLElement | null = null;
   let sceneObjects: SVGGElement | null = null;
   let audioWaves: SVGGElement | null = null;
   let eventButtons: HTMLButtonElement[] = [];
@@ -136,7 +135,6 @@ export function createMediaAnalyticsScreen(): ProjectScreen {
   return {
     id: 'media-analytics',
     mount(container) {
-      host = container;
       const root = el('div', 'dir-screen dir-media');
       root.dataset.screenId = 'media-analytics';
       const layout = el('div', 'dir-media-layout');
