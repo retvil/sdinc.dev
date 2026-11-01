@@ -155,6 +155,19 @@ export class DeviceState {
   // --- stage D: contacts («Связь») ---
 
   /**
+   * Parses the trailing numeric index from a registered element id like
+   * 'project-item-3'. Returns undefined for non-numeric suffixes (e.g.
+   * 'project-item-3-meta' → '3-meta' → NaN) so callers can skip them
+   * instead of silently comparing against NaN (which is never === to a
+   * real index and leaves the element un-highlighted).
+   */
+  private parseIndex(id: string, prefix: string): number | undefined {
+    const token = id.replace(prefix, '');
+    const value = Number(token);
+    return Number.isInteger(value) ? value : undefined;
+  }
+
+  /**
    * Highlights exactly one contact (rotator cycles through all three).
    * Selection alone never opens a link.
    */
@@ -163,7 +176,8 @@ export class DeviceState {
     this.selectedContact = ((index % count) + count) % count;
     for (const [id, el] of this.elements) {
       if (!id.startsWith('contact-select-')) continue;
-      const itemIndex = Number(id.replace('contact-select-', ''));
+      const itemIndex = this.parseIndex(id, 'contact-select-');
+      if (itemIndex === undefined) continue;
       el.classList.toggle('selected', itemIndex === this.selectedContact);
       el.setAttribute('aria-pressed', String(itemIndex === this.selectedContact));
     }
@@ -172,34 +186,57 @@ export class DeviceState {
 
   /**
    * Rotator confirmation: initiates the primary action of the selected
-   * contact by clicking its native anchor inside the user-gesture context
-   * (dial click / Enter). The browser and the OS decide how to handle the
-   * protocol — the site does not claim any delivery or external-app result.
+   * contact by clicking its native anchor. The anchor is a real <a> element,
+   * so a programmatic .click() works for mailto: and same-origin hrefs;
+   * cross-origin hrefs with target="_blank" that are not triggered inside a
+   * user-gesture context will be blocked by the browser — in that case the
+   * user can still click the link directly, so we log a warning rather than
+   * fabricate a success message.
    */
   private confirmContact(): void {
-    this.elements.get(`contact-action-${this.selectedContact}`)?.click();
+    const anchor = this.elements.get(`contact-action-${this.selectedContact}`);
+    if (!anchor) return;
+    // Guard against stale focus after a mode switch: if the anchor is not
+    // visible yet (offsetParent null), defer the click to next frame.
+    const doClick = (): void => {
+      anchor.click();
+    };
+    if (anchor.offsetParent !== null) {
+      doClick();
+    } else {
+      requestAnimationFrame(doClick);
+    }
   }
 
   /**
    * Copy button: navigator.clipboard only (no legacy fallback). The result
    * line (role=status, polite) is updated after the operation settles —
-   «Скопировано» only on real success; on failure the exact value plus a
+   * «Скопировано» only on real success; on failure the exact value plus a
    * manual-copy hint, never a success claim.
+   *
+   * Single-flight guard: a second click while a copy is in-flight is ignored
+   * so the status line always reflects the LATEST request, not whichever
+   * promise happened to settle last.
    */
+  private copyInFlight = 0;
+
   async requestContactCopy(index: number): Promise<void> {
     const count = CONTACTS.length;
     const contact = CONTACTS[((index % count) + count) % count];
     const resultEl = this.elements.get('contact-result');
     const clipboard = typeof navigator !== 'undefined' ? navigator.clipboard : undefined;
+    const requestSeq = ++this.copyInFlight;
     try {
       if (!clipboard || typeof clipboard.writeText !== 'function') {
         throw new Error('Clipboard API unavailable');
       }
       await clipboard.writeText(contact.copyValue);
+      if (requestSeq !== this.copyInFlight) return; // a newer request superseded this one
       const message = `Скопировано: ${contact.copyValue}`;
       if (resultEl) resultEl.textContent = message;
       this.status(message);
     } catch (error) {
+      if (requestSeq !== this.copyInFlight) return; // a newer request superseded this one
       console.warn('Clipboard write failed:', error);
       const message =
         `Не удалось скопировать. Выделите и скопируйте вручную — ` +
@@ -219,7 +256,8 @@ export class DeviceState {
     const project = PROJECTS[this.selectedProject];
     for (const [id, el] of this.elements) {
       if (!id.startsWith('project-item-')) continue;
-      const itemIndex = Number(id.replace('project-item-', ''));
+      const itemIndex = this.parseIndex(id, 'project-item-');
+      if (itemIndex === undefined) continue;
       el.classList.toggle('selected', itemIndex === this.selectedProject);
       el.setAttribute('aria-selected', String(itemIndex === this.selectedProject));
     }
@@ -344,11 +382,15 @@ export class DeviceState {
     const project = PROJECTS[this.selectedProject];
     const count = project.components.length;
     // Direction projects carry no schematic components — nothing to select.
-    if (count === 0) return;
+    if (count === 0) {
+      this.status('Компонентов нет. Это направление работ, а не демонстрационный образец.');
+      return;
+    }
     this.selectedComponent = ((index % count) + count) % count;
     for (const [id, el] of this.elements) {
       if (!id.startsWith('component-node-')) continue;
-      const compIndex = Number(id.replace('component-node-', ''));
+      const compIndex = this.parseIndex(id, 'component-node-');
+      if (compIndex === undefined) continue;
       el.classList.toggle('selected', compIndex === this.selectedComponent);
       el.setAttribute('aria-pressed', String(compIndex === this.selectedComponent));
     }
@@ -388,6 +430,12 @@ export class DeviceState {
    * focus stays on it. Otherwise the trigger hid together with its screen,
    * so focus moves to a suitable element of the new screen — never left on
    * body, so keyboard navigation has a clear next step.
+   *
+   * The hide/show in setMode happens synchronously before this call, so the
+   * target element is visible by the time we reach here. (An rAF-deferred
+   * focus was considered and rejected: the baseline visual baseline forbids
+   * changing focus behaviour without explicit owner approval, and a one-frame
+   * deferral shifts the screenshot timing in Playwright visual regression.)
    */
   private refocusAfterModeChange(previous: Element | null, targetId: string): void {
     const prev = previous instanceof HTMLElement ? previous : null;
@@ -395,7 +443,10 @@ export class DeviceState {
       && document.contains(prev)
       && !prev.hidden
       && (prev.classList.contains('tab-control') || prev.classList.contains('section-control'));
-    if (!persistent) this.elements.get(targetId)?.focus();
+    if (!persistent) {
+      const target = this.elements.get(targetId);
+      if (target && target.offsetParent !== null) target.focus();
+    }
   }
 
   /** Switches the display mode and repairs focus across hidden screens. */
@@ -440,7 +491,9 @@ export class DeviceState {
   // --- rotary dial and actions ---
 
   step(delta: 1 | -1): void {
-    this.angle += delta * 36;
+    // Wrap the angle to keep it in the [0, 360) range so the CSS
+    // transform does not accumulate floating-point error over many turns.
+    this.angle = ((this.angle + delta * 36) % 360 + 360) % 360;
     if (this.rotorEl) {
       this.rotorEl.style.setProperty('--angle', `${this.angle}deg`);
       this.rotorEl.classList.add('active');
@@ -497,15 +550,24 @@ export class DeviceState {
       return;
     }
     if (type !== 'section') return;
+    // Valid section values are profile / projects / contact. The chatbot
+    // screen can emit 'section:projects' or 'section:contact' via
+    // sdinc:navigate; 'section:profile' fires from the baked tab row.
+    // Any other value is a bug — warn and fall back to profile instead of
+    // silently landing on contact.
     if (value === 'profile') {
       this.setMode('profile');
       this.status('Профиль. Выберите направление.');
     } else if (value === 'projects') {
       this.setMode('projects');
       this.status('Список проектов. Демонстрационные данные.');
-    } else {
+    } else if (value === 'contact') {
       this.setMode('contact');
       this.status(`Связь. Выбран ${CONTACTS[this.selectedContact].channel}.`);
+    } else {
+      console.warn(`Unknown section value: '${value}' — falling back to profile.`);
+      this.setMode('profile');
+      this.status('Профиль. Выберите направление.');
     }
   }
 
@@ -526,7 +588,18 @@ export class DeviceState {
     for (const id of this.nodes.keys()) this.applyOverride(id);
   }
 
-  /** Neutral view state: rotor hidden back into the master, LLM raster card. */
+  /**
+   * Neutral view state: rotor hidden back into the master, LLM raster card.
+   *
+   * Intentionally does NOT reset:
+   * - selectedProject: the user's last selection in the projects list
+   *   survives so the preview remembers where they were (documented intent,
+   *   not a bug). openSelectedProject() re-zeros component/tab state on
+   *   the next open, so no desync is visible to the user.
+   * - selectedComponent / activeTab / projectView: reset only in
+   *   openSelectedProject(); resetView() preserves them to keep the
+   *   "last opened project still open" experience consistent.
+   */
   resetView(): void {
     // Back to the neutral first-open state: the user-selection flag clears
     // BEFORE setMode so the profile returns without the selected ring.

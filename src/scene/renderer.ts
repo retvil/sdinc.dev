@@ -242,14 +242,23 @@ const SCHEMA_CIRCLES: Array<{ cx: number; cy: number; r: number }> = [
   { cx: 50, cy: 44, r: 18 },
   { cx: 78, cy: 44, r: 16 },
 ];
+// The schematic SVG uses a fixed viewBox. These constants MUST match the
+// literal 'viewBox="0 0 100 62"' set in schematicSvg() below. If the viewBox
+// changes, update BOTH places (or extract the attribute) — the layout math
+// (scale, offset) hardcodes these dimensions.
+const SCHEMA_VBX_W = 100;
+const SCHEMA_VBX_H = 62;
 
 function schematicSvg(width: number, height: number, dim: boolean): SVGSVGElement {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', '0 0 100 62');
+  // viewBox dimensions MUST match SCHEMA_VBX_W/SCHEMA_VBX_H (used by the
+  // layout-hook letterbox math in mountScreenPanels below).
+  svg.setAttribute('viewBox', `0 0 ${SCHEMA_VBX_W} ${SCHEMA_VBX_H}`);
   svg.setAttribute('aria-hidden', 'true');
   svg.classList.add('schematic');
   const opacity = dim ? '0.55' : '1';
   let inner = '';
+  // Connectors between consecutive circles (n-1 segments).
   for (let i = 0; i < SCHEMA_CIRCLES.length - 1; i += 1) {
     const a = SCHEMA_CIRCLES[i];
     const b = SCHEMA_CIRCLES[i + 1];
@@ -414,12 +423,16 @@ export function mountScreenPanels(container: HTMLElement): void {
   // The SVG letterboxes its 100x62 viewBox inside the container (meet), so
   // node buttons must align with the DRAWN area. Geometry is only measurable
   // while the screen is visible — positioning runs via a layout hook.
+  //
+  // A ResizeObserver keeps the buttons in sync with the SVG when the window
+  // is resized while the project screen is already visible. Without it the
+  // letterbox math goes stale and the circular buttons drift off the circles.
   const layoutComponentNodes = (): void => {
     const rect = schematic.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return;
-    const scale = Math.min(rect.width / 100, rect.height / 62);
-    const offsetX = (rect.width - 100 * scale) / 2;
-    const offsetY = (rect.height - 62 * scale) / 2;
+    const scale = Math.min(rect.width / SCHEMA_VBX_W, rect.height / SCHEMA_VBX_H);
+    const offsetX = (rect.width - SCHEMA_VBX_W * scale) / 2;
+    const offsetY = (rect.height - SCHEMA_VBX_H * scale) / 2;
     for (const { button, circle } of componentButtons) {
       button.style.left = `${((offsetX + (circle.cx - circle.r) * scale) / rect.width) * 100}%`;
       button.style.top = `${((offsetY + (circle.cy - circle.r) * scale) / rect.height) * 100}%`;
@@ -428,6 +441,17 @@ export function mountScreenPanels(container: HTMLElement): void {
     }
   };
   device.addLayoutHook(layoutComponentNodes);
+  // Re-align on any size change of the schematic container (window resize,
+  // layout shift). The observer fires once on observe (initial geometry) and
+  // on every subsequent resize while the element is in the DOM.
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(() => {
+      // Only re-align when the project screen is visible — the observer
+      // would otherwise fire uselessly while the screen is hidden.
+      const viewEl = document.getElementById('project-view');
+      if (viewEl && !viewEl.hidden) layoutComponentNodes();
+    }).observe(schematic);
+  }
   const side = document.createElement('div');
   side.className = 'project-side';
   // Direction projects have no confirmed schematic components or task/role/

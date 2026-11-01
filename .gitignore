@@ -29,3 +29,6 @@ preview.log
 # Playwright test artifacts (regenerated on each run)
 e2e/test-results/
 
+# Stray local binary (not a build artifact, not tracked)
+mimo.exe
+
