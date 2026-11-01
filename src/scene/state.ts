@@ -22,6 +22,7 @@ import {
   stepActiveScreen,
 } from '../projects/registry';
 import '../projects/screens';
+import { playVaultOpen } from './vault-sound';
 
 type DirectionCopy = Record<DirectionKey, DirectionInfo>;
 export type ScreenMode = 'profile' | 'projects' | 'project' | 'contact';
@@ -376,6 +377,20 @@ export class DeviceState {
     this.setMode('project');
     const project = PROJECTS[this.selectedProject];
     this.status(`Открыт ${project.title}. Описание и демонстрация отдельно.`);
+    // Vault opening cue: synthesized rumble (no-op when muted / no Web Audio)
+    // plus a brief shutter-reveal animation on the project screen. The
+    // animation class is added AFTER the mode is visible so the shutter
+    // elements participate in layout; it is removed on the next frame so the
+    // CSS keyframe runs exactly once per open.
+    const view = this.elements.get('project-view');
+    if (view) {
+      view.classList.remove('is-opening');
+      // Force a style recalc so re-adding the class restarts the animation.
+      void view.offsetWidth;
+      view.classList.add('is-opening');
+      requestAnimationFrame(() => view.classList.remove('is-opening'));
+    }
+    playVaultOpen();
   }
 
   selectComponent(index: number): void {

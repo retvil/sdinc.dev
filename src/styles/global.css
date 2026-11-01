@@ -37,9 +37,10 @@ main {
 .device {
   position: relative;
   width: 100%;
-  min-width: 960px;
+  min-width: 0;
   aspect-ratio: 3 / 2;
   container-type: inline-size;
+  container-name: device;
   isolation: isolate;
 }
 
@@ -1645,9 +1646,169 @@ summary {
   background: #9cc4a6;
 }
 
+/* --- project-open animation: shutter reveal + scheme fade-in ---
+   The physical body stays still (approved: no literal vault door on the
+   master). Only the display's HTML content is animated: a brief "shutter"
+   split (top/bottom bars pull apart) over the screen-surface region, then
+   the scheme/detail content fades + scales in. ~500ms total.
+   Disabled under prefers-reduced-motion (the existing global rule kills
+   all animations; content still appears — static representation is kept). */
+
+.vault-shutter {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: rgba(17, 18, 16, 0.92);
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+}
+.vault-shutter--top {
+  top: 0;
+  transform-origin: top center;
+}
+.vault-shutter--bottom {
+  bottom: 0;
+  transform-origin: bottom center;
+}
+
+.project-view.is-opening .vault-shutter {
+  animation: vault-shutter-open 0.5s ease-out forwards;
+}
+.project-view.is-opening .project-view-content {
+  animation: vault-content-in 0.5s ease-out 0.15s backwards;
+}
+
+@keyframes vault-shutter-open {
+  0% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleY(0);
+  }
+}
+
+@keyframes vault-content-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Mute toggle: a small control in the top-right corner of the device, above
+   the display content. Positioned via CSS (NOT place()) so it does not
+   overlap the content region. Compact fixed-ish size so it never intercepts
+   clicks on the project list or preview below it. */
+.sound-toggle {
+  position: absolute;
+  right: 1.6cqw;
+  top: 3.2cqw;
+  z-index: 4;
+  width: 3cqw;
+  height: 3cqw;
+  min-width: 24px;
+  min-height: 24px;
+  border: 1px solid #355f42;
+  border-radius: 0.3cqw;
+  background: rgba(53, 95, 66, 0.2);
+  color: #9ccaab;
+  font: 600 0.8cqw monospace;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.12s, background 0.12s;
+}
+.sound-toggle[hidden] {
+  display: none;
+}
+.sound-toggle[aria-pressed="true"] {
+  border-color: #d3dda5;
+  background: rgba(211, 221, 165, 0.12);
+  color: #d3dda5;
+}
+.sound-toggle:focus-visible {
+  outline: none;
+  border-color: #d3dda5;
+  box-shadow: 0 0 9px #c3e2a855;
+}
+.sound-toggle .sound-glyph {
+  font-size: 1.6cqw;
+  line-height: 1;
+}
+/* Muted state: dim the glyph */
+.sound-toggle[aria-pressed="true"] .sound-glyph {
+  opacity: 0.5;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
     animation: none !important;
   }
 }
+
+/* --- mobile adaptation (sub-960px viewports) ---
+   The device container keeps aspect-ratio 3/2 so the master raster stays
+   proportional. Below the 640px container threshold the two-column layouts
+   stack to a single column and dense text gets a 0.8cqw floor (≈ 5px at
+   320px viewport, but the 640px container floor keeps it at ~5px+ readable).
+   The min-width was already dropped from 960px to 0 so the container can
+   shrink to fit the viewport. */
+
+@container (max-width: 640px) {
+  /* Direction screens: stack instead of side-by-side */
+  .dir-media-layout,
+  .dir-game-layout,
+  .dir-open-layout,
+  .dir-rag-layout,
+  .dir-chat-layout,
+  .projects-body,
+  .project-body {
+    flex-direction: column;
+  }
+
+  /* Project detail grids: single column */
+  .project-detail[data-layout="compare"],
+  .project-detail[data-layout="split"] {
+    grid-template-columns: 1fr;
+  }
+
+  /* Text floors: prevent cqw-scaled fonts from dropping below readable size.
+     0.8cqw at 640px container = 5.12px — still small but legible. */
+  .live-card p,
+  .contact-value,
+  .project-item,
+  .detail-essence,
+  .project-head h2,
+  .pv-origin,
+  .dir-screen p,
+  .dir-screen li {
+    font-size: max(0.8cqw, 9px);
+  }
+
+  /* Compact list spacing */
+  .project-list {
+    gap: 0.15cqw;
+  }
+
+  /* Shrink the preview illustration max size */
+  .pv-illustration svg {
+    max-width: 14cqw;
+    max-height: 8cqw;
+  }
+
+  /* Contact actions: stack vertically on narrow */
+  .contact-actions {
+    flex-direction: column;
+    gap: 0.4cqw;
+  }
+}
+

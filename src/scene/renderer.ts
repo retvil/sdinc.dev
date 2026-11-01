@@ -16,6 +16,7 @@ import { mountPreviewScenes } from '../projects/previews';
 import '../projects/screens';
 import { parseScene } from './parse';
 import sceneFile from './scene.json';
+import { isMuted, toggleMuted } from './vault-sound';
 
 const REFERENCE_BOUNDS: Bounds = [0, 0, 3840, 2560];
 const scene: SceneFile = parseScene(sceneFile);
@@ -129,6 +130,34 @@ export function mountScreenControls(container: HTMLElement): void {
   container.append(live);
   device.bindLiveCard(live, title, description);
   device.register(cardNode, live);
+
+  // --- vault-sound mute toggle (top-right of the display) ---
+  // The mute state persists across reloads (localStorage in vault-sound.ts).
+  // Initial icon reflects the persisted state so a user who muted before
+  // returns to a muted view.
+  const soundToggle = document.createElement('button');
+  soundToggle.type = 'button';
+  soundToggle.className = 'sound-toggle';
+  soundToggle.id = 'sound-toggle';
+  soundToggle.dataset.screen = 'panel';
+  soundToggle.setAttribute('aria-label', 'Звук открытия проекта');
+  soundToggle.setAttribute('aria-pressed', String(isMuted()));
+  soundToggle.title = 'Звук открытия';
+  const soundGlyph = document.createElement('span');
+  soundGlyph.className = 'sound-glyph';
+  soundGlyph.setAttribute('aria-hidden', 'true');
+  soundGlyph.textContent = isMuted() ? '✕' : '♪';
+  soundToggle.append(soundGlyph);
+  soundToggle.addEventListener('click', () => {
+    const muted = toggleMuted();
+    soundToggle.setAttribute('aria-pressed', String(muted));
+    soundToggle.title = muted ? 'Звук выключен' : 'Звук включён';
+    soundGlyph.textContent = muted ? '✕' : '♪';
+  });
+  // Positioning lives in CSS (.sound-toggle: position absolute, top-right of
+  // #device). No inline placement so it does not overlap the content region.
+  container.append(soundToggle);
+  device.registerElement('sound-toggle', soundToggle);
 }
 
 /**
@@ -374,6 +403,19 @@ export function mountScreenPanels(container: HTMLElement): void {
   projectView.dataset.screen = 'project';
   projectView.hidden = true;
   projectView.setAttribute('aria-label', 'Экран проекта');
+
+  // Vault opening animation: two shutter bars that split apart when
+  // projectView gets the .is-opening class. The physical body stays
+  // still (approved constraint) — only the display content is animated.
+  const shutterTop = document.createElement('div');
+  shutterTop.className = 'vault-shutter vault-shutter--top';
+  shutterTop.dataset.screen = 'project';
+  shutterTop.setAttribute('aria-hidden', 'true');
+  const shutterBottom = document.createElement('div');
+  shutterBottom.className = 'vault-shutter vault-shutter--bottom';
+  shutterBottom.dataset.screen = 'project';
+  shutterBottom.setAttribute('aria-hidden', 'true');
+
   const head = document.createElement('header');
   head.className = 'project-head';
   const title = document.createElement('h2');
@@ -553,7 +595,7 @@ export function mountScreenPanels(container: HTMLElement): void {
   projectNote.id = 'project-kind-note';
   projectNote.textContent = 'ДЕМОНСТРАЦИОННЫЕ ДАННЫЕ';
   projectNote.dataset.screen = 'project';
-  projectView.append(head, projectDetail, projectBody, projectNote);
+  projectView.append(shutterTop, shutterBottom, head, projectDetail, projectBody, projectNote);
   place(projectView, SCREEN_CONTENT_BOUNDS);
   container.append(projectView);
   device.registerElement('project-view', projectView);
