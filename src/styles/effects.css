@@ -185,7 +185,66 @@
    The .rotor-art transition is set above; ensure it does not animate
    display/visibility (which would cause layout). */
 
-/* --- 13. Vault shutter: add a subtle perspective tilt for depth ---
+/* --- 13. Panel entry fade ---
+   When a content panel (projects / project / contact) becomes visible,
+   fade + slide it in over 0.22s. The .screen-surface glass already
+   fades in over 0.3s (rule #4 above), so the content lags slightly
+   behind the glass, creating a layered "display powering on" feel.
+   Only the three transparent content views animate; the master raster
+   and the baked glass never move. */
+
+.projects-view,
+.project-view,
+.contact-view {
+  /* No default opacity: panels start visible in their initial mode.
+     The entry animation is applied imperatively via .panel-entering. */
+}
+
+.projects-view.panel-entering,
+.project-view.panel-entering,
+.contact-view.panel-entering {
+  animation: panel-enter 0.22s ease-out;
+}
+
+/* Under reduced motion the entry must be instant (no fade/slide), which
+   also keeps Playwright visual-regression screenshots deterministic. */
+@media (prefers-reduced-motion: reduce) {
+  .projects-view.panel-entering,
+  .project-view.panel-entering,
+  .contact-view.panel-entering {
+    animation: none;
+  }
+  .rotor-art.rotor-step {
+    animation: none;
+  }
+}
+
+@keyframes panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- 14. Rotor detent visual: brief scale "snap" on step ---
+   The rotor art gets a one-frame scale bounce when it steps, reinforcing
+   the physical detent feel. The animation is 0.1s, barely perceptible. */
+
+.rotor-art.rotor-step {
+  animation: rotor-snap 0.1s ease-out;
+}
+
+@keyframes rotor-snap {
+  0% { transform: rotate(var(--angle, 0deg)) scale(1); }
+  50% { transform: rotate(var(--angle, 0deg)) scale(0.96); }
+  100% { transform: rotate(var(--angle, 0deg)) scale(1); }
+}
+
+/* --- 15. Vault shutter: add a subtle perspective tilt for depth ---
    The two shutter bars get a very slight perspective transform so the
    opening feels like a physical door parting rather than a flat wipe.
    400px perspective is barely perceptible. */

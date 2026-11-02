@@ -9,7 +9,7 @@ import {
   isMuted,
   setMuted,
   toggleMuted,
-} from '../src/scene/vault-sound';
+} from '../src/scene/sound';
 
 const STORAGE_KEY = 'sdinc:muted';
 

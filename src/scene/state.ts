@@ -22,7 +22,7 @@ import {
   stepActiveScreen,
 } from '../projects/registry';
 import '../projects/screens';
-import { playVaultOpen } from './vault-sound';
+import { playRotorClick, playRotorConfirm, playVaultOpen } from './sound';
 
 type DirectionCopy = Record<DirectionKey, DirectionInfo>;
 export type ScreenMode = 'profile' | 'projects' | 'project' | 'contact';
@@ -488,14 +488,17 @@ export class DeviceState {
     }
     if (mode === 'projects') {
       this.selectProject(this.selectedProject);
+      this.triggerPanelEntry('projects-view');
       this.refocusAfterModeChange(previous, `project-item-${this.selectedProject}`);
     } else if (mode === 'project') {
       for (const hook of this.layoutHooks) hook();
       this.updateProjectView();
       this.selectComponent(this.selectedComponent);
       if (PROJECTS[this.selectedProject].details) this.setProjectTab(this.activeTab);
+      this.triggerPanelEntry('project-view');
       this.refocusAfterModeChange(previous, 'project-title');
     } else if (mode === 'contact') {
+      this.triggerPanelEntry('contact-view');
       this.refocusAfterModeChange(previous, `contact-select-${this.selectedContact}`);
     } else {
       // profile: direction-owned visuals return with the ring ONLY if the
@@ -508,15 +511,48 @@ export class DeviceState {
     this.syncLiveCard();
   }
 
+  /**
+   * Adds the .panel-entering class to a view container so its entry CSS
+   * animation runs on this mode switch. The class is removed after the
+   * animation completes so it does not replay on subsequent mode changes
+   * unless explicitly re-added. No-op for the profile mode (the master
+   * raster is always visible; there is no HTML panel to animate).
+   */
+  private triggerPanelEntry(viewId: string): void {
+    const view = this.elements.get(viewId);
+    if (!view) return;
+    view.classList.remove('panel-entering');
+    // Force a style flush so the animation restarts if the same panel is
+    // re-shown within the same frame (e.g. rapid mode toggling).
+    void view.offsetWidth;
+    view.classList.add('panel-entering');
+    // Clean up after the 0.22s animation so it does not linger.
+    const onEnd = (e: AnimationEvent): void => {
+      if (e.target === view) {
+        view.classList.remove('panel-entering');
+        view.removeEventListener('animationend', onEnd);
+      }
+    };
+    view.addEventListener('animationend', onEnd, { once: true });
+  }
+
   // --- rotary dial and actions ---
 
   step(delta: 1 | -1): void {
+    // Physical detent: the rotor always makes a click as it steps, even
+    // when the logical action is inert (e.g. on the project detail page).
+    playRotorClick();
     // Wrap the angle to keep it in the [0, 360) range so the CSS
     // transform does not accumulate floating-point error over many turns.
     this.angle = ((this.angle + delta * 36) % 360 + 360) % 360;
     if (this.rotorEl) {
       this.rotorEl.style.setProperty('--angle', `${this.angle}deg`);
       this.rotorEl.classList.add('active');
+      // Brief visual "snap" that reinforces the detent feel.
+      this.rotorEl.classList.remove('rotor-step');
+      // Force reflow so the animation can restart on rapid successive steps.
+      void this.rotorEl.offsetWidth;
+      this.rotorEl.classList.add('rotor-step');
     }
     if (this.mode === 'projects') {
       this.selectProject(this.selectedProject + delta);
@@ -542,8 +578,13 @@ export class DeviceState {
   /** Dial confirmation: context-dependent, never an empty selection. */
   confirm(): void {
     if (this.mode === 'projects') {
+      // Opening a project plays the vault-door rumble (see openSelectedProject)
+      // rather than a plain confirm tick, so the two cues do not stack.
       this.openSelectedProject();
-    } else if (this.mode === 'project') {
+      return;
+    }
+    playRotorConfirm();
+    if (this.mode === 'project') {
       const project = PROJECTS[this.selectedProject];
       if (project.kind === 'direction') {
         if (this.projectView !== 'demo') return;

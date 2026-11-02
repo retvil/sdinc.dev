@@ -16,7 +16,7 @@ import { mountPreviewScenes } from '../projects/previews';
 import '../projects/screens';
 import { parseScene } from './parse';
 import sceneFile from './scene.json';
-import { isMuted, toggleMuted } from './vault-sound';
+import { isMuted, toggleMuted } from './sound';
 
 const REFERENCE_BOUNDS: Bounds = [0, 0, 3840, 2560];
 const scene: SceneFile = parseScene(sceneFile);
