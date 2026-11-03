@@ -343,10 +343,19 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0.8cqw;
-  /* Top padding clears the common baked header; side/bottom paddings keep
-     the content off the glass edges and the baked tab row. */
-  padding: 4.2cqw 2.3cqw 0.8cqw;
+  /* Top padding clears the common baked header. Side paddings keep content
+     off the glass edges; the bottom padding reserves a 34px glass margin
+     between content and the baked tab-row (profile / projects / contact) so
+     no HTML panel ever paints over or touches the physical tab buttons. */
+  padding: 4.2cqw 2.3cqw 0.5cqw;
   min-height: 0;
+  /* The content region is fixed by place() to the display glass; any inner
+     scroll container that grows past it must clip, never paint onto the
+     body / baked lower tab row. */
+  overflow: hidden;
+  /* Cap children to the glass height so no child (detail, schematic, side)
+     can grow past the recessed screen. */
+  max-height: 100%;
   color: #83bd99;
   font-family: monospace;
   /* Pure layout over the shared surface: empty areas must not intercept
@@ -518,7 +527,10 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0.28cqw;
-  overflow: hidden;
+  /* Scroll when the list outgrows the display frame instead of clipping the
+     last items off the glass. */
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .project-item {
@@ -1477,6 +1489,8 @@ button {
    pages and direction-screen columns). The native scroll engine is untouched —
    wheel, touchpad and keyboard scrolling all keep working. */
 .project-detail,
+.project-list,
+.projects-body,
 .dir-game-right,
 .dir-open-catalog,
 .dir-open-passport,
@@ -1488,6 +1502,8 @@ button {
 }
 
 .project-detail::-webkit-scrollbar,
+.project-list::-webkit-scrollbar,
+.projects-body::-webkit-scrollbar,
 .dir-game-right::-webkit-scrollbar,
 .dir-open-catalog::-webkit-scrollbar,
 .dir-open-passport::-webkit-scrollbar,
@@ -1498,6 +1514,8 @@ button {
 }
 
 .project-detail::-webkit-scrollbar-track,
+.project-list::-webkit-scrollbar-track,
+.projects-body::-webkit-scrollbar-track,
 .dir-game-right::-webkit-scrollbar-track,
 .dir-open-catalog::-webkit-scrollbar-track,
 .dir-open-passport::-webkit-scrollbar-track,
@@ -1510,6 +1528,8 @@ button {
 }
 
 .project-detail::-webkit-scrollbar-thumb,
+.project-list::-webkit-scrollbar-thumb,
+.projects-body::-webkit-scrollbar-thumb,
 .dir-game-right::-webkit-scrollbar-thumb,
 .dir-open-catalog::-webkit-scrollbar-thumb,
 .dir-open-passport::-webkit-scrollbar-thumb,
@@ -1523,6 +1543,8 @@ button {
 }
 
 .project-detail::-webkit-scrollbar-thumb:hover,
+.project-list::-webkit-scrollbar-thumb:hover,
+.projects-body::-webkit-scrollbar-thumb:hover,
 .dir-game-right::-webkit-scrollbar-thumb:hover,
 .dir-open-catalog::-webkit-scrollbar-thumb:hover,
 .dir-open-passport::-webkit-scrollbar-thumb:hover,
@@ -1533,6 +1555,8 @@ button {
 }
 
 .project-detail::-webkit-scrollbar-thumb:active,
+.project-list::-webkit-scrollbar-thumb:active,
+.projects-body::-webkit-scrollbar-thumb:active,
 .dir-game-right::-webkit-scrollbar-thumb:active,
 .dir-open-catalog::-webkit-scrollbar-thumb:active,
 .dir-open-passport::-webkit-scrollbar-thumb:active,
@@ -1728,6 +1752,26 @@ button {
   /* Compact list spacing */
   .project-list {
     gap: 0.15cqw;
+  }
+
+  /* On narrow widths the list + preview stack vertically and the whole body
+     scrolls inside the display frame instead of clipping the last items past
+     the glass. The preview keeps its natural height (does not collapse) so
+     the open button and project description stay visible; the list takes the
+     remaining space and scrolls internally. */
+  .projects-body {
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .project-list {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+  }
+  .project-preview {
+    width: 100%;
+    flex: 0 0 auto;
   }
 
   /* Shrink the preview illustration max size */

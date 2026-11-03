@@ -293,8 +293,12 @@ export function masterAsset(): string {
 // Covers the EXACT screen region so its edges are the same pixels as the
 // master underneath — seam-free by construction.
 const SCREEN_SURFACE_BOUNDS: Bounds = [1250, 588, 3338, 1942];
-// Mode content lives BETWEEN the common baked header and the common baked
-// tab row, so it never clips or overlaps them.
+// Mode content lives in the display glass region. The baked tab row (profile
+// / projects / contact buttons) sits at reference-space y 1778–1888, so the
+// HTML panel stops just above it at y=1744 — 34px of glass margin between
+// content bottom and the tab-row top — so no HTML panel ever paints over or
+// touches the physical tab buttons and the baked divider line. The view's
+// own overflow:hidden plus inner scroll containers keep content clipped.
 const SCREEN_CONTENT_BOUNDS: Bounds = [1250, 588, 3338, 1744];
 const SCHEMA_CIRCLES: Array<{ cx: number; cy: number; r: number }> = [
   { cx: 22, cy: 44, r: 16 },

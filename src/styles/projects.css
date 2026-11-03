@@ -63,12 +63,17 @@
 }
 
 .project-detail {
-  flex: 1;
+  flex: 1 1 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 0.7cqw;
   padding: 0.2cqw 0.3cqw 0.4cqw 0;
+  /* Cap the detail page at the available glass height so its own
+     scrollbar stays inside the display frame instead of the whole page
+     growing past the baked lower tab row. */
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .project-detail[hidden] {
