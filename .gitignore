@@ -29,6 +29,14 @@ preview.log
 # Playwright test artifacts (regenerated on each run)
 e2e/test-results/
 
+# QA screenshots and dev-server logs (local working artifacts)
+bleed-diag/
+dev-server.log
+dev-server-err.log
+
+# AI-agent local scratch / state
+.mimocode/
+
 # Stray local binary (not a build artifact, not tracked)
 mimo.exe
 

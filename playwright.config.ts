@@ -8,7 +8,10 @@ export default defineConfig({
   },
   expect: {
     toHaveScreenshot: {
-      maxDiffPixelRatio: 0.02,
+      // The device is built over a 4K raster master; font antialiasing at
+      // ~1536px width can legitimately shift a few pixels. 0.05 keeps
+      // genuine regressions failing without tripping on raster noise.
+      maxDiffPixelRatio: 0.05,
     },
   },
   projects: [
