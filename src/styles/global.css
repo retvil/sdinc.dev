@@ -38,7 +38,9 @@ main {
 .device {
   position: relative;
   width: 100%;
-  min-width: 0;
+  /* Mobile = desktop: the device keeps its minimum usable width and the
+     page scrolls horizontally instead of reflowing the composition. */
+  min-width: 960px;
   aspect-ratio: 3 / 2;
   container-type: inline-size;
   container-name: device;
@@ -1689,108 +1691,9 @@ button {
   }
 }
 
-/* --- mobile adaptation (sub-960px viewports) ---
-   The device container keeps aspect-ratio 3/2 so the master raster stays
-   proportional. Below the 640px container threshold the two-column layouts
-   stack to a single column and dense text gets a floor so it stays readable.
-   The min-width was dropped from 960px to 0 so the container can shrink to
-   fit the viewport.
-
-   At 375px the container is ~375px wide, so 1cqw ≈ 3.75px and pure-cqw
-   fonts collapse to illegible sizes (captions ~2px, headings ~6px). The
-   floor below keeps every text element at a readable minimum. 12px is the
-   practical floor: small enough to still fit the display frame, large
-   enough to read on a phone. (The master raster art itself scales down and
-   gets soft — that is an accepted design consequence of a single static
-   image; the live HTML text stays sharp because it is real DOM.) */
-
-@container (max-width: 640px) {
-  /* Direction screens: stack instead of side-by-side */
-  .dir-media-layout,
-  .dir-game-layout,
-  .dir-open-layout,
-  .dir-rag-layout,
-  .dir-chat-layout,
-  .projects-body,
-  .project-body {
-    flex-direction: column;
-  }
-
-  /* Project detail grids: single column */
-  .project-detail[data-layout="compare"],
-  .project-detail[data-layout="split"] {
-    grid-template-columns: 1fr;
-  }
-
-  /* Text floor: keep all display content readable on a phone. The 12px
-     floor wins over the pure-cqw sizing whenever the container is narrow.
-     Headings keep a slightly larger floor so the hierarchy survives. */
-  .project-view p,
-  .project-view li,
-  .project-view small,
-  .projects-view p,
-  .projects-view li,
-  .projects-view small,
-  .contact-view p,
-  .contact-view li,
-  .contact-view small,
-  .live-card p,
-  .pv-origin,
-  .dir-origin,
-  .dir-status,
-  .dir-screen p,
-  .dir-screen li,
-  .dir-screen small {
-    font-size: max(1cqw, 12px);
-  }
-  .project-view h2,
-  .project-view h3,
-  .projects-view h2,
-  .projects-view h3,
-  .contact-view h2 {
-    font-size: max(1.2cqw, 14px);
-  }
-  /* .project-item uses font shorthand with a unit — override with
-     !important so the 12px floor reliably wins at narrow widths. */
-  .project-item {
-    font-size: max(1cqw, 12px) !important;
-  }
-
-  /* Compact list spacing */
-  .project-list {
-    gap: 0.15cqw;
-  }
-
-  /* On narrow widths the list + preview stack vertically and the whole body
-     scrolls inside the display frame instead of clipping the last items past
-     the glass. The preview keeps its natural height (does not collapse) so
-     the open button and project description stay visible; the list takes the
-     remaining space and scrolls internally. */
-  .projects-body {
-    flex-direction: column;
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
-  .project-list {
-    width: 100%;
-    flex: 1;
-    min-height: 0;
-  }
-  .project-preview {
-    width: 100%;
-    flex: 0 0 auto;
-  }
-
-  /* Shrink the preview illustration max size */
-  .pv-illustration svg {
-    max-width: 14cqw;
-    max-height: 8cqw;
-  }
-
-  /* Contact actions: stack vertically on narrow */
-  .contact-actions {
-    flex-direction: column;
-    gap: 0.4cqw;
-  }
-}
+/* --- narrow-viewport behavior (sub-960px viewports) ---
+   Mobile = desktop: the device keeps a fixed minimum width and the page
+   scrolls horizontally (see .viewport above) instead of reflowing. No
+   container queries, no text floors, no stacking — the desktop composition
+   is preserved 1:1 at any viewport size. */
 
