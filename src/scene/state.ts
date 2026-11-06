@@ -22,7 +22,7 @@ import {
   stepActiveScreen,
 } from '../projects/registry';
 import '../projects/screens';
-import { playRotorClick, playRotorConfirm, playVaultOpen } from './sound';
+import { playRotorClick, playRotorConfirm, playVaultOpen, playScreenClick, playButtonPress } from './sound';
 
 type DirectionCopy = Record<DirectionKey, DirectionInfo>;
 export type ScreenMode = 'profile' | 'projects' | 'project' | 'contact';
@@ -145,6 +145,7 @@ export class DeviceState {
     if (mark) {
       this.userSelected = true;
       this.status(`Выбран ${info.title}. Данные демонстрационные.`);
+      playScreenClick();
     }
   }
 
@@ -268,6 +269,7 @@ export class DeviceState {
     // Each direction has a unique level-1 preview scene.
     this.previewSwitcher?.(project.screen);
     this.status(`Проект выбран: ${project.title}.`);
+    playScreenClick();
   }
 
   /**
@@ -526,6 +528,7 @@ export class DeviceState {
     }
     const [type, value] = action.split(':');
     if (type === 'node') {
+      playScreenClick();
       this.selectNode(value);
       return;
     }
@@ -536,12 +539,15 @@ export class DeviceState {
     // Any other value is a bug — warn and fall back to profile instead of
     // silently landing on contact.
     if (value === 'profile') {
+      playButtonPress();
       this.setMode('profile');
       this.status('Профиль. Выберите направление.');
     } else if (value === 'projects') {
+      playButtonPress();
       this.setMode('projects');
       this.status('Список проектов. Демонстрационные данные.');
     } else if (value === 'contact') {
+      playButtonPress();
       this.setMode('contact');
       this.status(`Связь. Выбран ${CONTACTS[this.selectedContact].channel}.`);
     } else {

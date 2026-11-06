@@ -189,6 +189,84 @@ export function playVaultOpen(): void {
   slide.stop(now + 0.6);
 }
 
+/**
+ * Pip-Boy screen click: a short, crisp mechanical tick, band-passed around
+ * 3.2 kHz. Emitted on every screen button press — direction nodes, section
+ * tabs, project list items — to make on-screen interaction feel like
+ * pressing a physical Pip-Boy button. ~45 ms, quiet by design.
+ */
+export function playScreenClick(): void {
+  const sfx = beginSfx();
+  if (!sfx) return;
+  const { ctx, now } = sfx;
+
+  const dur = 0.045;
+  const frames = Math.floor(ctx.sampleRate * dur);
+  const buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < frames; i += 1) {
+    const t = i / frames;
+    data[i] = (Math.random() * 2 - 1) * Math.exp(-t * 28);
+  }
+  const noise = ctx.createBufferSource();
+  noise.buffer = buffer;
+  const band = ctx.createBiquadFilter();
+  band.type = 'bandpass';
+  band.frequency.value = 3200;
+  band.Q.value = 4;
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.09, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+  noise.connect(band).connect(gain).connect(ctx.destination);
+  noise.start(now);
+  noise.stop(now + dur);
+}
+
+/**
+ * Physical button press: a deeper, more resonant "clack" than the screen
+ * tick. Emitted on the Profile / Projects / Contact hardware buttons.
+ * Layered square-wave thump + band-passed noise snap. ~90 ms.
+ */
+export function playButtonPress(): void {
+  const sfx = beginSfx();
+  if (!sfx) return;
+  const { ctx, now } = sfx;
+
+  // Low square thump (the button body hitting its stop).
+  const osc = ctx.createOscillator();
+  const oscGain = ctx.createGain();
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(160, now);
+  osc.frequency.exponentialRampToValueAtTime(60, now + 0.06);
+  oscGain.gain.setValueAtTime(0.11, now);
+  oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+  osc.connect(oscGain).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.09);
+
+  // Noise snap layered over the thump.
+  const dur = 0.04;
+  const frames = Math.floor(ctx.sampleRate * dur);
+  const buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < frames; i += 1) {
+    const t = i / frames;
+    data[i] = (Math.random() * 2 - 1) * Math.exp(-t * 24);
+  }
+  const noise = ctx.createBufferSource();
+  noise.buffer = buffer;
+  const band = ctx.createBiquadFilter();
+  band.type = 'bandpass';
+  band.frequency.value = 1400;
+  band.Q.value = 3;
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.07, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+  noise.connect(band).connect(gain).connect(ctx.destination);
+  noise.start(now);
+  noise.stop(now + dur);
+}
+
 export function isMuted(): boolean {
   return muted;
 }

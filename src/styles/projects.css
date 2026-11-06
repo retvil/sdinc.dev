@@ -32,6 +32,7 @@
   align-items: center;
   justify-content: center;
   pointer-events: none;
+  overflow: hidden;
 }
 
 .pv-illustration svg {

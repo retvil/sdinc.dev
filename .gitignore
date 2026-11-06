@@ -34,6 +34,7 @@ scratch/
 
 # Playwright test artifacts (regenerated on each run)
 e2e/test-results/
+e2e/visual.spec.ts-snapshots/
 
 # QA screenshots and dev-server logs (local working artifacts)
 bleed-diag/

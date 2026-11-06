@@ -550,6 +550,7 @@ button {
   font: 1.05cqw monospace;
   cursor: pointer;
   transition: border-color 0.12s, box-shadow 0.12s;
+  overflow: hidden;
 }
 
 .project-item:hover {
