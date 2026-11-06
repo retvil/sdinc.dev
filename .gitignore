@@ -25,6 +25,12 @@ dist/
 
 # Local dev server logs
 preview.log
+preview-bg.log
+preview-bg-err.log
+preview-run.log
+
+# AI-agent scratch work (measurement scripts, diag screenshots)
+scratch/
 
 # Playwright test artifacts (regenerated on each run)
 e2e/test-results/
