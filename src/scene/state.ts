@@ -219,6 +219,7 @@ export class DeviceState {
   private copyInFlight = 0;
 
   async requestContactCopy(index: number): Promise<void> {
+    playScreenClick();
     const count = CONTACTS.length;
     const contact = CONTACTS[((index % count) + count) % count];
     const resultEl = this.elements.get('contact-result');
@@ -334,6 +335,7 @@ export class DeviceState {
 
   /** Opens the level-3 demonstration of the selected direction. */
   showProjectDemo(): void {
+    playScreenClick();
     this.projectView = 'demo';
     this.updateProjectView();
     this.status(`Демонстрация: ${PROJECTS[this.selectedProject].title}. Возврат — «К описанию».`);
@@ -342,6 +344,7 @@ export class DeviceState {
 
   /** Returns from the demonstration to the description, restoring focus. */
   backToProjectDetail(): void {
+    playScreenClick();
     this.projectView = 'detail';
     this.updateProjectView();
     this.status(`Описание: ${PROJECTS[this.selectedProject].title}.`);
