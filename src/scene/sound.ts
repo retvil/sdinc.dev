@@ -5,7 +5,7 @@
 // (localStorage). Every public play* function is a no-op when muted or
 // when the browser has no Web Audio support.
 //
-// reduced-motion note (per SDINC-projects-specifications 00-common §6):
+// reduced-motion note: honors prefers-reduced-motion globally.
 // the visual presentation must retain full meaning without the sound;
 // this module only adds optional audio cues, never visual ones.
 

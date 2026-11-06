@@ -46,3 +46,6 @@ dev-server-err.log
 # Stray local binary (not a build artifact, not tracked)
 mimo.exe
 
+# Agent ТЗ package (removed from repo — kept out of git)
+/SDINC-projects-specifications/
+
