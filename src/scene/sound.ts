@@ -223,48 +223,63 @@ export function playScreenClick(): void {
 }
 
 /**
- * Physical button press: a deeper, more resonant "clack" than the screen
- * tick. Emitted on the Profile / Projects / Contact hardware buttons.
- * Layered square-wave thump + band-passed noise snap. ~90 ms.
+ * Physical toggle-switch click: a sharp, metallic "tack" — like a
+ * mechanical rock-switch being flipped. The sound is built from a
+ * very short high-frequency noise transient (15 ms) plus a short
+ * decaying 5 kHz sine ping to simulate the metallic snap of the
+ * switch contacts. This is distinct from the Pip-Boy screen tick:
+ * it has no low thump, no warm tone — just a crisp click.
+ * ~30 ms total.
  */
 export function playButtonPress(): void {
   const sfx = beginSfx();
   if (!sfx) return;
   const { ctx, now } = sfx;
 
-  // Low square thump (the button body hitting its stop).
-  const osc = ctx.createOscillator();
-  const oscGain = ctx.createGain();
-  osc.type = 'square';
-  osc.frequency.setValueAtTime(160, now);
-  osc.frequency.exponentialRampToValueAtTime(60, now + 0.06);
-  oscGain.gain.setValueAtTime(0.11, now);
-  oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
-  osc.connect(oscGain).connect(ctx.destination);
-  osc.start(now);
-  osc.stop(now + 0.09);
-
-  // Noise snap layered over the thump.
-  const dur = 0.04;
+  // 1. Sharp noise transient (the "snap" of the switch).
+  const dur = 0.015;
   const frames = Math.floor(ctx.sampleRate * dur);
   const buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
   const data = buffer.getChannelData(0);
   for (let i = 0; i < frames; i += 1) {
     const t = i / frames;
-    data[i] = (Math.random() * 2 - 1) * Math.exp(-t * 24);
+    data[i] = (Math.random() * 2 - 1) * Math.exp(-t * 50);
   }
   const noise = ctx.createBufferSource();
   noise.buffer = buffer;
-  const band = ctx.createBiquadFilter();
-  band.type = 'bandpass';
-  band.frequency.value = 1400;
-  band.Q.value = 3;
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass';
+  hp.frequency.value = 3000;
   const gain = ctx.createGain();
-  gain.gain.setValueAtTime(0.07, now);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-  noise.connect(band).connect(gain).connect(ctx.destination);
+  gain.gain.setValueAtTime(0.14, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + dur + 0.01);
+  noise.connect(hp).connect(gain).connect(ctx.destination);
   noise.start(now);
-  noise.stop(now + dur);
+  noise.stop(now + dur + 0.02);
+
+  // 2. Short metallic ping (contact snap) — 5 kHz sine, fast decay.
+  const ping = ctx.createOscillator();
+  const pingGain = ctx.createGain();
+  ping.type = 'sine';
+  ping.frequency.setValueAtTime(5000, now);
+  pingGain.gain.setValueAtTime(0.0001, now);
+  pingGain.gain.exponentialRampToValueAtTime(0.08, now + 0.004);
+  pingGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+  ping.connect(pingGain).connect(ctx.destination);
+  ping.start(now);
+  ping.stop(now + 0.06);
+
+  // 3. Lower metallic overtone (2.2 kHz) for the "tick" character.
+  const tick = ctx.createOscillator();
+  const tickGain = ctx.createGain();
+  tick.type = 'sine';
+  tick.frequency.setValueAtTime(2200, now);
+  tickGain.gain.setValueAtTime(0.0001, now);
+  tickGain.gain.exponentialRampToValueAtTime(0.05, now + 0.003);
+  tickGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+  tick.connect(tickGain).connect(ctx.destination);
+  tick.start(now);
+  tick.stop(now + 0.05);
 }
 
 export function isMuted(): boolean {
