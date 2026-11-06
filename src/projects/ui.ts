@@ -1,6 +1,8 @@
 // Small DOM helpers shared by the direction screens. Deliberately tiny:
 // no universal widget engine — each screen owns its own composition.
 
+import { playScreenClick } from '../scene/sound';
+
 type Tag = keyof HTMLElementTagNameMap;
 
 export function el<K extends Tag>(tag: K, className?: string, text?: string): HTMLElementTagNameMap[K] {
@@ -23,7 +25,7 @@ export function statusLine(): HTMLParagraphElement {
   return p;
 }
 
-/** Toggle button with a selected state kept in one place. */
+/** Toggle button with a selected state kept in one place; plays the Pip-Boy tick on press. */
 export function selectButton(
   label: string,
   ariaLabel: string,
@@ -33,7 +35,10 @@ export function selectButton(
   b.type = 'button';
   b.textContent = label;
   b.setAttribute('aria-label', ariaLabel);
-  b.addEventListener('click', onClick);
+  b.addEventListener('click', () => {
+    playScreenClick();
+    onClick();
+  });
   return b;
 }
 
@@ -47,4 +52,16 @@ export function markSelected(
     b.classList.toggle('selected', isSel);
     b.setAttribute(attribute, String(isSel));
   }
+}
+
+/**
+ * Wraps a click handler so every button press plays the Pip-Boy tick.
+ * Use this for all in-screen buttons created with el('button', ...) —
+ * chat options, reference buttons, game reset, contact selects, etc.
+ */
+export function clickSfx(handler: () => void): () => void {
+  return () => {
+    playScreenClick();
+    handler();
+  };
 }

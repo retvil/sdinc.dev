@@ -3,7 +3,7 @@
 // выдуманных репозиториев, звёзд, языковых процентов и статусов CI.
 
 import type { ProjectScreen } from '../types';
-import { el, originNote, selectButton, statusLine, markSelected } from '../ui';
+import { el, originNote, selectButton, statusLine, markSelected, clickSfx } from '../ui';
 
 /** Confirmed source: the portfolio site repository itself (user-confirmed). */
 const REPO = {

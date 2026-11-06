@@ -3,7 +3,7 @@
 // пример — никаких случайных сигналов, метрик и доступа к устройствам.
 
 import type { ProjectScreen } from '../types';
-import { el, originNote, selectButton, statusLine, markSelected } from '../ui';
+import { el, originNote, selectButton, statusLine, markSelected, clickSfx } from '../ui';
 
 interface MediaEvent {
   id: string;
@@ -205,7 +205,7 @@ export function createMediaAnalyticsScreen(): ProjectScreen {
           marker.style.left = `${e.pos}%`;
           marker.dataset.eventIndex = String(index);
           marker.setAttribute('aria-label', `${label}: ${e.type}, ${e.time}`);
-          marker.addEventListener('click', () => selectEvent(e.id, `Выбрано событие: ${e.type} (${e.time}).`));
+          marker.addEventListener('click', clickSfx(() => selectEvent(e.id, `Выбрано событие: ${e.type} (${e.time}).`)));
           line.append(marker);
           store.push(marker);
         });

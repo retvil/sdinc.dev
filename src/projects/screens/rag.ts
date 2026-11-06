@@ -3,7 +3,7 @@
 // один честно без основания). Модель не вызывается, индексации нет.
 
 import type { ProjectScreen } from '../types';
-import { el, originNote, selectButton, statusLine, markSelected } from '../ui';
+import { el, originNote, selectButton, statusLine, markSelected, clickSfx } from '../ui';
 
 interface Doc {
   id: string;
@@ -121,13 +121,13 @@ export function createRagScreen(): ProjectScreen {
           ref.type = 'button';
           ref.textContent = `[${refMatch[1]}]`;
           ref.setAttribute('aria-label', `Показать фрагмент-основание ${refMatch[1]}`);
-          ref.addEventListener('click', () => {
+          ref.addEventListener('click', clickSfx(() => {
             selectedFragmentId = fragId;
             const frag = FRAGMENTS.find((f) => f.id === fragId);
             openDocId = frag?.docId ?? null;
             syncFragments();
             if (status) status.textContent = 'Показан фрагмент-основание и документ-источник.';
-          });
+          }));
           p.append(ref);
         } else if (part) {
           p.append(el('span', undefined, part));

@@ -3,7 +3,7 @@
 // переход в раздел «Связь» только отдельной явной кнопкой.
 
 import type { ProjectScreen } from '../types';
-import { el, originNote, statusLine, markSelected } from '../ui';
+import { el, originNote, statusLine, markSelected, clickSfx } from '../ui';
 
 interface Option {
   label: string;
@@ -106,7 +106,7 @@ export function createChatbotScreen(): ProjectScreen {
       const b = el('button', 'dir-chat-option') as HTMLButtonElement;
       b.type = 'button';
       b.textContent = o.label;
-      b.addEventListener('click', () => activateOption(o));
+      b.addEventListener('click', clickSfx(() => activateOption(o)));
       optionsRow?.append(b);
       return b;
     });
@@ -176,7 +176,7 @@ export function createChatbotScreen(): ProjectScreen {
       resetBtn.type = 'button';
       resetBtn.textContent = 'Начать диалог заново';
       resetBtn.setAttribute('aria-label', 'Начать диалог заново: сброс только диалога');
-      resetBtn.addEventListener('click', reset);
+      resetBtn.addEventListener('click', clickSfx(reset));
       status = statusLine();
       left.append(log, optionsRow, resetBtn, status, originNote(
         'Локальный сценарий. Сообщения никуда не отправляются.',

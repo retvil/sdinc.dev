@@ -3,7 +3,7 @@
 // Детерминированная карта, локальная демонстрация, без сети и таймеров.
 
 import type { ProjectScreen } from '../types';
-import { el, originNote, statusLine } from '../ui';
+import { el, originNote, statusLine, clickSfx } from '../ui';
 
 const SIZE = 5;
 /** Deterministic obstacles (x, y) — target is reachable around them. */
@@ -240,13 +240,13 @@ export function createGameScreen(): ProjectScreen {
       reset.type = 'button';
       reset.textContent = 'Начать заново';
       reset.setAttribute('aria-label', 'Начать заново: сброс локальной демонстрации маршрута');
-      reset.addEventListener('click', () => {
+      reset.addEventListener('click', clickSfx(() => {
         pos = [...START];
         won = false;
         selectedDir = 0;
         sync();
         announce('Прототип сброшен к старту. Маркер на исходной позиции.');
-      });
+      }));
       left.append(reset);
 
       // Right column: legend, rules, selection info, status.

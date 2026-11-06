@@ -3,7 +3,7 @@
 // без персональных данных, баллов качества и ложного воспроизведения.
 
 import type { ProjectScreen } from '../types';
-import { el, originNote, selectButton, statusLine, markSelected } from '../ui';
+import { el, originNote, selectButton, statusLine, markSelected, clickSfx } from '../ui';
 
 type Speaker = 'operator' | 'client';
 
@@ -108,7 +108,7 @@ export function createCallAnalyticsScreen(): ProjectScreen {
         seg.style.width = `${(l.duration / TOTAL) * 100}%`;
         seg.dataset.lineIndex = String(index);
         seg.setAttribute('aria-label', `${SPEAKER_LABEL[speaker]}, ${l.time}: ${l.text}`);
-        seg.addEventListener('click', () => pickLine(l.id, `Реплика ${SPEAKER_LABEL[l.speaker]} (${l.time}).`));
+        seg.addEventListener('click', clickSfx(() => pickLine(l.id, `Реплика ${SPEAKER_LABEL[l.speaker]} (${l.time}).`)));
         line.append(seg);
         trackButtons.push(seg);
       }
@@ -147,11 +147,11 @@ export function createCallAnalyticsScreen(): ProjectScreen {
         basis.type = 'button';
         basis.textContent = 'основание ↩';
         basis.setAttribute('aria-label', `Перейти к реплике-основанию: ${l?.text}`);
-        basis.addEventListener('click', () => {
+        basis.addEventListener('click', clickSfx(() => {
           view = 'talk';
           syncView();
           pickLine(row.basisLineId as string, `Основание: реплика ${SPEAKER_LABEL[l?.speaker ?? 'operator']} (${l?.time}).`);
-        });
+        }));
         p.append(' ', basis);
       }
       box.append(p);
