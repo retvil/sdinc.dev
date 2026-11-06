@@ -179,6 +179,7 @@ export class DeviceState {
       el.setAttribute('aria-pressed', String(itemIndex === this.selectedContact));
     }
     this.status(`Выбран ${CONTACTS[this.selectedContact].channel}.`);
+    playScreenClick();
   }
 
   /**
@@ -521,14 +522,13 @@ export class DeviceState {
     }
   }
 
-  handleAction(action: string): void {
+  handleAction(action: string, source: 'screen' | 'hardware' = 'screen'): void {
     if (action === 'dial') {
       this.step(1);
       return;
     }
     const [type, value] = action.split(':');
     if (type === 'node') {
-      playScreenClick();
       this.selectNode(value);
       return;
     }
@@ -538,16 +538,19 @@ export class DeviceState {
     // sdinc:navigate; 'section:profile' fires from the baked tab row.
     // Any other value is a bug — warn and fall back to profile instead of
     // silently landing on contact.
+    // Sound: on-screen tabs play the Pip-Boy tick; the hardware buttons
+    // (Profile / Projects / Contact, left side) play the toggle-switch click.
+    const sfx = source === 'hardware' ? playButtonPress : playScreenClick;
     if (value === 'profile') {
-      playButtonPress();
+      sfx();
       this.setMode('profile');
       this.status('Профиль. Выберите направление.');
     } else if (value === 'projects') {
-      playButtonPress();
+      sfx();
       this.setMode('projects');
       this.status('Список проектов. Демонстрационные данные.');
     } else if (value === 'contact') {
-      playButtonPress();
+      sfx();
       this.setMode('contact');
       this.status(`Связь. Выбран ${CONTACTS[this.selectedContact].channel}.`);
     } else {

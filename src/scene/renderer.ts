@@ -94,11 +94,12 @@ export function mountScreenControls(container: HTMLElement): void {
   }
 
   for (const key of SECTION_KEYS) {
-    const node = findNode(`tab-${key}`);
+    const node = findNode(`button-${key}`);
     if (!node) throw new Error(`Scene node not found: tab-${key}`);
     const control = createControl(node, 'tab-control', `Вкладка ${key}`);
     control.dataset.action = `section:${key}`;
-    control.addEventListener('click', () => device.handleAction(`section:${key}`));
+    // On-screen tab row → Pip-Boy screen tick.
+    control.addEventListener('click', () => device.handleAction(`section:${key}`, 'screen'));
     container.append(control);
     device.register(node, control);
   }
@@ -108,7 +109,7 @@ export function mountScreenControls(container: HTMLElement): void {
   const openControl = createControl(openNode, 'open-control', 'Открыть проекты');
   openControl.dataset.action = 'section:projects';
   openControl.dataset.screen = 'profile';
-  openControl.addEventListener('click', () => device.handleAction('section:projects'));
+  openControl.addEventListener('click', () => device.handleAction('section:projects', 'screen'));
   container.append(openControl);
   device.register(openNode, openControl);
 
@@ -126,7 +127,7 @@ export function mountScreenControls(container: HTMLElement): void {
   const open = document.createElement('button');
   open.type = 'button';
   open.textContent = 'ПРОЕКТЫ →';
-  open.addEventListener('click', () => device.handleAction('section:projects'));
+  open.addEventListener('click', () => device.handleAction('section:projects', 'screen'));
   live.append(title, description, open);
   live.hidden = true;
   container.append(live);
@@ -175,7 +176,7 @@ export function mountSectionControls(container: HTMLElement): void {
 
     const control = createControl(node, 'section-control', node.name);
     control.dataset.action = `section:${key}`;
-    control.addEventListener('click', () => device.handleAction(`section:${key}`));
+    control.addEventListener('click', () => device.handleAction(`section:${key}`, 'hardware'));
     container.append(control);
     device.register(node, control);
 
@@ -437,7 +438,7 @@ export function mountScreenPanels(container: HTMLElement): void {
   backButton.className = 'panel-button';
   backButton.id = 'project-back';
   backButton.textContent = '← К списку';
-  backButton.addEventListener('click', () => device.handleAction('section:projects'));
+  backButton.addEventListener('click', () => device.handleAction('section:projects', 'screen'));
   // Visible only inside a demonstration: returns to the project description
   // (level 2), keeping the project open.
   const demoBackButton = document.createElement('button');
