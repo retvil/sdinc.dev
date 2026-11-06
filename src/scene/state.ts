@@ -168,7 +168,7 @@ export class DeviceState {
    * Highlights exactly one contact (rotator cycles through all three).
    * Selection alone never opens a link.
    */
-  selectContact(index: number): void {
+   selectContact(index: number, mark = true): void {
     const count = CONTACTS.length;
     this.selectedContact = ((index % count) + count) % count;
     for (const [id, el] of this.elements) {
@@ -179,7 +179,7 @@ export class DeviceState {
       el.setAttribute('aria-pressed', String(itemIndex === this.selectedContact));
     }
     this.status(`Выбран ${CONTACTS[this.selectedContact].channel}.`);
-    playScreenClick();
+    if (mark) playScreenClick();
   }
 
   /**
@@ -248,7 +248,7 @@ export class DeviceState {
   /** Open-project presentation: 'detail' (level 2) or 'demo' (level 3). */
   private projectView: 'detail' | 'demo' = 'detail';
 
-  selectProject(index: number): void {
+  selectProject(index: number, mark = true): void {
     const count = PROJECTS.length;
     this.selectedProject = ((index % count) + count) % count;
     const project = PROJECTS[this.selectedProject];
@@ -270,7 +270,7 @@ export class DeviceState {
     // Each direction has a unique level-1 preview scene.
     this.previewSwitcher?.(project.screen);
     this.status(`Проект выбран: ${project.title}.`);
-    playScreenClick();
+    if (mark) playScreenClick();
   }
 
   /**
@@ -422,7 +422,9 @@ export class DeviceState {
       else if (screen === 'contact') el.hidden = mode !== 'contact';
     }
     if (mode === 'projects') {
-      this.selectProject(this.selectedProject);
+      // Programmatic sync on mode change — no screen click here; the click
+      // that triggered setMode already played its own sound.
+      this.selectProject(this.selectedProject, false);
       this.triggerPanelEntry('projects-view');
       this.refocusAfterModeChange(previous, `project-item-${this.selectedProject}`);
     } else if (mode === 'project') {
@@ -488,14 +490,16 @@ export class DeviceState {
       this.rotorEl.classList.add('rotor-step');
     }
     if (this.mode === 'projects') {
-      this.selectProject(this.selectedProject + delta);
+      // Rotor step already plays playRotorClick — no second screen tick.
+      this.selectProject(this.selectedProject + delta, false);
     } else if (this.mode === 'project') {
       // The rotor drives the active direction screen only; on the
       // description page it stays inert — never mapped to detail actions.
       if (this.projectView !== 'demo') return;
       stepActiveScreen(delta);
     } else if (this.mode === 'contact') {
-      this.selectContact(this.selectedContact + delta);
+      // Rotor step already plays playRotorClick — no second screen tick.
+      this.selectContact(this.selectedContact + delta, false);
     } else {
       const index = DIRECTION_KEYS.indexOf(this.active);
       const next = DIRECTION_KEYS[(index + delta + DIRECTION_KEYS.length) % DIRECTION_KEYS.length];
@@ -538,19 +542,18 @@ export class DeviceState {
     // sdinc:navigate; 'section:profile' fires from the baked tab row.
     // Any other value is a bug — warn and fall back to profile instead of
     // silently landing on contact.
-    // Sound: on-screen tabs play the Pip-Boy tick; the hardware buttons
-    // (Profile / Projects / Contact, left side) play the toggle-switch click.
-    const sfx = source === 'hardware' ? playButtonPress : playScreenClick;
+    // Sound: on-screen tab row (Pip-Boy tick) vs hardware buttons left side
+    // (toggle-switch clack). Both are distinct cues.
     if (value === 'profile') {
-      sfx();
+      source === 'hardware' ? playButtonPress() : playScreenClick();
       this.setMode('profile');
       this.status('Профиль. Выберите направление.');
     } else if (value === 'projects') {
-      sfx();
+      source === 'hardware' ? playButtonPress() : playScreenClick();
       this.setMode('projects');
       this.status('Список проектов. Демонстрационные данные.');
     } else if (value === 'contact') {
-      sfx();
+      source === 'hardware' ? playButtonPress() : playScreenClick();
       this.setMode('contact');
       this.status(`Связь. Выбран ${CONTACTS[this.selectedContact].channel}.`);
     } else {

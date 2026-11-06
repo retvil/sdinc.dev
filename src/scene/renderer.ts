@@ -94,7 +94,7 @@ export function mountScreenControls(container: HTMLElement): void {
   }
 
   for (const key of SECTION_KEYS) {
-    const node = findNode(`button-${key}`);
+    const node = findNode(`tab-${key}`);
     if (!node) throw new Error(`Scene node not found: tab-${key}`);
     const control = createControl(node, 'tab-control', `Вкладка ${key}`);
     control.dataset.action = `section:${key}`;
