@@ -30,10 +30,10 @@
   text-shadow: 0 0 6px rgba(131, 189, 153, 0.18);
 }
 
-/* --- 2. Subtle scanline overlay on the display surface ---
-   A repeating-linear-gradient with 3px period: very faint dark lines
-   that evoke a CRT raster. Opacity kept to 0.04 so it is felt, not
-   seen. Applied to .screen-surface via a pseudo-element. */
+/* --- 2. Subtle green CRT scanline overlay on the display surface ---
+    A repeating-linear-gradient with 3px period: very faint green lines
+    that evoke a real phosphor CRT raster. Opacity kept to 0.015 so it
+    is felt, not seen. Applied to .screen-surface via a pseudo-element. */
 
 .screen-surface::after {
   content: "";
@@ -41,10 +41,10 @@
   inset: 0;
   background: repeating-linear-gradient(
     to bottom,
-    transparent 0px,
-    transparent 2px,
-    rgba(0, 0, 0, 0.04) 2px,
-    rgba(0, 0, 0, 0.04) 4px
+    rgba(0, 255, 0, 0.015) 0px,
+    rgba(0, 255, 0, 0.015) 1px,
+    transparent 1px,
+    transparent 3px
   );
   pointer-events: none;
   z-index: 1;
