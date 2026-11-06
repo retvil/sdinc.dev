@@ -66,12 +66,10 @@ describe('DeviceState edge cases', () => {
     expect(state.screenMode).toBe('project');
   });
 
-  it('openSelectedProject on demo project does not throw', () => {
-    const demoIndex = PROJECTS.findIndex((p) => p.kind === 'demo');
+  it('openSelectedProject on any project does not throw', () => {
     // Register minimal elements so updateProjectView() can access them
     for (const id of [
-      'project-title', 'project-kind-note', 'project-schematic', 'project-tabs',
-      'project-tab-text', 'component-info', 'project-side', 'project-detail',
+      'project-title', 'project-kind-note', 'project-detail',
       'project-demo-open', 'project-demo-back', 'project-screen-host',
       'project-preview-title', 'project-preview-desc', 'project-preview-kind',
       'project-detail-essence', 'project-detail-problem', 'project-detail-approach',
@@ -86,14 +84,8 @@ describe('DeviceState edge cases', () => {
       el.id = `project-item-${i}`;
       state.registerElement(`project-item-${i}`, el);
     });
-    const demo = PROJECTS.find((p) => p.kind === 'demo')!;
-    demo.components.forEach((_, i) => {
-      const el = document.createElement('button');
-      el.id = `component-node-${i}`;
-      state.registerElement(`component-node-${i}`, el);
-    });
 
-    state.selectProject(demoIndex);
+    state.selectProject(0);
     expect(() => {
       state.openSelectedProject();
       state.setMode('project');

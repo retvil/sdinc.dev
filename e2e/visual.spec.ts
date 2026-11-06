@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * Visual regression suite: one screenshot per direction screen + the demo.
+ * Visual regression suite: one screenshot per direction preview scene and
+ * per direction detail page.
  * Run against a live `npm run preview` server (port 4322).
  * First run generates baselines into e2e/screenshots/; subsequent runs
  * fail if the pixel diff exceeds maxDiffPixelRatio (2%).
@@ -17,8 +18,6 @@ const DIRECTIONS = [
   { name: 'shorts', index: 6, file: 'list-shorts' },
   { name: 'restore', index: 7, file: 'list-restore' },
 ] as const;
-
-const DEMO_INDEX = 8;
 
 async function selectAndCapture(
   page: import('@playwright/test').Page,
@@ -53,10 +52,4 @@ test.describe('detail pages (level 2)', () => {
       await selectAndCapture(page, d.index, `detail-${d.name}`, true);
     });
   }
-});
-
-test.describe('demo project (level 3)', () => {
-  test('demo schematic view', async ({ page }) => {
-    await selectAndCapture(page, DEMO_INDEX, 'demo-schematic');
-  });
 });

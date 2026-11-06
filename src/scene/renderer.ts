@@ -10,7 +10,7 @@ import { MASKED_FACES, MASTER_ASSET, ROTOR_MASKED, deviceAsset, resolveAsset } f
 import { device } from './state';
 import { DEFAULT_DIRECTION } from '../data/demo';
 import { CONTACTS } from '../data/contacts';
-import { DEMO_PROJECT, PROJECTS } from '../data/projects';
+import { PROJECTS } from '../data/projects';
 import { setScreenHost } from '../projects/registry';
 import { mountPreviewScenes } from '../projects/previews';
 import '../projects/screens';
@@ -123,13 +123,11 @@ export function mountScreenControls(container: HTMLElement): void {
   place(live, cardNode.bounds);
   const title = document.createElement('h2');
   const description = document.createElement('p');
-  const demo = document.createElement('small');
-  demo.textContent = 'ДЕМОНСТРАЦИОННЫЕ ДАННЫЕ';
   const open = document.createElement('button');
   open.type = 'button';
   open.textContent = 'ПРОЕКТЫ →';
   open.addEventListener('click', () => device.handleAction('section:projects'));
-  live.append(title, description, demo, open);
+  live.append(title, description, open);
   live.hidden = true;
   container.append(live);
   device.bindLiveCard(live, title, description);
@@ -300,43 +298,6 @@ const SCREEN_SURFACE_BOUNDS: Bounds = [1250, 588, 3338, 1942];
 // touches the physical tab buttons and the baked divider line. The view's
 // own overflow:hidden plus inner scroll containers keep content clipped.
 const SCREEN_CONTENT_BOUNDS: Bounds = [1250, 588, 3338, 1744];
-const SCHEMA_CIRCLES: Array<{ cx: number; cy: number; r: number }> = [
-  { cx: 22, cy: 44, r: 16 },
-  { cx: 50, cy: 44, r: 18 },
-  { cx: 78, cy: 44, r: 16 },
-];
-// The schematic SVG uses a fixed viewBox. These constants MUST match the
-// literal 'viewBox="0 0 100 62"' set in schematicSvg() below. If the viewBox
-// changes, update BOTH places (or extract the attribute) — the layout math
-// (scale, offset) hardcodes these dimensions.
-const SCHEMA_VBX_W = 100;
-const SCHEMA_VBX_H = 62;
-
-function schematicSvg(width: number, height: number, dim: boolean): SVGSVGElement {
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  // viewBox dimensions MUST match SCHEMA_VBX_W/SCHEMA_VBX_H (used by the
-  // layout-hook letterbox math in mountScreenPanels below).
-  svg.setAttribute('viewBox', `0 0 ${SCHEMA_VBX_W} ${SCHEMA_VBX_H}`);
-  svg.setAttribute('aria-hidden', 'true');
-  svg.classList.add('schematic');
-  const opacity = dim ? '0.55' : '1';
-  let inner = '';
-  // Connectors between consecutive circles (n-1 segments).
-  for (let i = 0; i < SCHEMA_CIRCLES.length - 1; i += 1) {
-    const a = SCHEMA_CIRCLES[i];
-    const b = SCHEMA_CIRCLES[i + 1];
-    inner += `<line x1="${a.cx + a.r}" y1="${a.cy}" x2="${b.cx - b.r}" y2="${b.cy}" stroke="#3f7a52" stroke-width="0.8" stroke-dasharray="2 1.6" opacity="${opacity}"/>`;
-  }
-  SCHEMA_CIRCLES.forEach((c, i) => {
-    inner += `<circle cx="${c.cx}" cy="${c.cy}" r="${c.r}" fill="none" stroke="#4f8f63" stroke-width="1" opacity="${opacity}"/>`;
-    inner += `<circle cx="${c.cx}" cy="${c.cy}" r="${c.r - 4.5}" fill="none" stroke="#355f42" stroke-width="0.5" stroke-dasharray="1.6 1.4" opacity="${opacity}"/>`;
-    inner += `<text x="${c.cx}" y="${c.cy + 1.6}" text-anchor="middle" font-size="4.4" fill="#83bd99" opacity="${opacity}" font-family="monospace">${i + 1}</text>`;
-  });
-  svg.innerHTML = inner;
-  svg.style.width = `${width}%`;
-  svg.style.height = `${height}%`;
-  return svg;
-}
 
 /**
  * Stage D: the shared clean display surface (screen-surface.png, derived
@@ -411,12 +372,8 @@ export function mountScreenPanels(container: HTMLElement): void {
   preview.className = 'project-preview';
   preview.setAttribute('role', 'group');
   preview.setAttribute('aria-label', 'Предпросмотр выбранного проекта');
-  // Demo item keeps its static schematic preview; direction items show a
-  // unique interactive preview scene (level 1 of the presentation).
-  const previewSchematic = document.createElement('div');
-  previewSchematic.id = 'preview-schematic';
-  previewSchematic.dataset.screen = 'projects';
-  previewSchematic.append(schematicSvg(100, 42, true));
+  // Each direction shows its own unique interactive preview scene
+  // (level 1 of the presentation); all scenes mount eagerly in the stage.
   const previewStage = document.createElement('div');
   previewStage.className = 'pv-stage';
   previewStage.id = 'preview-stage';
@@ -425,24 +382,23 @@ export function mountScreenPanels(container: HTMLElement): void {
   previewTitle.id = 'project-preview-title';
   const previewDesc = document.createElement('p');
   previewDesc.id = 'project-preview-desc';
-  // Honesty marker per item kind: directions are lines of work, the demo
-  // sample is demonstrational — never presented as finished products.
+  // All items are lines of work (directions) — the marker is a fixed label.
   const previewKind = document.createElement('small');
   previewKind.id = 'project-preview-kind';
   previewKind.dataset.screen = 'projects';
+  previewKind.textContent = 'НАПРАВЛЕНИЕ РАБОТ';
   const openButton = document.createElement('button');
   openButton.type = 'button';
   openButton.className = 'panel-button';
   openButton.id = 'project-open';
   openButton.textContent = 'Открыть →';
   openButton.addEventListener('click', () => device.openSelectedProject());
-  preview.append(previewSchematic, previewStage, previewTitle, previewDesc, previewKind, openButton);
+  preview.append(previewStage, previewTitle, previewDesc, previewKind, openButton);
   // Unique preview scenes mount eagerly (they are tiny); the returned
   // switcher toggles visibility per selected item.
-  const showPreviewScene = mountPreviewScenes(previewStage, previewSchematic);
+  const showPreviewScene = mountPreviewScenes(previewStage);
   device.bindPreviewSwitcher(showPreviewScene);
   body.append(list, preview);
-  device.registerElement('preview-schematic', previewSchematic);
   device.registerElement('preview-stage', previewStage);
   device.registerElement('project-preview-title', previewTitle);
   device.registerElement('project-preview-desc', previewDesc);
@@ -475,7 +431,6 @@ export function mountScreenPanels(container: HTMLElement): void {
   const title = document.createElement('h2');
   title.id = 'project-title';
   title.tabIndex = -1;
-  title.textContent = DEMO_PROJECT.title;
   title.dataset.screen = 'project';
   const backButton = document.createElement('button');
   backButton.type = 'button';
@@ -495,99 +450,7 @@ export function mountScreenPanels(container: HTMLElement): void {
   head.append(title, demoBackButton, backButton);
   const projectBody = document.createElement('div');
   projectBody.className = 'project-body';
-  const schematic = document.createElement('div');
-  schematic.className = 'project-schematic';
-  schematic.id = 'project-schematic';
-  schematic.dataset.screen = 'project';
-  schematic.append(schematicSvg(100, 100, false));
-  const componentButtons: Array<{ button: HTMLButtonElement; circle: (typeof SCHEMA_CIRCLES)[number] }> = [];
-  // Schematic components belong to the demo sample only — directions have
-  // none (their screen shows the description instead).
-  DEMO_PROJECT.components.forEach((component, index) => {
-    const nodeButton = document.createElement('button');
-    nodeButton.type = 'button';
-    nodeButton.className = 'control component-control';
-    nodeButton.dataset.screen = 'project';
-    nodeButton.id = `component-node-${index}`;
-    nodeButton.setAttribute('aria-label', `${component.label}: условный компонент системы`);
-    nodeButton.setAttribute('aria-pressed', String(index === 0));
-    nodeButton.addEventListener('click', () => device.selectComponent(index));
-    schematic.append(nodeButton);
-    device.registerElement(`component-node-${index}`, nodeButton);
-    componentButtons.push({ button: nodeButton, circle: SCHEMA_CIRCLES[index % SCHEMA_CIRCLES.length] });
-  });
-  // The SVG letterboxes its 100x62 viewBox inside the container (meet), so
-  // node buttons must align with the DRAWN area. Geometry is only measurable
-  // while the screen is visible — positioning runs via a layout hook.
-  //
-  // A ResizeObserver keeps the buttons in sync with the SVG when the window
-  // is resized while the project screen is already visible. Without it the
-  // letterbox math goes stale and the circular buttons drift off the circles.
-  const layoutComponentNodes = (): void => {
-    const rect = schematic.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
-    const scale = Math.min(rect.width / SCHEMA_VBX_W, rect.height / SCHEMA_VBX_H);
-    const offsetX = (rect.width - SCHEMA_VBX_W * scale) / 2;
-    const offsetY = (rect.height - SCHEMA_VBX_H * scale) / 2;
-    for (const { button, circle } of componentButtons) {
-      button.style.left = `${((offsetX + (circle.cx - circle.r) * scale) / rect.width) * 100}%`;
-      button.style.top = `${((offsetY + (circle.cy - circle.r) * scale) / rect.height) * 100}%`;
-      button.style.width = `${((circle.r * 2 * scale) / rect.width) * 100}%`;
-      button.style.height = `${((circle.r * 2 * scale) / rect.height) * 100}%`;
-    }
-  };
-  device.addLayoutHook(layoutComponentNodes);
-  // Re-align on any size change of the schematic container (window resize,
-  // layout shift). The observer fires once on observe (initial geometry) and
-  // on every subsequent resize while the element is in the DOM.
-  //
-  // `layoutComponentNodes` already early-returns when the schematic has zero
-  // size, so the visible-only guard below is a cheap pre-filter that avoids
-  // running the letterbox math while the project screen is hidden.
-  if (typeof ResizeObserver !== 'undefined') {
-    const viewEl = document.getElementById('project-view');
-    new ResizeObserver(() => {
-      if (viewEl && !viewEl.hidden) layoutComponentNodes();
-    }).observe(schematic);
-  }
-  const side = document.createElement('div');
-  side.className = 'project-side';
-  // Direction projects have no confirmed schematic components or task/role/
-  // result materials — their screen area is owned by the detail page and the
-  // demonstration (visibility is switched in state.updateProjectView).
-  const componentInfo = document.createElement('p');
-  componentInfo.id = 'component-info';
-  componentInfo.className = 'component-info';
-  const tabs = document.createElement('div');
-  tabs.className = 'project-tabs';
-  tabs.id = 'project-tabs';
-  tabs.dataset.screen = 'project';
-  tabs.setAttribute('role', 'tablist');
-  tabs.setAttribute('aria-label', 'Сведения о проекте');
-  const tabLabels: Record<string, string> = { task: 'Задача', role: 'Моя роль', result: 'Результат' };
-  for (const [key, label] of Object.entries(tabLabels)) {
-    const tab = document.createElement('button');
-    tab.type = 'button';
-    tab.className = 'project-tab';
-    tab.id = `project-tab-${key}`;
-    tab.dataset.screen = 'project';
-    tab.setAttribute('role', 'tab');
-    tab.setAttribute('aria-selected', String(key === 'task'));
-    tab.setAttribute('aria-controls', 'project-tab-text');
-    tab.textContent = label;
-    tab.addEventListener('click', () => device.setProjectTab(key as 'task' | 'role' | 'result'));
-    tabs.append(tab);
-    device.registerElement(`project-tab-${key}`, tab);
-  }
-  const tabText = document.createElement('p');
-  tabText.id = 'project-tab-text';
-  tabText.className = 'project-tab-text';
-  tabText.dataset.screen = 'project';
-  tabText.setAttribute('role', 'tabpanel');
-  tabText.setAttribute('aria-labelledby', 'project-tab-task');
-  side.append(componentInfo, tabs, tabText);
-  projectBody.append(schematic, side);
-  // Shared host for the eight direction screens (lazy-mounted by registry).
+  // The demonstration host: direction screens mount here (lazy, via registry).
   const screenHost = document.createElement('div');
   screenHost.className = 'project-screen-host';
   screenHost.id = 'project-screen-host';
@@ -649,17 +512,16 @@ export function mountScreenPanels(container: HTMLElement): void {
     outcomeSection,
     demoOpenButton,
   );
-  // Honesty marker for the OPEN project: kind switches text in state.
+  // Honesty marker for the OPEN project.
   const projectNote = document.createElement('small');
   projectNote.id = 'project-kind-note';
-  projectNote.textContent = 'ДЕМОНСТРАЦИОННЫЕ ДАННЫЕ';
+  projectNote.textContent = 'НАПРАВЛЕНИЕ РАБОТ';
   projectNote.dataset.screen = 'project';
   projectView.append(shutterTop, shutterBottom, head, projectDetail, projectBody, projectNote);
   place(projectView, SCREEN_CONTENT_BOUNDS);
   container.append(projectView);
   device.registerElement('project-view', projectView);
   device.registerElement('project-title', title);
-  device.registerElement('project-schematic', schematic);
   device.registerElement('project-detail', projectDetail);
   device.registerElement('project-detail-essence', essence);
   device.registerElement('project-detail-problem', problemText);
@@ -668,10 +530,6 @@ export function mountScreenPanels(container: HTMLElement): void {
   device.registerElement('project-detail-outcome', outcomeText);
   device.registerElement('project-demo-open', demoOpenButton);
   device.registerElement('project-demo-back', demoBackButton);
-  device.registerElement('project-side', side);
-  device.registerElement('component-info', componentInfo);
-  device.registerElement('project-tabs', tabs);
-  device.registerElement('project-tab-text', tabText);
   device.registerElement('project-screen-host', screenHost);
   device.registerElement('project-kind-note', projectNote);
 

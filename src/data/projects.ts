@@ -1,17 +1,14 @@
 // Project section data — separate from components (representation).
-// The section lists EIGHT lines of work (directions) plus ONE explicitly
-// demonstrational sample project. Directions are lines of work, NOT finished
-// products: no invented product names, metrics, links, technologies,
-// screenshots or results. Only the demo project carries schematic components
-// and task/role/result copy, which plainly state that real information has
-// not been added.
+// The section lists the owner's lines of work (directions). Directions are
+// lines of work, NOT finished products: no invented product names, metrics,
+// links, technologies, screenshots or results.
 //
 // Data lives in projects.json (edit that file to change the section content);
 // this module adds the type contract and exports the arrays.
 
 import raw from './projects.json';
 
-export type ProjectKind = 'demo' | 'direction';
+export type ProjectKind = 'direction';
 
 export interface ProjectComponent {
   id: string;
@@ -23,7 +20,6 @@ export interface ProjectComponent {
 
 /** Dispatcher id for the open-project screen (stable, not array position). */
 export type ProjectScreenRef =
-  | 'demo'
   | 'media-analytics'
   | 'game'
   | 'open-source'
@@ -57,30 +53,15 @@ export interface ProjectInfo {
   id: string;
   title: string;
   shortDescription: string;
-  /**
-   * 'demo' — explicitly demonstrational sample of the section structure;
-   * 'direction' — a confirmed line of work without product materials yet.
-   */
+  /** A confirmed line of work without product materials yet. */
   kind: ProjectKind;
-  /** Which open-project screen renders this item (demo uses the built-in view). */
+  /** Which open-project screen renders this item. */
   screen: ProjectScreenRef;
-  /** Level-2 page copy — only directions have it (demo keeps schematic+tabs). */
+  /** Level-2 page copy (directions carry it). */
   detail?: ProjectDetail;
-  /** Schematic components — only the demo sample has them. */
-  components: ProjectComponent[];
-  /** Task/role/result copy — only the demo sample has one. */
-  details?: {
-    task: string;
-    role: string;
-    result: string;
-  };
 }
 
 /** Lines of work, user-confirmed order (no product claims). */
-const WORK_DIRECTIONS = raw
+export const PROJECTS: ProjectInfo[] = raw
   .filter((p) => p.kind === 'direction')
   .map((p) => p as ProjectInfo);
-
-export const DEMO_PROJECT = raw.find((p) => p.kind === 'demo') as ProjectInfo;
-
-export const PROJECTS: ProjectInfo[] = [...WORK_DIRECTIONS, DEMO_PROJECT];

@@ -14,13 +14,9 @@ export function registerPreview(preview: ProjectPreview): void {
 /**
  * Mounts every preview scene into its own hidden container inside `stage`.
  * Scenes are tiny; eager mounting keeps switching instant and deterministic.
- * Returns a switcher: shows the scene for the id, or hides all for 'demo'
- * (the demo item keeps its static schematic preview).
+ * Returns a switcher: shows the scene for the given direction id.
  */
-export function mountPreviewScenes(
-  stage: HTMLElement,
-  schematic: HTMLElement,
-): (id: ProjectScreenRef) => void {
+export function mountPreviewScenes(stage: HTMLElement): (id: ProjectScreenRef) => void {
   const containers = new Map<PreviewId, HTMLElement>();
   for (const preview of registry.values()) {
     const holder = document.createElement('div');
@@ -31,7 +27,6 @@ export function mountPreviewScenes(
     containers.set(preview.id, holder);
   }
   return (id: ProjectScreenRef) => {
-    schematic.hidden = id !== 'demo';
     for (const [pid, holder] of containers) holder.hidden = pid !== id;
   };
 }

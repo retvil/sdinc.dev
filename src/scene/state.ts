@@ -26,9 +26,6 @@ import { playRotorClick, playRotorConfirm, playVaultOpen } from './sound';
 
 type DirectionCopy = Record<DirectionKey, DirectionInfo>;
 export type ScreenMode = 'profile' | 'projects' | 'project' | 'contact';
-export type ProjectTab = 'task' | 'role' | 'result';
-
-const PROJECT_TABS: ProjectTab[] = ['task', 'role', 'result'];
 
 function cloneDirections(): DirectionCopy {
   return Object.fromEntries(
@@ -65,8 +62,6 @@ export class DeviceState {
   // --- stage D: display mode machine ---
   private mode: ScreenMode = 'profile';
   private selectedProject = 0;
-  private selectedComponent = 0;
-  private activeTab: ProjectTab = 'task';
   /** «Связь» screen: selected contact, survives mode switches (start: Email). */
   private selectedContact = 0;
   /** Layout hooks run when a hidden screen becomes visible (geometry needed). */
@@ -268,58 +263,43 @@ export class DeviceState {
     if (previewTitle) previewTitle.textContent = project.title;
     if (previewDesc) previewDesc.textContent = project.shortDescription;
     if (previewKind) {
-      previewKind.textContent = project.kind === 'direction' ? 'НАПРАВЛЕНИЕ РАБОТ' : 'ДЕМОНСТРАЦИОННЫЕ ДАННЫЕ';
+      previewKind.textContent = 'НАПРАВЛЕНИЕ РАБОТ';
     }
-    // Unique preview scene for directions; the demo item keeps its schematic.
+    // Each direction has a unique level-1 preview scene.
     this.previewSwitcher?.(project.screen);
-    this.status(`Проект выбран: ${project.title}. Демонстрационные данные.`);
+    this.status(`Проект выбран: ${project.title}.`);
   }
 
   /**
-   * Level 2/3 visibility inside the OPEN project: directions show the
-   * description page first, the demonstration only on explicit request.
-   * The demo sample keeps its built-in schematic view at all times.
+   * Level 2/3 visibility inside the OPEN project: the description page
+   * shows first, the demonstration only on explicit request.
    */
   private updateProjectView(): void {
     const project = PROJECTS[this.selectedProject];
-    const isDirection = project.kind === 'direction';
     const view = this.projectView;
-    const showDemo = isDirection && view === 'demo';
+    const showDemo = view === 'demo';
     const title = this.elements.get('project-title');
     const kindNote = this.elements.get('project-kind-note');
-    const schematic = this.elements.get('project-schematic');
-    const tabs = this.elements.get('project-tabs');
-    const tabText = this.elements.get('project-tab-text');
-    const compInfo = this.elements.get('component-info');
-    const screenHost = this.elements.get('project-screen-host');
-    const side = this.elements.get('project-side');
     const detail = this.elements.get('project-detail');
+    const screenHost = this.elements.get('project-screen-host');
     const demoBack = this.elements.get('project-demo-back');
     if (title) title.textContent = project.title;
     if (kindNote) {
-      kindNote.textContent = isDirection ? 'НАПРАВЛЕНИЕ РАБОТ' : 'ДЕМОНСТРАЦИОННЫЕ ДАННЫЕ';
+      kindNote.textContent = 'НАПРАВЛЕНИЕ РАБОТ';
     }
-    // Description page (directions only).
+    // Description page.
     if (detail) {
-      detail.hidden = !isDirection || showDemo;
-      if (isDirection) this.applyProjectDetail(detail, project);
+      detail.hidden = showDemo;
+      this.applyProjectDetail(detail, project);
     }
-    // Demo sample chrome vs direction screen host.
-    if (schematic) schematic.hidden = isDirection;
-    if (tabs) tabs.hidden = isDirection;
-    if (tabText) tabText.hidden = isDirection;
-    if (compInfo) compInfo.hidden = isDirection;
-    if (side) side.hidden = isDirection;
     if (screenHost) screenHost.hidden = !showDemo;
     if (demoBack) demoBack.hidden = !showDemo;
-    // Body hosts either the demo schematic or the demonstration screen.
-    if (isDirection) {
-      const body = screenHost?.parentElement ?? null;
-      if (body) body.hidden = view !== 'demo';
-    }
-    if (showDemo && project.screen !== 'demo') {
+    // Body hosts the demonstration screen; the description replaces it.
+    const body = screenHost?.parentElement ?? null;
+    if (body) body.hidden = !showDemo;
+    if (showDemo) {
       activateScreen(project.screen);
-    } else if (isDirection) {
+    } else {
       // Leaving the demonstration keeps its mounted state for the next visit.
       deactivateScreens();
     }
@@ -349,29 +329,23 @@ export class DeviceState {
     }
   }
 
-  /** Opens the level-2 description page (always first after opening). */
+  /** Opens the level-3 demonstration of the selected direction. */
   showProjectDemo(): void {
-    const project = PROJECTS[this.selectedProject];
-    if (project.kind !== 'direction') return;
     this.projectView = 'demo';
     this.updateProjectView();
-    this.status(`Демонстрация: ${project.title}. Возврат — «К описанию».`);
+    this.status(`Демонстрация: ${PROJECTS[this.selectedProject].title}. Возврат — «К описанию».`);
     this.elements.get('project-demo-back')?.focus();
   }
 
   /** Returns from the demonstration to the description, restoring focus. */
   backToProjectDetail(): void {
-    const project = PROJECTS[this.selectedProject];
-    if (project.kind !== 'direction') return;
     this.projectView = 'detail';
     this.updateProjectView();
-    this.status(`Описание: ${project.title}.`);
+    this.status(`Описание: ${PROJECTS[this.selectedProject].title}.`);
     this.elements.get('project-demo-open')?.focus();
   }
 
   openSelectedProject(): void {
-    this.selectedComponent = 0;
-    this.activeTab = 'task';
     // Opening ALWAYS lands on the description (level 2), never on a demo.
     this.projectView = 'detail';
     this.setMode('project');
@@ -391,48 +365,6 @@ export class DeviceState {
       requestAnimationFrame(() => view.classList.remove('is-opening'));
     }
     playVaultOpen();
-  }
-
-  selectComponent(index: number): void {
-    const project = PROJECTS[this.selectedProject];
-    const count = project.components.length;
-    // Direction projects carry no schematic components — nothing to select.
-    if (count === 0) {
-      this.status('Компонентов нет. Это направление работ, а не демонстрационный образец.');
-      return;
-    }
-    this.selectedComponent = ((index % count) + count) % count;
-    for (const [id, el] of this.elements) {
-      if (!id.startsWith('component-node-')) continue;
-      const compIndex = this.parseIndex(id, 'component-node-');
-      if (compIndex === undefined) continue;
-      el.classList.toggle('selected', compIndex === this.selectedComponent);
-      el.setAttribute('aria-pressed', String(compIndex === this.selectedComponent));
-    }
-    const info = this.elements.get('component-info');
-    if (info) info.textContent = project.components[this.selectedComponent].description;
-  }
-
-  setProjectTab(tab: ProjectTab): void {
-    const project = PROJECTS[this.selectedProject];
-    // Only the demo sample carries task/role/result materials.
-    const details = project.details;
-    if (!details) return;
-    this.activeTab = tab;
-    for (const t of PROJECT_TABS) {
-      const button = this.elements.get(`project-tab-${t}`);
-      if (!button) continue;
-      button.setAttribute('aria-selected', String(t === tab));
-      button.classList.toggle('active-tab', t === tab);
-    }
-    const text = this.elements.get('project-tab-text');
-    if (text) {
-      text.textContent = details[tab];
-      // Keep the tabpanel's labelledby in sync with the active tab so a
-      // screen reader announces which panel is open.
-      text.setAttribute('aria-labelledby', `project-tab-${tab}`);
-    }
-    // Switching tabs must not reset the selected component — separate state.
   }
 
   /**
@@ -493,8 +425,6 @@ export class DeviceState {
     } else if (mode === 'project') {
       for (const hook of this.layoutHooks) hook();
       this.updateProjectView();
-      this.selectComponent(this.selectedComponent);
-      if (PROJECTS[this.selectedProject].details) this.setProjectTab(this.activeTab);
       this.triggerPanelEntry('project-view');
       this.refocusAfterModeChange(previous, 'project-title');
     } else if (mode === 'contact') {
@@ -557,15 +487,10 @@ export class DeviceState {
     if (this.mode === 'projects') {
       this.selectProject(this.selectedProject + delta);
     } else if (this.mode === 'project') {
-      const project = PROJECTS[this.selectedProject];
-      if (project.kind === 'direction') {
-        // The rotor serves the demonstration only; on the description page it
-        // stays inert — never mapped to random detail interactions.
-        if (this.projectView !== 'demo') return;
-        stepActiveScreen(delta);
-        return;
-      }
-      this.selectComponent(this.selectedComponent + delta);
+      // The rotor drives the active direction screen only; on the
+      // description page it stays inert — never mapped to detail actions.
+      if (this.projectView !== 'demo') return;
+      stepActiveScreen(delta);
     } else if (this.mode === 'contact') {
       this.selectContact(this.selectedContact + delta);
     } else {
@@ -585,14 +510,8 @@ export class DeviceState {
     }
     playRotorConfirm();
     if (this.mode === 'project') {
-      const project = PROJECTS[this.selectedProject];
-      if (project.kind === 'direction') {
-        if (this.projectView !== 'demo') return;
-        confirmActiveScreen();
-        return;
-      }
-      const component = project.components[this.selectedComponent];
-      this.status(`Компонент ${component.label}. ${component.description}`);
+      if (this.projectView !== 'demo') return;
+      confirmActiveScreen();
     } else if (this.mode === 'contact') {
       this.confirmContact();
     } else {
@@ -655,11 +574,9 @@ export class DeviceState {
    * Intentionally does NOT reset:
    * - selectedProject: the user's last selection in the projects list
    *   survives so the preview remembers where they were (documented intent,
-   *   not a bug). openSelectedProject() re-zeros component/tab state on
-   *   the next open, so no desync is visible to the user.
-   * - selectedComponent / activeTab / projectView: reset only in
-   *   openSelectedProject(); resetView() preserves them to keep the
-   *   "last opened project still open" experience consistent.
+   *   not a bug).
+   * - projectView: reset only in openSelectedProject(); resetView()
+   *   preserves it to keep the "last opened project still open" experience.
    */
   resetView(): void {
     // Back to the neutral first-open state: the user-selection flag clears

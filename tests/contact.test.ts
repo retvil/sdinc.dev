@@ -62,11 +62,6 @@ function contactElements(): Map<string, HTMLElement> {
   for (const id of [
     'project-title',
     'project-kind-note',
-    'project-schematic',
-    'project-tabs',
-    'project-tab-text',
-    'component-info',
-    'project-side',
     'project-detail',
     'project-demo-open',
     'project-demo-back',
@@ -81,13 +76,6 @@ function contactElements(): Map<string, HTMLElement> {
     el.id = id;
     map.set(id, el);
   }
-  // component nodes
-  const demo = PROJECTS.find((p) => p.kind === 'demo')!;
-  demo.components.forEach((_, i) => {
-    const el = document.createElement('button');
-    el.id = `component-node-${i}`;
-    map.set(`component-node-${i}`, el);
-  });
   return map;
 }
 
