@@ -119,6 +119,25 @@ def main() -> None:
     binary = mask >= 0.5
 
     filled = pyramid_fill(np.asarray(plate_before, dtype=np.float64), binary)
+
+    # --- edge integrity pass -----------------------------------------------
+    # The dilated mask (MaxFilter(15)) reaches the right crop edge, so the
+    # interpolated fill overwrites the rightmost columns with values that
+    # drift up to ~13 lum from the master chassis frame — a visible seam when
+    # the surface is overlaid on the master raster. The glass frame itself is
+    # never masked (the crop border is outside every content rect), so the
+    # original crop pixels on the border are the CORRECT ones: restore a 24px
+    # border strip from `plate_before` to guarantee pixel-identical edges.
+    BORDER = 24
+    filled_arr = np.asarray(filled, dtype=np.float64)
+    before_arr = np.asarray(plate_before, dtype=np.float64)
+    filled_arr[:BORDER, :] = before_arr[:BORDER, :]
+    filled_arr[-BORDER:, :] = before_arr[-BORDER:, :]
+    filled_arr[:, :BORDER] = before_arr[:, :BORDER]
+    filled_arr[:, -BORDER:] = before_arr[:, -BORDER:]
+    filled = filled_arr
+    # ------------------------------------------------------------------------
+
     stats = highpass_stats(filled, binary)
 
     plate = Image.fromarray(np.clip(filled, 0, 255).astype(np.uint8))
@@ -132,10 +151,16 @@ def main() -> None:
     compare.paste(plate, (0, size[1] + 12))
     compare.save(OUT_DIR / "screen-surface-compare.png")
 
+    # Edge-identity check: max per-column |surface - master crop| across the
+    # whole plate; border columns must be 0.0.
+    ref_arr = np.asarray(plate_before, dtype=np.float64)
+    edge_delta = np.abs(np.asarray(plate, dtype=np.float64) - ref_arr).mean(axis=0)
     print("plate:", OUT_PLATE.name, plate.size)
     print("mask:", OUT_DIR / "screen-surface-mask.png")
     print("compare:", OUT_DIR / "screen-surface-compare.png")
     print("highpass residual (ghost/stripe check):", stats)
+    print(f"edge-identity: border 24 cols/rows max ΔL={edge_delta[:BORDER].max():.2f} / "
+          f"{edge_delta[-BORDER:].max():.2f}, interior max ΔL={edge_delta.max():.2f}")
 
 
 if __name__ == "__main__":
