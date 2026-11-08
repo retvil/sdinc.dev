@@ -50,3 +50,11 @@ mimo.exe
 # Agent ТЗ package (removed from repo — kept out of git)
 /SDINC-projects-specifications/
 
+
+# Local AI-agent skills (per-project installs, not shipped with the site)
+.agents/
+.claude/
+.continue/
+.grok/
+.roo/
+skills-lock.json
