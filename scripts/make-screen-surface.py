@@ -43,6 +43,10 @@ CONTENT_RECTS_4K = [
     (1370, 788, 2575, 1668, 48),  # diagram: twin, rings, nodes, labels, links
     (2695, 820, 3275, 1610, 56),  # LLM card frame, icon, text, button
     (2575, 780, 2695, 1672, 0),   # bridge between diagram and card masks
+    # Dark patch near the Связь (contact) tab, bottom-right of the glass.
+    # This region is baked into the master raster and not covered by the
+    # pyramid-fill above, so it stands out on clean non-profile pages.
+    (2832, 1670, 2952, 1790, 60),
 ]
 
 

@@ -291,14 +291,23 @@ export function masterAsset(): string {
 // (mode-specific start content removed, header/tab row/glass kept baked).
 // Covers the EXACT screen region so its edges are the same pixels as the
 // master underneath — seam-free by construction.
-const SCREEN_SURFACE_BOUNDS: Bounds = [1250, 588, 3338, 1942];
+// The green-glass right edge in the master raster is at ref 3331 (measured
+// from the luminance profile: col 3330 = 26.4 lum, col 3334 = 13.9 lum — a
+// hard drop marking the glass→chassis transition). The original 3338 bound
+// painted 7 px past the real glass edge on every non-profile page, causing
+// the right-edge bleed artifact. Left edge 1212 is the real glass start;
+// 1250 is safe (inside the glass). Using 3331 and 1250 as the physical
+// glass bounds so surface + content view never overshoot the glass.
+const SCREEN_SURFACE_BOUNDS: Bounds = [1250, 588, 3331, 1942];
 // Mode content lives in the display glass region. The baked tab row (profile
 // / projects / contact buttons) sits at reference-space y 1778–1888, so the
 // HTML panel stops just above it at y=1744 — 34px of glass margin between
 // content bottom and the tab-row top — so no HTML panel ever paints over or
 // touches the physical tab buttons and the baked divider line. The view's
 // own overflow:hidden plus inner scroll containers keep content clipped.
-const SCREEN_CONTENT_BOUNDS: Bounds = [1250, 588, 3338, 1744];
+// (continued) The content view keeps the same right bound as the surface so
+// no HTML ever paints past the real glass edge.
+const SCREEN_CONTENT_BOUNDS: Bounds = [1250, 588, 3331, 1744];
 
 /**
  * Stage D: the shared clean display surface (screen-surface.png, derived

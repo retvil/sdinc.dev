@@ -335,6 +335,10 @@ button {
   z-index: 1;
   pointer-events: none;
   user-select: none;
+  /* Replaced-element guard: the PNG must paint exactly its CSS box, no
+     sub-pixel overshoot past the right glass edge (ref 3331). */
+  display: block;
+  overflow: hidden;
 }
 
 .projects-view,

@@ -28,6 +28,7 @@ preview.log
 preview-bg.log
 preview-bg-err.log
 preview-run.log
+preview-err.log
 
 # AI-agent scratch work (measurement scripts, diag screenshots)
 scratch/

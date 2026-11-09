@@ -1,7 +1,7 @@
 # GitHub Actions — publish dist/ to GitHub Pages.
 #
 # Pipeline: on push to main (or manual dispatch)
-#   1. Install dependencies + build Astro
+#   1. Run checks (typecheck + unit tests + build) — blocks deploy on failure
 #   2. Deploy the dist/ folder to the gh-pages branch
 #
 # Pages setup (do ONCE, manually, after first workflow run):
@@ -30,7 +30,36 @@ permissions:
   id-token: write
 
 jobs:
+  check:
+    # Runs typecheck + unit tests before any build/deploy. A broken build or
+    # a failing test now BLOCKS the deploy instead of silently shipping.
+    # Playwright visual regression stays local (needs a browser + reference
+    # snapshots that regenerate on each run); unit + typecheck + build cover
+    # the common breakage.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck (astro check)
+        run: npx astro check
+
+      - name: Unit tests (vitest)
+        run: npm run test
+
+      - name: Build Astro (verify)
+        run: npm run build
+
   build:
+    needs: check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
