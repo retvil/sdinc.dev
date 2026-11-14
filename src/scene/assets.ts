@@ -12,7 +12,7 @@
 //     once the Vite client types are wired up).
 //
 // Until the sub-path deploy is active, keep ASSET_BASE at the root.
-const ASSET_BASE = '/assets/device/';
+const ASSET_BASE = import.meta.env.BASE_URL + 'assets/device/';
 const PACKAGE_PREFIX = 'assets/';
 
 /** Continuous static master: approved 4K reference, whole device. */

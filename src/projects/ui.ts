@@ -55,9 +55,11 @@ export function markSelected(
 }
 
 /**
- * Wraps a click handler so every button press plays the Pip-Boy tick.
- * Use this for all in-screen buttons created with el('button', ...) —
- * chat options, reference buttons, game reset, contact selects, etc.
+ * Wraps a handler so that a click sound plays before it fires.
+ *
+ * NOTE: `selectButton` (below) also calls `playScreenClick()` directly, so
+ * callers must NOT use both wrappers on the same button — that would play the
+ * sound twice. Pick one wrapping strategy per click target.
  */
 export function clickSfx(handler: () => void): () => void {
   return () => {

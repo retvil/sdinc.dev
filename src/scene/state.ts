@@ -443,7 +443,7 @@ export class DeviceState {
       // user explicitly selected a node (first open stays neutral). Focus:
       // a persistent trigger keeps it; anything else lands on the selected
       // node control — a clear keyboard continuation, never body.
-      this.selectNode(this.active, this.userSelected);
+      this.selectNode(this.active, false);
       this.refocusAfterModeChange(previous, `node-${this.active}`);
     }
     this.syncLiveCard();
@@ -468,7 +468,6 @@ export class DeviceState {
     const onEnd = (e: AnimationEvent): void => {
       if (e.target === view) {
         view.classList.remove('panel-entering');
-        view.removeEventListener('animationend', onEnd);
       }
     };
     view.addEventListener('animationend', onEnd, { once: true });
@@ -506,7 +505,7 @@ export class DeviceState {
     } else {
       const index = DIRECTION_KEYS.indexOf(this.active);
       const next = DIRECTION_KEYS[(index + delta + DIRECTION_KEYS.length) % DIRECTION_KEYS.length];
-      this.selectNode(next);
+      this.selectNode(next, false);
     }
   }
 

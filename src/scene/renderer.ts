@@ -266,6 +266,7 @@ export function mountDial(container: HTMLElement): void {
   let rotorLoaded = false;
   const loadRotor = (): void => {
     if (!rotorLoaded) {
+      img.onerror = () => { rotorLoaded = false; };
       img.src = ROTOR_MASKED;
       rotorLoaded = true;
     }
@@ -461,6 +462,7 @@ export function mountScreenPanels(container: HTMLElement): void {
   head.append(title, demoBackButton, backButton);
   const projectBody = document.createElement('div');
   projectBody.className = 'project-body';
+  projectBody.dataset.screen = 'project';
   // The demonstration host: direction screens mount here (lazy, via registry).
   const screenHost = document.createElement('div');
   screenHost.className = 'project-screen-host';

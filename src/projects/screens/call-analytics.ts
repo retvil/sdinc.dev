@@ -51,6 +51,7 @@ export function createCallAnalyticsScreen(): ProjectScreen {
   let view: 'talk' | 'summary' = 'talk';
   let trackButtons: HTMLButtonElement[] = [];
   let transcriptRows: HTMLButtonElement[] = [];
+  let viewButtons: HTMLButtonElement[] = [];
   let card: HTMLElement | null = null;
   let talkPane: HTMLElement | null = null;
   let summaryPane: HTMLElement | null = null;
@@ -80,6 +81,7 @@ export function createCallAnalyticsScreen(): ProjectScreen {
   function syncView(): void {
     if (talkPane) talkPane.hidden = view !== 'talk';
     if (summaryPane) summaryPane.hidden = view !== 'summary';
+    markSelected(viewButtons, viewButtons[view === 'talk' ? 0 : 1], 'aria-pressed');
   }
 
   function sync(): void {
@@ -146,7 +148,7 @@ export function createCallAnalyticsScreen(): ProjectScreen {
         const basis = el('button', 'dir-rag-ref') as HTMLButtonElement;
         basis.type = 'button';
         basis.textContent = 'основание ↩';
-        basis.setAttribute('aria-label', `Перейти к реплике-основанию: ${l?.text}`);
+        basis.setAttribute('aria-label', `Перейти к реплике-основанию: ${l?.text ?? row.value}`);
         basis.addEventListener('click', clickSfx(() => {
           view = 'talk';
           syncView();
@@ -168,7 +170,7 @@ export function createCallAnalyticsScreen(): ProjectScreen {
       const viewRow = el('div', 'dir-call-views');
       viewRow.setAttribute('role', 'group');
       viewRow.setAttribute('aria-label', 'Режим просмотра');
-      const viewButtons = ['talk', 'summary'].map((v) =>
+      viewButtons = ['talk', 'summary'].map((v) =>
         selectButton(v === 'talk' ? 'Разговор' : 'Итог', v === 'talk' ? 'Режим: разговор' : 'Режим: итог', () => {
           view = v as 'talk' | 'summary';
           syncView();

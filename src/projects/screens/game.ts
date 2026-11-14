@@ -77,8 +77,12 @@ export function createGameScreen(): ProjectScreen {
       marker.setAttribute('fill', won ? '#d3dda5' : '#a4d7aa');
     }
     for (const b of buttons) {
-      const [x, y] = (b.dataset.cell ?? '0:0').split(':').map(Number);
-      b.classList.toggle('selected', n !== null && n.x === x && n.y === y);
+      const parts = (b.dataset.cell ?? '0:0').split(':');
+      const x = Number(parts[0]);
+      const y = Number(parts[1]);
+      if (parts.length === 2 && Number.isInteger(x) && Number.isInteger(y)) {
+        b.classList.toggle('selected', n !== null && n.x === x && n.y === y);
+      }
     }
   }
 

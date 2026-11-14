@@ -63,5 +63,13 @@ export interface ProjectInfo {
 
 /** Lines of work, user-confirmed order (no product claims). */
 export const PROJECTS: ProjectInfo[] = raw
-  .filter((p) => p.kind === 'direction')
+  .filter((p) => {
+    if (p.kind !== 'direction') {
+      if (import.meta.env.DEV) {
+        console.warn(`projects.ts: dropped entry with kind='${p.kind}' — id=${(p as { id?: string }).id ?? '(unknown)'}`);
+      }
+      return false;
+    }
+    return true;
+  })
   .map((p) => p as ProjectInfo);

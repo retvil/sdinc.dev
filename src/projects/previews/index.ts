@@ -8,6 +8,9 @@
  * No focusable nodes, no click handlers; `pointer-events` is disabled via CSS
  * so the graphics can never intercept the "open project" action.
  */
+// NOTE: svgMarkup is sourced from hard-coded inline SVG constants in this
+// module (not from user input or network responses).  If that ever changes,
+// sanitise before assigning to innerHTML to prevent XSS.
 export function illustration(root: HTMLElement, svgMarkup: string, originText?: string): void {
   const box = document.createElement('div');
   box.className = 'pv-illustration';

@@ -170,7 +170,7 @@ export function createRestorationScreen(): ProjectScreen {
       range.value = String(splitPos);
       range.setAttribute('aria-label', 'Положение разделителя до/после, проценты');
       range.addEventListener('input', () =>
-        setSplit(Number(range?.value ?? 50), `Разделитель: ${splitPos}%.`),
+        setSplit(Number(range?.value ?? 50), `Разделитель: ${Number(range?.value ?? 50)}%.`),
       );
       presetButtons = [
         { v: 0, label: 'До' },

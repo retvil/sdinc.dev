@@ -25,8 +25,14 @@ function instance(id: ProjectScreenId): ProjectScreen | null {
   if (known) return known;
   const factory = factories.get(id);
   if (!factory || !host) return null;
-  const created = factory();
-  created.mount(host);
+  let created: ProjectScreen;
+  try {
+    created = factory();
+    created.mount(host);
+  } catch (error) {
+    console.error(`[registry] failed to mount screen "${id}":`, error);
+    return null;
+  }
   instances.set(id, created);
   return created;
 }

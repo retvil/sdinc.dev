@@ -110,13 +110,14 @@ export function createShortVideoScreen(): ProjectScreen {
       const row1 = el('div', 'dir-pipeline-row');
       const row2 = el('div', 'dir-pipeline-row');
       stageButtons = STAGES.map((s, i) => buildStageButton(s, i));
-      for (let i = 0; i < 3; i += 1) {
+      const half = Math.ceil(STAGES.length / 2);
+      for (let i = 0; i < half; i += 1) {
         row1.append(stageButtons[i]);
-        if (i < 2) row1.append(el('span', 'dir-pipeline-arrow', '→'));
+        if (i < half - 1) row1.append(el('span', 'dir-pipeline-arrow', '→'));
       }
-      for (let i = 3; i < 6; i += 1) {
+      for (let i = half; i < STAGES.length; i += 1) {
         row2.append(stageButtons[i]);
-        if (i < 5) row2.append(el('span', 'dir-pipeline-arrow', '→'));
+        if (i < STAGES.length - 1) row2.append(el('span', 'dir-pipeline-arrow', '→'));
       }
       const turn = el('div', 'dir-pipeline-turn', '↓');
 

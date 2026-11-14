@@ -52,6 +52,19 @@ mimo.exe
 /SDINC-projects-specifications/
 
 
+# Environment files (secrets — never commit)
+.env
+.env.*
+.env.local
+.env.dev
+.env.prod
+
+# Playwright HTML report
+playwright-report/
+
+# General log files
+*.log
+
 # Local AI-agent skills (per-project installs, not shipped with the site)
 .agents/
 .claude/
