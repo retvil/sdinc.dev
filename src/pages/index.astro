@@ -15,6 +15,7 @@ import RotaryKnob from '../components/RotaryKnob.astro';
 const BASE = import.meta.env.BASE_URL;
 const MASTER_AVIF = `${BASE}assets/device/SDINC_reference_4K_conservative.avif`;
 const MASTER_PNG = `${BASE}assets/device/SDINC_reference_4K_conservative.png`;
+const MASTER_WEBP = `${BASE}assets/device/SDINC_reference_4K_conservative.webp`;
 ---
 
 <!doctype html>
@@ -32,10 +33,11 @@ const MASTER_PNG = `${BASE}assets/device/SDINC_reference_4K_conservative.png`;
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={MASTER_PNG} />
     <link rel="icon" href="data:," />
-    <!-- Preload the master device image (AVIF): LCP element, fetched ahead
-         of lower-priority assets. PNG fallback is loaded on error in JS. -->
-    <link rel="preload" as="image" href={MASTER_AVIF} fetchpriority="high" type="image/avif" />
-    <link rel="preload" as="image" href={MASTER_PNG} fetchpriority="low" type="image/png" />
+    <!-- Preload the master device image (PNG, lossless): LCP element.
+         AVIF is the lighter fallback. -->
+    <link rel="preload" as="image" href={MASTER_PNG} fetchpriority="high" type="image/png" />
+    <link rel="preload" as="image" href={MASTER_AVIF} fetchpriority="low" type="image/avif" />
+    <link rel="preload" as="image" href={MASTER_WEBP} fetchpriority="low" type="image/webp" />
   </head>
   <body>
     <main>

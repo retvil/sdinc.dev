@@ -71,14 +71,12 @@ export function mountMaster(container: HTMLElement): void {
   // fetches it as soon as it sees the <img>, ahead of lower-priority assets
   // (the hidden screen-surface, face overlays, etc.).
   master.fetchPriority = 'high';
-  // AVIF → PNG fallback for browsers without AVIF support.
-  // If the PNG fallback ITSELF 404s (e.g. CDN purge), retry AVIF after
-  // 5s — the master is the LCP, a broken image is a total loss.
+  // PNG → AVIF fallback: if the PNG 404s (e.g. CDN purge), try AVIF.
+  // If AVIF also fails, wait 3s then retry PNG (transient error window).
   master.addEventListener('error', () => {
-    if (master.src.endsWith('.avif')) {
+    if (master.src.endsWith('.png')) {
       master.src = MASTER_ASSET_FALLBACK;
       master.addEventListener('error', () => {
-        // PNG also failed — wait 3s then retry AVIF (transient error window).
         setTimeout(() => { master.src = MASTER_ASSET; }, 3000);
       }, { once: true });
     }

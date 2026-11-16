@@ -16,10 +16,10 @@ const ASSET_BASE = import.meta.env.BASE_URL + 'assets/device/';
 const PACKAGE_PREFIX = 'assets/';
 
 /** Continuous static master: approved 4K reference, whole device.
- *  AVIF (~0.39 MB) is the LCP asset; PNG (~6.1 MB) is the fallback
- *  for browsers without AVIF support. */
-export const MASTER_ASSET = deviceAsset('SDINC_reference_4K_conservative.avif');
-export const MASTER_ASSET_FALLBACK = deviceAsset('SDINC_reference_4K_conservative.png');
+ *  PNG is the LCP asset (lossless, no AVIF ringing on dark chassis).
+ *  AVIF q95 (~1.39 MB) and WebP q90 (~0.57 MB) are lighter alternatives. */
+export const MASTER_ASSET = deviceAsset('SDINC_reference_4K_conservative.png');
+export const MASTER_ASSET_FALLBACK = deviceAsset('SDINC_reference_4K_conservative.avif');
 
 /** Masked moving overlays (V7): shown only during interaction. */
 export const MASKED_FACES: Record<'profile' | 'projects' | 'contact', string> = {
