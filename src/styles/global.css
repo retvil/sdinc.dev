@@ -605,6 +605,9 @@ button {
   outline: none;
   border-color: #d3dda5;
   box-shadow: 0 0 9px #c3e2a855;
+  /* Ensure the focus glow is not clipped by overflow:hidden when the
+     title is truncated — add right padding to accommodate the glow. */
+  padding-right: calc(1cqw + 4px);
 }
 
 .project-preview {
