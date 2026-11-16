@@ -11,18 +11,12 @@
    - All motion should be slow, mechanical, and quiet.
    */
 
-/* --- 1. Phosphor text glow on display content ---
-   Very subtle: 0.5px spread, warm green tint.
-   Only applies to text inside the display screens, NOT to body text.
-   0.12 opacity keeps it a hint of bloom, not neon. */
+/* --- 1. Phosphor text glow on display headings only ---
+    Apply the bloom to headings (h2) — the most visible text — instead
+    of all content. Applying text-shadow to every text node inside
+    scrollable views forces a repaint on every content change; scoping
+    to headings keeps the phosphor feel without the cost. */
 
-.projects-view,
-.project-view,
-.contact-view {
-  text-shadow: 0 0 4px rgba(131, 189, 153, 0.12);
-}
-
-/* Slightly stronger glow for headings */
 .projects-view h2,
 .project-view h2,
 .contact-view h2,
@@ -96,12 +90,13 @@
 }
 
 /* --- 7. Direction screen entry animation ---
-   When a direction screen first becomes visible (e.g., the media-
-   analytics demo), a subtle slide-up + fade makes the transition
-   feel intentional rather than abrupt. Only applied to the .dir-screen
-   containers; the content inside stays static. */
+    When a direction screen becomes visible, a subtle slide-up + fade
+    makes the transition feel intentional. The animation is applied
+    only when the screen is UNHIDDEN (the renderer removes [hidden]
+    before the first paint), so re-selecting the same screen does not
+    replay the entry. */
 
-.dir-screen {
+.dir-screen:not([hidden]) {
   animation: dir-screen-in 0.3s ease-out;
 }
 

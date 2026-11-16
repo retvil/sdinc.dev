@@ -78,8 +78,8 @@ export function mountMaster(container: HTMLElement): void {
     if (master.src.endsWith('.avif')) {
       master.src = MASTER_ASSET_FALLBACK;
       master.addEventListener('error', () => {
-        // PNG also failed — retry AVIF (may have been a transient error).
-        master.src = MASTER_ASSET;
+        // PNG also failed — wait 3s then retry AVIF (transient error window).
+        setTimeout(() => { master.src = MASTER_ASSET; }, 3000);
       }, { once: true });
     }
   }, { once: true });

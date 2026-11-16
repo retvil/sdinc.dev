@@ -22,7 +22,8 @@ body {
   padding: 0;
   background: #111210;
   color: #bdc6b1;
-  font: 14px system-ui, sans-serif;
+  font-size: 100%;
+  line-height: 1.5;
   color-scheme: light dark;
 }
 
