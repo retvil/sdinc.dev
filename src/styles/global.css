@@ -339,9 +339,6 @@ button {
      sub-pixel overshoot past the right glass edge (ref 3331). */
   display: block;
   overflow: hidden;
-  /* Right-edge bevel: mirrors the glass-edge falloff baked into the master's
-     left side. Without it the right matrix corner reads as a hard seam. */
-  box-shadow: inset -14px 0 28px -14px rgba(3, 18, 9, 0.55);
 }
 
 .projects-view,
@@ -353,7 +350,6 @@ button {
   flex-direction: column;
   gap: 0.8cqw;
   padding: 4.2cqw 3.5cqw 0.5cqw 2.3cqw;
-  box-shadow: inset -10px 0 20px -10px rgba(3, 18, 9, 0.45);
   isolation: isolate;
   min-height: 0;
   overflow: hidden;
@@ -361,20 +357,6 @@ button {
   color: #83bd99;
   font-family: monospace;
   pointer-events: none;
-}
-
-.projects-view::after,
-.project-view::after,
-.contact-view::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 2.5cqw;
-  background: linear-gradient(to right, transparent, rgba(3, 18, 9, 0.55));
-  pointer-events: none;
-  z-index: 1;
 }
 
 .projects-view :is(button, a, input, textarea, select),
@@ -521,7 +503,7 @@ button {
 
 .projects-body {
   display: flex;
-  gap: 3cqw;
+  gap: 2.5cqw;
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -541,7 +523,7 @@ button {
   width: 40%;
   display: flex;
   flex-direction: column;
-  gap: 0.5cqw;
+  gap: 0.35cqw;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -551,12 +533,12 @@ button {
   text-align: left;
   display: flex;
   align-items: center;
-  gap: 0.9cqw;
+  gap: 0.7cqw;
   background: rgba(53, 95, 66, 0.16);
   color: #9ccaab;
   border: 1px solid #355f42;
   border-radius: 0.6cqw;
-  padding: 0.7cqw 1.2cqw;
+  padding: 0.55cqw 1cqw;
   font: 1.05cqw monospace;
   cursor: pointer;
   transition: border-color 0.12s, box-shadow 0.12s;
@@ -567,8 +549,8 @@ button {
 /* Project item icon: small decorative SVG, sized in cqw to match the device */
 .project-item .pi-wrap {
   flex-shrink: 0;
-  width: 2cqw;
-  height: 2cqw;
+  width: 1.6cqw;
+  height: 1.6cqw;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -615,10 +597,10 @@ button {
   flex: 1;
   border: 1px solid #2c4f38;
   border-radius: 0.9cqw;
-  padding: 1.8cqw 2cqw;
+  padding: 1.4cqw 1.6cqw;
   display: flex;
   flex-direction: column;
-  gap: 1cqw;
+  gap: 0.8cqw;
   min-width: 0;
   min-height: 0;
   max-width: 100%;
