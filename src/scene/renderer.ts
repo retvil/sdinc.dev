@@ -377,6 +377,19 @@ export function mountScreenPanels(container: HTMLElement): void {
   // (no listbox role — native list semantics keep screen-reader behavior
   // correct; aria-selected is an additive attribute on role=option items).
   list.setAttribute('aria-label', 'Проекты');
+  // Per-project icon: small inline SVG (12×12 viewBox), matched by project id.
+  // No new assets — reuses the same visual language as the node icons.
+  const PROJECT_ICONS: Record<string, string> = {
+    'direction-video-audio': '<svg viewBox="0 0 12 12" aria-hidden="true" class="pi"><path d="M1 3h5v6H1zM8 4l3 2-3 2z" fill="none" stroke="currentColor" stroke-width="1"/></svg>',
+    'direction-game': '<svg viewBox="0 0 12 12" aria-hidden="true" class="pi"><rect x="1" y="4" width="10" height="5" rx="1" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="4" cy="6.5" r=".8" fill="currentColor"/><circle cx="7" cy="6.5" r=".8" fill="currentColor"/><circle cx="9" cy="6.5" r=".8" fill="currentColor"/></svg>',
+    'direction-open-source': '<svg viewBox="0 0 12 12" aria-hidden="true" class="pi"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.2" fill="none"/><circle cx="6" cy="6" r="2" fill="none" stroke="currentColor" stroke-width="1"/></svg>',
+    'direction-rag': '<svg viewBox="0 0 12 12" aria-hidden="true" class="pi"><rect x="1" y="2" width="10" height="8" rx="1" fill="none" stroke="currentColor" stroke-width="1"/><path d="M3 5h6M3 7h4" stroke="currentColor" stroke-width=".8"/></svg>',
+    'direction-chatbot': '<svg viewBox="0 0 12 12" aria-hidden="true" class="pi"><path d="M2 2h8v5H5l-2 2V7H2z" fill="none" stroke="currentColor" stroke-width="1"/></svg>',
+    'direction-call-analytics': '<svg viewBox="0 0 12 12" aria-hidden="true" class="pi"><path d="M2 10V7M5 10V4M8 10V2M11 10V5" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>',
+    'direction-short-video': '<svg viewBox="0 0 12 12" aria-hidden="true" class="pi"><rect x="1" y="3" width="8" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1"/><path d="M9 5l2-1v4l-2-1z" fill="currentColor"/></svg>',
+    'direction-video-restore': '<svg viewBox="0 0 12 12" aria-hidden="true" class="pi"><path d="M2 6a4 4 0 018 0" fill="none" stroke="currentColor" stroke-width="1"/><path d="M6 2v4l3 2" fill="none" stroke="currentColor" stroke-width="1"/></svg>',
+  };
+
   PROJECTS.forEach((project, index) => {
     const li = document.createElement('li');
     const item = document.createElement('button');
@@ -386,7 +399,19 @@ export function mountScreenPanels(container: HTMLElement): void {
     item.dataset.screen = 'projects';
     item.setAttribute('role', 'option');
     item.setAttribute('aria-selected', String(index === 0));
-    item.textContent = project.title;
+    // Icon + title (icon is decorative, aria-hidden)
+    const iconSvg = PROJECT_ICONS[project.id] ?? '';
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'pi-title';
+    titleSpan.textContent = project.title;
+    item.append(titleSpan);
+    if (iconSvg) {
+      const iconWrap = document.createElement('span');
+      iconWrap.className = 'pi-wrap';
+      iconWrap.setAttribute('aria-hidden', 'true');
+      iconWrap.innerHTML = iconSvg;
+      item.prepend(iconWrap);
+    }
     item.addEventListener('click', () => device.selectProject(index));
     li.append(item);
     list.append(li);
