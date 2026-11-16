@@ -8,6 +8,13 @@ import DeviceStage from '../components/DeviceStage.astro';
 import Display from '../components/Display.astro';
 import SectionButtons from '../components/SectionButtons.astro';
 import RotaryKnob from '../components/RotaryKnob.astro';
+
+// Sub-path-safe asset URLs (GitHub Pages: /sdinc.dev/assets/… on
+// retvil.github.io, /assets/… on apex sdinc.dev). import.meta.env.BASE_URL
+// resolves to the configured `base` (default '/') at build time.
+const BASE = import.meta.env.BASE_URL;
+const MASTER_AVIF = `${BASE}assets/device/SDINC_reference_4K_conservative.avif`;
+const MASTER_PNG = `${BASE}assets/device/SDINC_reference_4K_conservative.png`;
 ---
 
 <!doctype html>
@@ -21,13 +28,14 @@ import RotaryKnob from '../components/RotaryKnob.astro';
     <meta property="og:description" content="SDINC — персональная система. Ретрофутуристический прибор: проекты, связи, направления." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://sdinc.dev/" />
-    <meta property="og:image" content="/assets/device/SDINC_reference_4K_conservative.png" />
+    <meta property="og:image" content={MASTER_PNG} />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={MASTER_PNG} />
     <link rel="icon" href="data:," />
     <!-- Preload the master device image (AVIF): LCP element, fetched ahead
          of lower-priority assets. PNG fallback is loaded on error in JS. -->
-    <link rel="preload" as="image" href="/assets/device/SDINC_reference_4K_conservative.avif" fetchpriority="high" type="image/avif" />
-    <link rel="preload" as="image" href="/assets/device/SDINC_reference_4K_conservative.png" fetchpriority="low" />
+    <link rel="preload" as="image" href={MASTER_AVIF} fetchpriority="high" type="image/avif" />
+    <link rel="preload" as="image" href={MASTER_PNG} fetchpriority="low" type="image/png" />
   </head>
   <body>
     <main>

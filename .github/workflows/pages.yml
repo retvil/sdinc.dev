@@ -74,7 +74,7 @@ jobs:
         run: npm ci
 
       - name: Type check
-        run: npx astro check
+        run: node_modules/.bin/astro check
 
       - name: Unit tests
         run: npm run test
