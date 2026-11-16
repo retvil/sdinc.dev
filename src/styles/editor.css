@@ -1,17 +1,18 @@
 /* Editor chrome (DEV-only). Loaded ONLY by src/pages/editor.astro so the
-   public page (/) does not ship these 26 KB of toolbar / inspector rules. */
+   public page (/) does not ship these 26 KB of toolbar / inspector rules.
+   Spacing in cqw: at 640px device min-width, 1cqw ≈ 6.4px, so 2cqw ≈ 12px. */
 
 .toolbar {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 2cqw;
   flex-wrap: wrap;
-  margin: 16px;
+  margin: 2.5cqw;
 }
 
 .toolbar b {
-  font: 12px monospace;
+  font: 1.8cqw monospace;
   color: #9fb68a;
 }
 
@@ -25,8 +26,8 @@
   background: #252d20;
   color: #c5cfb6;
   border: 1px solid #596447;
-  border-radius: 5px;
-  padding: 8px 10px;
+  border-radius: 0.8cqw;
+  padding: 1.2cqw 1.5cqw;
 }
 
 .toolbar button:focus-visible,
@@ -36,23 +37,23 @@
 .editor select:focus-visible,
 .editor input:focus-visible,
 .editor textarea:focus-visible {
-  outline: 2px solid #cddda4;
-  outline-offset: 3px;
+  outline: 0.3cqw solid #cddda4;
+  outline-offset: 0.5cqw;
 }
 
 .note {
   text-align: center;
-  padding: 0 16px;
-  font-size: 12px;
+  padding: 0 2.5cqw;
+  font-size: 1.8cqw;
   line-height: 1.6;
   color: #859279;
 }
 
 details {
-  margin: 20px 16px;
-  padding: 14px;
+  margin: 3cqw 2.5cqw;
+  padding: 2cqw;
   border: 1px solid #45503a;
-  border-radius: 8px;
+  border-radius: 1.2cqw;
 }
 
 summary {
@@ -62,27 +63,28 @@ summary {
 
 .editor {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
-  gap: 24px;
-  margin-top: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 40cqw), 1fr));
+  gap: 3.5cqw;
+  margin-top: 2cqw;
 }
 
 .editor h2 {
-  font: 16px monospace;
+  font: 2.5cqw monospace;
   color: #9fc190;
 }
 
 .editor label {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  margin: 12px 0;
+  gap: 0.8cqw;
+  margin: 1.8cqw 0;
 }
 
 .editor p {
-  font-size: 12px;
+  font-size: 1.8cqw;
   line-height: 1.5;
   color: #9aa68c;
+  overflow-wrap: break-word;
 }
 
 .editor input[type="checkbox"] {
@@ -92,6 +94,7 @@ summary {
 .editor textarea {
   resize: vertical;
   width: 100%;
+  overflow-wrap: break-word;
 }
 
 .editor select {
@@ -99,14 +102,14 @@ summary {
 }
 
 .editor button {
-  margin: 4px 0;
-  min-height: 40px;
+  margin: 0.6cqw 0;
+  min-height: 6cqw;
 }
 
 #source-preview {
   max-width: 100%;
-  max-height: 220px;
+  max-height: 34cqw;
   border: 1px solid #45503a;
-  border-radius: 6px;
+  border-radius: 0.9cqw;
   background: #0c0f0a;
 }
