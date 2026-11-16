@@ -24,10 +24,10 @@ import RotaryKnob from '../components/RotaryKnob.astro';
     <meta property="og:image" content="/assets/device/SDINC_reference_4K_conservative.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="data:," />
-    <!-- Preload the master device image: it is the LCP element and is otherwise
-         discovered only after ~40 KB of JS modules execute. fetchpriority=high
-         tells the browser to start it ahead of lower-priority assets. -->
-    <link rel="preload" as="image" href="/assets/device/SDINC_reference_4K_conservative.png" fetchpriority="high" />
+    <!-- Preload the master device image (AVIF): LCP element, fetched ahead
+         of lower-priority assets. PNG fallback is loaded on error in JS. -->
+    <link rel="preload" as="image" href="/assets/device/SDINC_reference_4K_conservative.avif" fetchpriority="high" type="image/avif" />
+    <link rel="preload" as="image" href="/assets/device/SDINC_reference_4K_conservative.png" fetchpriority="low" />
   </head>
   <body>
     <main>

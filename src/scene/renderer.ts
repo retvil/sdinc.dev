@@ -6,7 +6,7 @@
 // overlays drawn by CSS on the controls — never whole-fragment brightening.
 
 import type { Bounds, SceneFile, SceneNode } from './types';
-import { MASKED_FACES, MASTER_ASSET, ROTOR_MASKED, deviceAsset, resolveAsset } from './assets';
+import { MASKED_FACES, MASTER_ASSET, MASTER_ASSET_FALLBACK, ROTOR_MASKED, deviceAsset, resolveAsset } from './assets';
 import { device } from './state';
 import { DEFAULT_DIRECTION } from '../data/demo';
 import { CONTACTS } from '../data/contacts';
@@ -71,6 +71,10 @@ export function mountMaster(container: HTMLElement): void {
   // fetches it as soon as it sees the <img>, ahead of lower-priority assets
   // (the hidden screen-surface, face overlays, etc.).
   master.fetchPriority = 'high';
+  // AVIF → PNG fallback for browsers without AVIF support.
+  master.addEventListener('error', () => {
+    if (master.src !== MASTER_ASSET_FALLBACK) master.src = MASTER_ASSET_FALLBACK;
+  }, { once: true });
   container.append(master);
 }
 
