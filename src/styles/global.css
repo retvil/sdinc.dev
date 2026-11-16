@@ -23,6 +23,7 @@ body {
   background: #111210;
   color: #bdc6b1;
   font: 14px system-ui, sans-serif;
+  color-scheme: light dark;
 }
 
 main {
@@ -1698,9 +1699,13 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * {
-    transition: none !important;
-    animation: none !important;
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html {
+    scroll-behavior: auto;
   }
 }
 
