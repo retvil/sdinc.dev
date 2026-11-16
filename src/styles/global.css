@@ -38,9 +38,7 @@ main {
 .device {
   position: relative;
   width: 100%;
-  /* Mobile = desktop: the device keeps its minimum usable width and the
-     page scrolls horizontally instead of reflowing the composition. */
-  min-width: 960px;
+  min-width: 640px;
   aspect-ratio: 3 / 2;
   container-type: inline-size;
   container-name: device;
@@ -339,6 +337,9 @@ button {
      sub-pixel overshoot past the right glass edge (ref 3331). */
   display: block;
   overflow: hidden;
+  /* Right-edge bevel: mirrors the glass-edge falloff baked into the master's
+     left side. Without it the right matrix corner reads as a hard seam. */
+  box-shadow: inset -14px 0 28px -14px rgba(3, 18, 9, 0.55);
 }
 
 .projects-view,
@@ -349,24 +350,29 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0.8cqw;
-  /* Top padding clears the common baked header. Side paddings keep content
-     off the glass edges; the bottom padding reserves a 34px glass margin
-     between content and the baked tab-row (profile / projects / contact) so
-     no HTML panel ever paints over or touches the physical tab buttons. */
-  padding: 4.2cqw 2.3cqw 0.5cqw;
+  padding: 4.2cqw 3.5cqw 0.5cqw 2.3cqw;
+  box-shadow: inset -10px 0 20px -10px rgba(3, 18, 9, 0.45);
+  isolation: isolate;
   min-height: 0;
-  /* The content region is fixed by place() to the display glass; any inner
-     scroll container that grows past it must clip, never paint onto the
-     body / baked lower tab row. */
   overflow: hidden;
-  /* Cap children to the glass height so no child (detail, schematic, side)
-     can grow past the recessed screen. */
   max-height: 100%;
   color: #83bd99;
   font-family: monospace;
-  /* Pure layout over the shared surface: empty areas must not intercept
-     clicks aimed at the baked tab row or other controls underneath. */
   pointer-events: none;
+}
+
+.projects-view::after,
+.project-view::after,
+.contact-view::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 2.5cqw;
+  background: linear-gradient(to right, transparent, rgba(3, 18, 9, 0.55));
+  pointer-events: none;
+  z-index: 1;
 }
 
 .projects-view :is(button, a, input, textarea, select),
@@ -554,7 +560,9 @@ button {
   font: 1.05cqw monospace;
   cursor: pointer;
   transition: border-color 0.12s, box-shadow 0.12s;
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .project-item:hover {

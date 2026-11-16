@@ -305,8 +305,9 @@ const SCREEN_SURFACE_BOUNDS: Bounds = [1250, 588, 3331, 1942];
 // content bottom and the tab-row top — so no HTML panel ever paints over or
 // touches the physical tab buttons and the baked divider line. The view's
 // own overflow:hidden plus inner scroll containers keep content clipped.
-// (continued) The content view keeps the same right bound as the surface so
-// no HTML ever paints past the real glass edge.
+// The right bound is 3331 (not 3338) so the HTML content zone does not
+// overrun the glass edge: at @1536 the surface's right edge lands at 1332,
+// while 3338 → 1335 would leave the view poking 3px past the glass.
 const SCREEN_CONTENT_BOUNDS: Bounds = [1250, 588, 3331, 1744];
 
 /**
