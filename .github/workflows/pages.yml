@@ -49,6 +49,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Security audit (npm audit)
+        run: npm audit --audit-level=low
+
       - name: Typecheck (astro check)
         run: npx astro check
 
