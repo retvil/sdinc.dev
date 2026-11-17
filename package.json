@@ -14,11 +14,11 @@
     "test:visual:update": "playwright test --update-snapshots"
   },
   "dependencies": {
-    "astro": "^5.0.0"
+    "astro": "^7.4.12"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
-    "@playwright/test": "1.53",
+    "@playwright/test": "^1.65.1",
     "jsdom": "^29.1.1",
     "typescript": "^5.9.3",
     "vitest": "^4.1.12"
