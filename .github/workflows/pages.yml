@@ -33,9 +33,12 @@ jobs:
   check:
     # Runs typecheck + unit tests before any build/deploy. A broken build or
     # a failing test now BLOCKS the deploy instead of silently shipping.
-    # Playwright visual regression stays local (needs a browser + reference
-    # snapshots that regenerate on each run); unit + typecheck + build cover
-    # the common breakage.
+    #
+    # Playwright visual regression runs locally only. The `check` job covers
+    # what CI can gate on: npm audit, typecheck, unit tests, and a verify-
+    # build. Visual is the developer's responsibility on their own machine —
+    # it needs reference snapshots and a browser, neither of which are stable
+    # in the default GitHub Actions runner.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
