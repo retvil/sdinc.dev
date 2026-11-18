@@ -19,7 +19,13 @@ import { defineConfig } from 'astro/config';
 // For now we keep base: '/' so the local dev server and the built
 // dist/ both serve from root — matching the hardcoded ASSET_BASE.
 // Flip to option A when the Pages sub-path is actually being used.
+//
+// The DEV-only /editor route is stripped from dist/ by scripts/strip-editor.mjs
+// (run after `astro build` in the `build` npm script). It is a no-op empty
+// shell in production anyway, but the route + its JS/CSS bundle are dead
+// public surface; the postbuild script removes only dist/editor/.
 export default defineConfig({
   site: 'https://sdinc.dev',
   integrations: [],
+  output: 'static',
 });

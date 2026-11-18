@@ -74,8 +74,8 @@ describe('public/_headers', () => {
   const raw = readFileSync(join(PUBLIC_DIR, '_headers'), 'utf8');
   const rules = parseHeadersFile(raw);
 
-  it('exists and parses into at least 5 rules', () => {
-    expect(rules.length).toBeGreaterThanOrEqual(5);
+  it('exists and parses into at least 4 rules', () => {
+    expect(rules.length).toBeGreaterThanOrEqual(4);
   });
 
   it('every rule carries X-Content-Type-Options: nosniff', () => {
@@ -93,12 +93,10 @@ describe('public/_headers', () => {
   });
 
   it('HTML document rules carry X-Frame-Options: DENY', () => {
-    // Only actual document paths (index/editor HTML + /editor/ page
-    // prefix) — /assets/ and /_astro/ are static resource prefixes
-    // that do not need X-Frame-Options.
-    const docRules = rules.filter(
-      (r) => r.path === '/*.html' || r.path === '/editor/' || r.path === '/',
-    );
+    // Only actual document paths — the device index + 404 pages (*.html)
+    // and the whole-site wildcard. /assets/ and /_astro/ are static
+    // resource prefixes that do not need X-Frame-Options.
+    const docRules = rules.filter((r) => r.path === '/*.html' || r.path === '/');
     expect(docRules.length).toBeGreaterThanOrEqual(1);
     for (const r of docRules) {
       const h = r.headers.find((x) => x.key === 'X-Frame-Options');
@@ -107,8 +105,8 @@ describe('public/_headers', () => {
   });
 
   it('HTML document rules carry a parseable CSP with frame-ancestors none', () => {
-    const htmlRules = rules.filter((r) => r.path === '/*.html' || r.path === '/editor/');
-    expect(htmlRules.length).toBe(2);
+    const htmlRules = rules.filter((r) => r.path === '/*.html');
+    expect(htmlRules.length).toBe(1);
     for (const r of htmlRules) {
       const csp = r.headers.find((x) => x.key === 'Content-Security-Policy');
       expect(csp, `${r.path} missing CSP`).toBeDefined();

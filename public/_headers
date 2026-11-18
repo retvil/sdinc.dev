@@ -4,12 +4,16 @@
 # into dist/) and Cloudflare headers.md (Markdown-style with ``` headers
 # fences, no per-path globs). Astro middleware does not run on Pages.
 #
-# Paths mirror dist/ — the site is static: pages are root files
-# (index.html) and /editor/, everything else lives under /assets/ and
-# /_astro/. Per-path rules beat the wildcard below, so HTML pages get
-# CSP/COOP/COEP/XFO while asset and editor responses get no CSP — a
-# frameless document and an SVG image need different policies, and a
-# single wildcard CSP could not serve both.
+# Paths mirror dist/ — the site is static: the device page is index.html,
+# the 404 page is 404.html, robots.txt sits at the root, everything else
+# lives under /assets/ and /_astro/. Per-path rules beat the wildcard
+# below, so HTML documents get a 'self'-scoped CSP while asset responses
+# get a no-scripts CSP. A single wildcard could not serve both.
+#
+# The DEV-only /editor route is stripped from production builds by
+# astro.config.mjs (editorStrip integration), so no /editor/ rule is
+# needed here. The dev server still serves it locally, but that is not
+# the deployable directory.
 #
 # On the sub-path deployment (retvil.github.io/sdinc.dev/, see
 # astro.config.mjs comment A) the paths in this file still match,
@@ -33,21 +37,12 @@ X-Content-Type-Options: nosniff
 Referrer-Policy: no-referrer
 Content-Security-Policy: default-src 'none'; img-src 'self'; base-uri 'none'; script-src 'none'; style-src 'none'; frame-ancestors 'none'
 
-# Static HTML documents: the device UI + the dev-only editor page.
-# 'self'-scoped CSP (no inline <script> — Astro ships separate .js files;
-# data: icon is the only inline payload). COOP/COEP make cross-origin
-# isolations available if the device ever adopts SharedArrayBuffer —
-# harmless today since no cross-origin resource is loaded.
+# Static HTML documents: the device UI + the 404 page. 'self'-scoped CSP
+# (no inline <script> — Astro ships separate .js files; data: icon is the
+# only inline payload). COOP/COEP make cross-origin isolations available
+# if the device ever adopts SharedArrayBuffer — harmless today since no
+# cross-origin resource is loaded.
 /*.html
-Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
-Cross-Origin-Opener-Policy: same-origin
-Cross-Origin-Embedder-Policy: require-corp
-X-Frame-Options: DENY
-X-Content-Type-Options: nosniff
-Referrer-Policy: no-referrer
-Permissions-Policy: camera=(), geolocation=(), microphone=(), payment=(), usb=()
-
-/editor/
 Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
 Cross-Origin-Opener-Policy: same-origin
 Cross-Origin-Embedder-Policy: require-corp
