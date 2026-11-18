@@ -62,6 +62,10 @@ mimo.exe
 # Playwright HTML report
 playwright-report/
 
+# Local working folders (external fix archives, full repo copies — not part of the site)
+/SDINC-fix/
+/sdinc.dev-full/
+
 # General log files
 *.log
 
