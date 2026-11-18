@@ -1,8 +1,23 @@
-# Security headers — served by GitHub Pages from this static file.
-# GitHub Pages supports Netlify-style header files in the deployable
-# directory: Netlify _headers in the root of public/ (copied verbatim
-# into dist/) and Cloudflare headers.md (Markdown-style with ``` headers
-# fences, no per-path globs). Astro middleware does not run on Pages.
+# SECURITY HEADERS — INERT ON GITHUB PAGES. DO NOT RELY ON THIS FILE IN PROD.
+#
+# This file is formatted for Netlify/Cloudflare-style header tooling, but
+# **GitHub Pages does not honor it**: Pages copies it verbatim into
+# dist/_headers as a static asset and does NOT turn its contents into HTTP
+# response headers. Verified live 2026-11-18: `https://sdinc.dev/` and
+# `https://retvil.github.io/sdinc.dev/` return NO Content-Security-Policy,
+# X-Frame-Options, X-Content-Type-Options, Referrer-Policy, or
+# Permissions-Policy (Server: GitHub.com, no CDN in front).
+#
+# The headers below only take effect if the site is fronted by a host that
+# reads them (Cloudflare, Netlify, Caddy, or a reverse-proxy Worker). Until
+# that is in place, the deploy has no X-Frame-Options (clickjacking surface),
+# no nosniff, and no CSP.
+#
+# To actually ship these headers: front sdinc.dev with Cloudflare (Transform
+# Rules) or a Caddy/Worker reverse proxy and re-map these values. Keep this
+# file as the single source of truth for the desired header set so the
+# Cloudflare rules and the test (tests/headers.test.ts) stay in sync — but
+# the test validates the FILE FORMAT only, not that the live host applies it.
 #
 # Paths mirror dist/ — the site is static: the device page is index.html,
 # the 404 page is 404.html, robots.txt sits at the root, everything else
@@ -11,9 +26,7 @@
 # get a no-scripts CSP. A single wildcard could not serve both.
 #
 # The DEV-only /editor route is stripped from production builds by
-# astro.config.mjs (editorStrip integration), so no /editor/ rule is
-# needed here. The dev server still serves it locally, but that is not
-# the deployable directory.
+# scripts/strip-editor.mjs, so no /editor/ rule is needed here.
 #
 # On the sub-path deployment (retvil.github.io/sdinc.dev/, see
 # astro.config.mjs comment A) the paths in this file still match,

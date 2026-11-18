@@ -1,4 +1,13 @@
-// Verify public/_headers stays valid as dist/ gains or loses files.
+// Verify public/_headers stays well-formed as dist/ gains or loses files.
+//
+// SCOPE LIMIT (important): this test validates the _headers FILE FORMAT and
+// that every dist/ path would resolve to a rule IF a Netlify/Cloudflare-style
+// host honored the file. It does NOT verify that the live deploy host applies
+// these headers. GitHub Pages does NOT honor _headers (see the header comment
+// in public/_headers and REVIEW.md C1) — so on the current Pages deploy the
+// headers in this file are inert. This guard is the single source of truth
+// for the desired header set; keep it in sync with any Cloudflare/Caddy rules
+// that later actually apply them.
 //
 // Two guards:
 //   1. Every dist/ path resolves to exactly ONE _headers rule
@@ -6,7 +15,7 @@
 //      path either already matches or no future content-type or file will
 //      — but a *new* top-level file (e.g. /robots.txt, /favicon.ico)
 //      would silently fall into no rule unless we catch it here.
-//   2. The two rules that carry security policies (HTML documents)
+//   2. The rules that carry security policies (HTML documents)
 //      still parse as CSP directives we recognize.
 //
 // The file is copied verbatim into dist/ on every build; we read it
