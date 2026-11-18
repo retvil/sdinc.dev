@@ -51,6 +51,9 @@ export class DeviceState {
   private liveDescEl: HTMLElement | null = null;
   /** Projects-list preview scene switcher (bound by the renderer). */
   private previewSwitcher: ((id: ProjectInfo['screen']) => void) | null = null;
+  /** Guards the document-level sdinc:navigate listener against double-binding
+     when init() is called from more than one mount site. */
+  private navigateBound = false;
 
   // --- stage D: display mode machine ---
   private mode: ScreenMode = 'profile';
@@ -185,16 +188,13 @@ export class DeviceState {
    */
   private confirmContact(): void {
     const anchor = this.elements.get(`contact-action-${this.selectedContact}`);
-    if (!anchor) return;
-    // Guard against stale focus after a mode switch: if the anchor is not
-    // visible yet (offsetParent null), defer the click to next frame.
-    const doClick = (): void => {
-      anchor.click();
-    };
+    if (!anchor || this.mode !== 'contact') return;
+    // Click only when the anchor is actually on screen. After a mode
+    // round-trip the contact view can be hidden (offsetParent null); a
+    // deferred rAF click on a hidden anchor would open a link from an
+    // invisible control. Visible anchors click immediately.
     if (anchor.offsetParent !== null) {
-      doClick();
-    } else {
-      requestAnimationFrame(doClick);
+      anchor.click();
     }
   }
 
@@ -387,15 +387,27 @@ export class DeviceState {
    * changing focus behaviour without explicit owner approval, and a one-frame
    * deferral shifts the screenshot timing in Playwright visual regression.)
    */
-  private refocusAfterModeChange(previous: Element | null, targetId: string): void {
+  private refocusAfterModeChange(previous: Element | null, targetId: string, fallbackId?: string): void {
     const prev = previous instanceof HTMLElement ? previous : null;
     const persistent = prev !== null
       && document.contains(prev)
       && !prev.hidden
       && (prev.classList.contains('tab-control') || prev.classList.contains('section-control'));
     if (!persistent) {
+      // Focus the named target only if it is actually visible (offsetParent
+      // non-null). If it was hidden by a concurrent view change (e.g. the
+      // detail pane hiding when the project demo is active), fall back to a
+      // sibling that IS visible so keyboard focus never lands on a detached
+      // node or body.
       const target = this.elements.get(targetId);
-      if (target && target.offsetParent !== null) target.focus();
+      if (target && target.offsetParent !== null) {
+        target.focus();
+        return;
+      }
+      if (fallbackId) {
+        const fallback = this.elements.get(fallbackId);
+        if (fallback && fallback.offsetParent !== null) fallback.focus();
+      }
     }
   }
 
@@ -426,7 +438,7 @@ export class DeviceState {
       for (const hook of this.layoutHooks) hook();
       this.updateProjectView();
       this.triggerPanelEntry('project-view');
-      this.refocusAfterModeChange(previous, 'project-title');
+      this.refocusAfterModeChange(previous, 'project-title', 'project-demo-open');
     } else if (mode === 'contact') {
       this.triggerPanelEntry('contact-view');
       this.refocusAfterModeChange(previous, `contact-select-${this.selectedContact}`);
@@ -600,11 +612,17 @@ export class DeviceState {
   init(): void {
     this.selectNode(DEFAULT_DIRECTION, false);
     // Direction screens request section navigation via one document-level
-    // event (chatbot's explicit "open section" buttons). Single listener.
-    document.addEventListener('sdinc:navigate', (event) => {
-      const action = (event as CustomEvent<{ action?: string }>).detail?.action;
-      if (typeof action === 'string') this.handleAction(action);
-    });
+    // event (chatbot's explicit "open section" buttons). The listener is
+    // added ONCE: init() can be called from both index.astro and
+    // LayerEditor.astro, so a re-entrant call must not stack a second
+    // handler (which would double-fire every navigate).
+    if (!this.navigateBound) {
+      this.navigateBound = true;
+      document.addEventListener('sdinc:navigate', (event) => {
+        const action = (event as CustomEvent<{ action?: string }>).detail?.action;
+        if (typeof action === 'string') this.handleAction(action);
+      });
+    }
   }
 }
 

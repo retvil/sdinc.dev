@@ -308,18 +308,29 @@ export function masterAsset(): string {
 // edge so the HTML panels reach the true glass edge, identical to the
 // profile master. Using 3338 (not 3331) for both keeps the view's right
 // edge aligned with the glass in every mode.
-const SCREEN_SURFACE_BOUNDS: Bounds = [1250, 588, 3338, 1942];
+// SINGLE SOURCE OF TRUTH for the glass region: the `screen` node in
+// scene.json (bounds [1250, 588, 3338, 1942]). Both bounds below derive from
+// that one node so the surface plate and the HTML content box can never
+// drift apart (which is what produced the right-edge defect). The content
+// box shares the node's left/right/top but stops above the baked tab row.
+const screenNode = findNode('screen');
+if (!screenNode) throw new Error('scene.json: "screen" node not found');
+const [GLASS_LEFT, GLASS_TOP, GLASS_RIGHT, GLASS_BOTTOM] = screenNode.bounds;
+
+// The surface plate spans the whole glass node; its edges are the same
+// pixels as the master underneath (verified pixel-identical in
+// scripts/make-screen-surface.py).
+const SCREEN_SURFACE_BOUNDS: Bounds = [GLASS_LEFT, GLASS_TOP, GLASS_RIGHT, GLASS_BOTTOM];
+
 // Mode content lives in the display glass region. The baked tab row (profile
 // / projects / contact buttons) sits at reference-space y 1778–1888, so the
 // HTML panel stops just above it at y=1744 — 34px of glass margin between
 // content bottom and the tab-row top — so no HTML panel ever paints over or
 // touches the physical tab buttons and the baked divider line. The view's
 // own overflow:hidden plus inner scroll containers keep content clipped.
-// The right bound is 3338 (the screen node's right edge in scene.json,
-// matching SCREEN_SURFACE_BOUNDS and the surface crop) so the HTML content
-// zone reaches the true glass edge. At @1536 the surface's right edge lands
-// at 1332 — identical to the profile master's right edge.
-const SCREEN_CONTENT_BOUNDS: Bounds = [1250, 588, 3338, 1744];
+// Left/right/top follow the glass node; only the bottom is the fixed 1744
+// stop so the content never reaches the baked tab row.
+const SCREEN_CONTENT_BOUNDS: Bounds = [GLASS_LEFT, GLASS_TOP, GLASS_RIGHT, 1744];
 
 /**
  * Stage D: the shared clean display surface (screen-surface.png, derived

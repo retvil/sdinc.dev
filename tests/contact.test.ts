@@ -114,13 +114,26 @@ describe('DeviceState contacts machine', () => {
     expect(selectEl(CONTACTS.length - 1).getAttribute('aria-pressed')).toBe('true');
   });
 
-  it('confirmContact clicks the anchor of the selected contact', () => {
+  it('confirmContact clicks the anchor of the selected contact when it is visible', () => {
     state.selectContact(1);
-    state.setMode('contact'); // required so that mode === 'contact' before confirm()
+    state.setMode('contact');
     const anchor = state.elements.get('contact-action-1')!;
+    // The fixture sets offsetParent = document.body (visible) for all anchors.
     const clickSpy = vi.spyOn(anchor, 'click');
     state.confirm();
     expect(clickSpy).toHaveBeenCalledTimes(1);
+    clickSpy.mockRestore();
+  });
+
+  it('confirmContact does NOT click a hidden (offsetParent null) anchor', () => {
+    state.selectContact(1);
+    state.setMode('contact');
+    const anchor = state.elements.get('contact-action-1')!;
+    // Model a hidden contact view: offsetParent null after a mode round-trip.
+    Object.defineProperty(anchor, 'offsetParent', { value: null, configurable: true });
+    const clickSpy = vi.spyOn(anchor, 'click');
+    state.confirm();
+    expect(clickSpy).not.toHaveBeenCalled();
     clickSpy.mockRestore();
   });
 
