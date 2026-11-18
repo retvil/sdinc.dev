@@ -27,9 +27,16 @@
 /* --- 2. Subtle green CRT scanline overlay on the display surface ---
     A repeating-linear-gradient with 3px period: very faint green lines
     that evoke a real phosphor CRT raster. Opacity kept to 0.015 so it
-    is felt, not seen. Applied to .screen-surface via a pseudo-element. */
+    is felt, not seen.
+    Applied to the content view containers rather than
+    img.screen-surface::after because replaced elements (<img>) do not
+    render ::after pseudo-elements. The view's own isolation:isolate
+    (global.css) gives each ::before its own stacking context, so the
+    scanline paints on top of the glass without z-fighting the master. */
 
-.screen-surface::after {
+.projects-view::before,
+.project-view::before,
+.contact-view::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -44,19 +51,13 @@
   z-index: 1;
 }
 
-/* --- 3. Smooth rotor rotation ---
-   The rotor uses a CSS custom property --angle set by JS.
-   Add a short transition so the dial steps feel mechanical rather
-   than instant. */
+/* --- 3. Smooth rotor rotation --- */
 
 .rotor-art {
   transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* --- 4. Screen-surface fade-in on first panel entry ---
-   The surface appears when the user moves from profile to
-   projects/project/contact. A quick opacity fade makes the transition
-   feel like the display powering on rather than a hard pop. */
+/* --- 4. Screen-surface fade-in on first panel entry --- */
 
 .screen-surface {
   transition: opacity 0.3s ease-out;
@@ -72,10 +73,7 @@
    there is nothing to fade. Kept as a numbered marker so the section
    list stays dense. */
 
-/* --- 6. Button press micro-interaction ---
-   Section controls and project items get a brief scale-down on press
-   for a tactile, mechanical feel. 0.98 scale is barely visible but
-   adds weight. */
+/* --- 6. Button press micro-interaction --- */
 
 .section-control:active,
 .project-item:active,
@@ -83,56 +81,36 @@
   transform: scale(0.98);
 }
 
-/* --- 7. Direction screen entry animation ---
-    When a direction screen becomes visible, a subtle slide-up + fade
-    makes the transition feel intentional. The animation is applied
-    only when the screen is UNHIDDEN (the renderer removes [hidden]
-    before the first paint), so re-selecting the same screen does not
-    replay the entry. */
+/* --- 7. Direction screen entry animation --- */
 
 .dir-screen:not([hidden]) {
   animation: dir-screen-in 0.3s ease-out;
 }
 
 @keyframes dir-screen-in {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* --- 8. Component node selection pulse ---
-   When a schematic component node is selected, a one-time scale pulse
-   (1 → 1.08 → 1) draws attention to the selection without persistent
-   visual noise. */
+/* --- 8. Component node selection pulse --- */
 
 .component-control.selected {
   animation: component-pulse 0.25s ease-out;
 }
 
 @keyframes component-pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.08); }
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.08); }
   100% { transform: scale(1); }
 }
 
-/* --- 9. Contact item hover glow ---
-   Subtle glow on hover to show the item is interactive. */
+/* --- 9. Contact item hover glow --- */
 
 .contact-select:hover {
   box-shadow: 0 0 12px rgba(131, 189, 153, 0.2);
 }
 
-/* --- 10. Detail page section reveal ---
-   When the level-2 description page loads, its sections fade in
-   sequentially (staggered delay) for a composed, editorial feel.
-   Only applies when .is-opening is set on the parent project-view.
-   The stagger is short (0.08s steps) so it reads as a single composed
-   reveal rather than a slow crawl. */
+/* --- 10. Detail page section reveal --- */
 
 .project-view.is-opening .detail-essence,
 .project-view.is-opening .detail-section,
@@ -146,41 +124,27 @@
 .project-view.is-opening .detail-section:nth-child(4) { animation-delay: 0.36s; }
 
 @keyframes section-in {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* --- 11. Smooth scroll for internal overflow areas ---
-   The project-detail and screen-host scroll containers get a subtle
-   scroll-behavior so programmatic focus jumps feel composed rather
-   than instant. Respects reduced-motion via the global rule. */
+/* --- 11. Smooth scroll for internal overflow areas --- */
 
 .project-detail,
 .project-screen-host,
 .dir-open-catalog,
 .dir-rag-left,
 .dir-rag-right,
-.dir-chat-log {
+.dir-chat-log,
+#device .dir-screen {
   scroll-behavior: smooth;
 }
 
 /* --- 12. Rotor transition only on transform (already compositor-safe) ---
-   The .rotor-art transition is set above; ensure it does not animate
-   display/visibility (which would cause layout). */
+    The .rotor-art transition is set above; ensure it does not animate
+    display/visibility (which would cause layout). */
 
-/* --- 13. Panel entry fade ---
-   When a content panel (projects / project / contact) becomes visible,
-   fade + slide it in over 0.22s. The .screen-surface glass already
-   fades in over 0.3s (rule #4 above), so the content lags slightly
-   behind the glass, creating a layered "display powering on" feel.
-   Only the three transparent content views animate; the master raster
-   and the baked glass never move. */
+/* --- 13. Panel entry fade --- */
 
 .projects-view,
 .project-view,
@@ -195,8 +159,6 @@
   animation: panel-enter 0.22s ease-out;
 }
 
-/* Under reduced motion the entry must be instant (no fade/slide), which
-   also keeps Playwright visual-regression screenshots deterministic. */
 @media (prefers-reduced-motion: reduce) {
   .projects-view.panel-entering,
   .project-view.panel-entering,
@@ -209,34 +171,23 @@
 }
 
 @keyframes panel-enter {
-  from {
-    opacity: 0;
-    transform: translateY(5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* --- 14. Rotor detent visual: brief scale "snap" on step ---
-   The rotor art gets a one-frame scale bounce when it steps, reinforcing
-   the physical detent feel. The animation is 0.1s, barely perceptible. */
+/* --- 14. Rotor detent visual: brief scale "snap" on step --- */
 
 .rotor-art.rotor-step {
   animation: rotor-snap 0.1s ease-out;
 }
 
 @keyframes rotor-snap {
-  0% { transform: rotate(var(--angle, 0deg)) scale(1); }
-  50% { transform: rotate(var(--angle, 0deg)) scale(0.96); }
+  0%   { transform: rotate(var(--angle, 0deg)) scale(1); }
+  50%  { transform: rotate(var(--angle, 0deg)) scale(0.96); }
   100% { transform: rotate(var(--angle, 0deg)) scale(1); }
 }
 
-/* --- 15. Vault shutter: add a subtle perspective tilt for depth ---
-   The two shutter bars get a very slight perspective transform so the
-   opening feels like a physical door parting rather than a flat wipe.
-   400px perspective is barely perceptible. */
+/* --- 15. Vault shutter: subtle perspective tilt for depth --- */
 
 .vault-shutter {
   perspective: 400px;
@@ -248,4 +199,50 @@
 
 .vault-shutter--bottom {
   transform-origin: bottom center;
+}
+
+/* --- 16. Audit fixes: prevent clipping in demos & enforce readable minimums ---
+    Scoped under #device so they override global.css regardless of import order.
+    The internal scroll on .dir-screen keeps long level-3 demonstrations
+    (game, call-analytics, short-video pipeline) reachable instead of
+    clipping at the bottom of the screen. */
+
+#device .dir-screen {
+  overflow-y: auto;
+  overflow-x: hidden;
+  pointer-events: auto;
+  padding-right: 0.3cqw;
+  scrollbar-width: thin;
+  scrollbar-color: #4f8f63 rgba(44, 90, 60, 0.22);
+}
+
+#device .dir-screen::-webkit-scrollbar {
+  width: 9px;
+}
+
+#device .dir-screen::-webkit-scrollbar-track {
+  background: rgba(44, 90, 60, 0.22);
+  border-radius: 5px;
+}
+
+#device .dir-screen::-webkit-scrollbar-thumb {
+  background: #4f8f63;
+  border-radius: 5px;
+  border: 2px solid #0c1f14;
+}
+
+#device .dir-game-svg {
+  width: clamp(140px, 18cqw, 260px);
+}
+
+#device .dir-origin,
+#device .projects-view small,
+#device .project-view small {
+  font-size: clamp(10px, 0.65cqw, 14px);
+}
+
+#device .project-preview p,
+#device .contact-action,
+#device .contact-copy {
+  font-size: clamp(11px, 0.95cqw, 18px);
 }
