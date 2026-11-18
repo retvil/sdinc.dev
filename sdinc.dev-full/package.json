@@ -1,0 +1,26 @@
+{
+  "name": "sdinc.dev",
+  "private": true,
+  "version": "1.0.0",
+  "description": "SDINC — ретрофутуристический персональный сайт-прибор (Pip-Boy inspired)",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && node scripts/strip-editor.mjs",
+    "preview": "astro preview",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "test:visual": "playwright test",
+    "test:visual:update": "playwright test --update-snapshots"
+  },
+  "dependencies": {
+    "astro": "^7.4.12"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@playwright/test": "^1.65.1",
+    "jsdom": "^29.1.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.12"
+  }
+}

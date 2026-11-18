@@ -1,0 +1,4 @@
+Install: npm ci
+Run: npm run preview
+Rebuild: npm run build
+Browser visual acceptance was not performed.

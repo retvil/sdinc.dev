@@ -1,0 +1,49 @@
+---
+import '../src/styles/global.css';
+import DeviceStage from '../src/components/DeviceStage.astro';
+---
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>SDINC — не найдено</title>
+    <link rel="icon" href="data:," />
+  </head>
+  <body>
+    <main>
+      <h1 class="sr-only">Страница не найдена</h1>
+      <DeviceStage />
+      <div class="notfound-panel">
+        <p class="notfound-code">404</p>
+        <p class="notfound-msg">Корпус устройства не отображает эту страницу.</p>
+        <a class="notfound-link" href="/">Вернуться к прибору</a>
+      </div>
+    </main>
+    <style>
+      .notfound-panel {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-content: center;
+        gap: 0.5rem;
+        text-align: center;
+        color: #9ccaab;
+        font: 1.2rem/1.4 monospace;
+        z-index: 2;
+        background: rgba(0, 0, 0, 0.35);
+      }
+      .notfound-code {
+        font-size: 4rem;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        color: #d3dda5;
+      }
+      .notfound-link {
+        color: #c1e2c8;
+        text-decoration: underline;
+      }
+    </style>
+  </body>
+</html>

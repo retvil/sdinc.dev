@@ -1,0 +1,62 @@
+---
+// SDINC — start screen. Desktop-only composition: the approved 4K reference
+// renders as ONE continuous master; only interactive layers mount on top
+// (V7 strategy — no static fragment patches). Narrow screens scroll
+// horizontally inside the container.
+import '../styles/global.css';
+import DeviceStage from '../components/DeviceStage.astro';
+import Display from '../components/Display.astro';
+import SectionButtons from '../components/SectionButtons.astro';
+import RotaryKnob from '../components/RotaryKnob.astro';
+
+// Sub-path-safe asset URLs (GitHub Pages: /sdinc.dev/assets/… on
+// retvil.github.io, /assets/… on apex sdinc.dev). import.meta.env.BASE_URL
+// resolves to the configured `base` (default '/') at build time.
+const BASE = import.meta.env.BASE_URL;
+const MASTER_AVIF = `${BASE}assets/device/SDINC_reference_4K_conservative.avif`;
+const MASTER_PNG = `${BASE}assets/device/SDINC_reference_4K_conservative.png`;
+const MASTER_WEBP = `${BASE}assets/device/SDINC_reference_4K_conservative.webp`;
+---
+
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="SDINC — персональная система." />
+    <title>SDINC / Personal System</title>
+    <meta property="og:title" content="SDINC / Personal System" />
+    <meta property="og:description" content="SDINC — персональная система. Ретрофутуристический прибор: проекты, связи, направления." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://sdinc.dev/" />
+    <meta property="og:image" content={MASTER_PNG} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={MASTER_PNG} />
+    <link rel="icon" href="data:," />
+    <!-- Preload the master device image (PNG, lossless): LCP element.
+         AVIF is the lighter fallback. -->
+    <link rel="preload" as="image" href={MASTER_PNG} fetchpriority="high" type="image/png" />
+    <link rel="preload" as="image" href={MASTER_AVIF} fetchpriority="low" type="image/avif" />
+    <link rel="preload" as="image" href={MASTER_WEBP} fetchpriority="low" type="image/webp" />
+  </head>
+  <body>
+    <main>
+      <h1 class="sr-only">SDINC — персональная система</h1>
+      <DeviceStage />
+      <!-- Interactive layers mount over the master in stacking order -->
+      <Display />
+      <SectionButtons />
+      <RotaryKnob />
+      <p id="status" class="sr-only" role="status">Исходный профиль. Корпус отображается единым слоем.</p>
+    </main>
+
+    <script>
+      // Runs after all component scripts (document order): controls are
+      // mounted, overlays registered — safe to bind and init.
+      import { device } from '../scene/state';
+
+      device.bindStatus(document.getElementById('status'));
+      device.init();
+    </script>
+  </body>
+</html>

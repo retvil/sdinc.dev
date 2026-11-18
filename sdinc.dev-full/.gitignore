@@ -1,0 +1,74 @@
+# Dependencies & build output
+node_modules/
+dist/
+.astro/
+
+# Service directories
+.playwright-mcp/
+.omo/
+
+# External reference packages (source materials, not product)
+/sdinc-fidelity-v2/
+/sdinc-fidelity-v3/
+/sdinc-fidelity-v4.1-desktop/
+/sdinc-fidelity-v5-desktop/
+/sdinc-fidelity-v6-desktop/
+/sdinc-fidelity-v7-desktop/
+/sdinc-starter/
+
+# Diagnostic screenshots and working artifacts in repo root
+/*.png
+!/SDINC_fallout_inspired_sketch.png
+
+# Scratch work area (screenshot comparisons, CSS extracts)
+.scratch/
+
+# Local dev server logs
+preview.log
+preview-bg.log
+preview-bg-err.log
+preview-run.log
+preview-err.log
+
+# AI-agent scratch work (measurement scripts, diag screenshots)
+scratch/
+
+# Playwright test artifacts (regenerated on each run)
+e2e/test-results/
+e2e/visual.spec.ts-snapshots/
+
+# QA screenshots and dev-server logs (local working artifacts)
+bleed-diag/
+dev-server.log
+dev-server-err.log
+
+# AI-agent local scratch / state
+.mimocode/
+
+# Stray local binary (not a build artifact, not tracked)
+mimo.exe
+
+# Agent ТЗ package (removed from repo — kept out of git)
+/SDINC-projects-specifications/
+
+
+# Environment files (secrets — never commit)
+.env
+.env.*
+.env.local
+.env.dev
+.env.prod
+
+# Playwright HTML report
+playwright-report/
+
+# General log files
+*.log
+
+# Local AI-agent skills (per-project installs, not shipped with the site)
+.agents/
+.claude/
+.continue/
+.grok/
+.roo/
+skills-lock.json
