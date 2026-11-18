@@ -67,16 +67,10 @@
   opacity: 1;
 }
 
-/* --- 5. Status line fade ---
-   The status line (#status, role="status") updates frequently.
-   A subtle fade-in on each update makes the change perceptible
-   without being distracting. */
-
-.sr-only[role="status"] {
-  /* sr-only keeps it visually hidden but screen-reader accessible;
-     no visual fade needed here since it's not shown to sighted users.
-     This rule is a no-op placeholder for clarity. */
-}
+/* --- 5. Status line (no-op — sr-only, no visual fade needed) ---
+   The status line (#status, role="status") is visually hidden (sr-only);
+   there is nothing to fade. Kept as a numbered marker so the section
+   list stays dense. */
 
 /* --- 6. Button press micro-interaction ---
    Section controls and project items get a brief scale-down on press

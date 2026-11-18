@@ -43,13 +43,6 @@ export class DeviceState {
 
   private directions: DirectionCopy = cloneDirections();
   private active: DirectionKey = DEFAULT_DIRECTION;
-  /**
-   * True only after an EXPLICIT user selection (node click, rotor step,
-   * dial confirm). First open and programmatic restores stay neutral:
-   * the selected ring returns to the profile only when the user actually
-   * chose a direction. Cleared by init/resetView.
-   */
-  private userSelected = false;
   private angle = 0;
   private statusEl: HTMLElement | null = null;
   private rotorEl: HTMLElement | null = null;
@@ -143,7 +136,6 @@ export class DeviceState {
     if (this.liveDescEl) this.liveDescEl.textContent = info.description;
     this.syncLiveCard();
     if (mark) {
-      this.userSelected = true;
       this.status(`Выбран ${info.title}. Данные демонстрационные.`);
       playScreenClick();
     }
@@ -593,9 +585,7 @@ export class DeviceState {
    *   preserves it to keep the "last opened project still open" experience.
    */
   resetView(): void {
-    // Back to the neutral first-open state: the user-selection flag clears
-    // BEFORE setMode so the profile returns without the selected ring.
-    this.userSelected = false;
+    // Back to the neutral first-open state.
     this.selectedContact = 0;
     this.angle = 0;
     if (this.rotorEl) {
@@ -608,7 +598,6 @@ export class DeviceState {
 
   /** Initial state once all interactive layers are mounted. */
   init(): void {
-    this.userSelected = false;
     this.selectNode(DEFAULT_DIRECTION, false);
     // Direction screens request section navigation via one document-level
     // event (chatbot's explicit "open section" buttons). Single listener.

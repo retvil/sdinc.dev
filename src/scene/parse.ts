@@ -60,25 +60,9 @@ export function parseScene(raw: unknown): SceneFile {
     height: Number(raw.reference.height),
     asset: asString(raw.reference.asset, 'reference'),
   };
-  if (!isRecord(raw.content)) throw new Error('Scene parse error: content must be an object');
-  if (!isRecord(raw.nodes)) throw new Error('Scene parse error: nodes must be an object');
-  const content: Record<string, string> = {};
-  for (const [key, value] of Object.entries(raw.content)) {
-    content[key] = asString(value, `content.${key}`);
-  }
-  const nodes: Record<string, { title: string; description: string }> = {};
-  for (const [key, value] of Object.entries(raw.nodes)) {
-    if (!isRecord(value)) throw new Error(`Scene parse error: nodes.${key} must be an object`);
-    nodes[key] = {
-      title: asString(value.title, `nodes.${key}.title`),
-      description: asString(value.description, `nodes.${key}.description`),
-    };
-  }
   return {
     version: asString(raw.version, 'version'),
     reference,
     scene: asNode(raw.scene, 'scene'),
-    content,
-    nodes,
   };
 }

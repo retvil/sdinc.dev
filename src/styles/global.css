@@ -1717,5 +1717,6 @@ button {
    Mobile = desktop: the device keeps a fixed minimum width and the page
    scrolls horizontally (see .viewport above) instead of reflowing. No
    container queries, no text floors, no stacking — the desktop composition
-   is preserved 1:1 at any viewport size. */
+   is preserved 1:1 at any viewport size. No rules here; the .viewport
+   overflow-x:auto already carries the behavior. */
 

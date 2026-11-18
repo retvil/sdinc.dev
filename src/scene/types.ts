@@ -22,8 +22,6 @@ export interface SceneFile {
     asset: string;
   };
   scene: SceneNode;
-  content: Record<string, string>;
-  nodes: Record<string, { title: string; description: string }>;
 }
 
 export interface LayerOverride {
