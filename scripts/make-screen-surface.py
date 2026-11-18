@@ -1,26 +1,30 @@
 #!/usr/bin/env python3
 """Generate the clean display surface (screen-surface.png) for SDINC.
 
-Derives a clean inner-display plate from the approved 4K reference by removing
-ONLY the mode-specific start content (digital twin diagram + LLM card) and
-keeping everything common baked: header with side rules, bottom tab row,
-separator, glass glare and vignette.
+Derives a clean inner-display plate from the approved 4K reference by
+REMOVING ONLY the mode-specific start content (digital twin diagram + LLM
+card). The removed regions are emitted as TRANSPARENT (alpha=0) so the
+master raster's ORIGINAL glass shows straight through when the plate is
+overlaid — this is the artifact fix: no interpolated interior means no
+double-tint, no horizontal seam band, no right-edge color step.
 
 - Source: public/assets/device/SDINC_reference_4K_conservative.png (untouched).
 - Crop:   [1250, 588] .. [3338, 1942] -> 2088x1354, no resize, no sharpening,
   no color correction.
-- Masked areas are reconstructed by coarse-to-fine pyramid interpolation of
-  the surrounding ORIGINAL pixels (the background field there is smooth).
-  The reconstructed background is a DERIVED layer, not an extracted original
-  hidden surface.
+- Output: RGBA plate. Opaque (alpha=255) everywhere except the masked
+  content regions (alpha=0). Unmasked pixels are byte-identical to the
+  master crop, so the plate's edges are seamless by construction.
+- The legacy pyramid-fill + 24px border-restore path (and the separate
+  fix-surface-border.py) is superseded: with a transparent cutout the
+  interior is the master itself, so there is nothing to reconstruct and
+  nothing to re-paste.
 
 Outputs:
-  public/assets/device/screen-surface.png        (the plate, opaque)
+  public/assets/device/screen-surface.png        (RGBA plate, transparent cutout)
   docs/screen-surface/screen-surface-mask.png    (removed-content mask)
-  docs/screen-surface/screen-surface-compare.png (before | after side by side)
+  docs/screen-surface/screen-surface-compare.png (before | composited-over-master)
 
-Prints residual statistics (high-pass inside masked areas) as an automated
-ghost/stripe check. Reference file is never modified.
+Reference file is never modified.
 """
 
 from pathlib import Path
@@ -118,49 +122,50 @@ def main() -> None:
     mask = np.asarray(mask_image, dtype=np.float64) / 255.0
     binary = mask >= 0.5
 
-    filled = pyramid_fill(np.asarray(plate_before, dtype=np.float64), binary)
+    # TRANSPARENT-CUTOUT MODE (the artifact fix): the plate is emitted as RGBA.
+    # Every pixel the mask removed (where the mode-specific content used to be)
+    # becomes alpha=0 so the master's ORIGINAL glass shows straight through —
+    # no interpolated interior, hence no double-tint / horizontal band / right
+    # seam. Everything outside the mask keeps the original crop pixels at
+    # alpha=255. This supersedes the older pyramid-fill approach whose derived
+    # interior drifted from the master glass (mean 11.4 / max 240 lum).
+    arr = np.asarray(plate_before, dtype=np.uint8).copy()
+    alpha = np.full(arr.shape[:2], 255, dtype=np.uint8)
+    alpha[binary] = 0
+    rgba = np.dstack([arr, alpha[..., None]])
+    plate = Image.fromarray(rgba, "RGBA")
 
-    # --- edge integrity pass -----------------------------------------------
-    # The dilated mask (MaxFilter(15)) reaches the right crop edge, so the
-    # interpolated fill overwrites the rightmost columns with values that
-    # drift up to ~13 lum from the master chassis frame — a visible seam when
-    # the surface is overlaid on the master raster. The glass frame itself is
-    # never masked (the crop border is outside every content rect), so the
-    # original crop pixels on the border are the CORRECT ones: restore a 24px
-    # border strip from `plate_before` to guarantee pixel-identical edges.
-    BORDER = 24
-    filled_arr = np.asarray(filled, dtype=np.float64)
-    before_arr = np.asarray(plate_before, dtype=np.float64)
-    filled_arr[:BORDER, :] = before_arr[:BORDER, :]
-    filled_arr[-BORDER:, :] = before_arr[-BORDER:, :]
-    filled_arr[:, :BORDER] = before_arr[:, :BORDER]
-    filled_arr[:, -BORDER:] = before_arr[:, -BORDER:]
-    filled = filled_arr
-    # ------------------------------------------------------------------------
+    # The plate is now RGBA: original crop pixels everywhere (alpha=255),
+    # transparent (alpha=0) exactly where the mask removed content. No border
+    # restoration is needed — the unmasked border pixels are already the
+    # original crop, pixel-identical to the master by construction.
 
-    stats = highpass_stats(filled, binary)
-
-    plate = Image.fromarray(np.clip(filled, 0, 255).astype(np.uint8))
     OUT_PLATE.parent.mkdir(parents=True, exist_ok=True)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     plate.save(OUT_PLATE)
     mask_image.save(OUT_DIR / "screen-surface-mask.png")
 
+    # Compare: show the original crop and the plate composited over the
+    # master crop (alpha-blend), so the transparent cutout reads as "master
+    # showing through" rather than black.
+    compare_bg = plate_before.copy().convert("RGBA")
+    composited = Image.alpha_composite(compare_bg, plate)
     compare = Image.new("RGB", (size[0] + 12, size[1] * 2 + 12), (24, 24, 24))
     compare.paste(plate_before, (0, 0))
-    compare.paste(plate, (0, size[1] + 12))
+    compare.paste(composited.convert("RGB"), (0, size[1] + 12))
     compare.save(OUT_DIR / "screen-surface-compare.png")
 
-    # Edge-identity check: max per-column |surface - master crop| across the
-    # whole plate; border columns must be 0.0.
+    # Verify: the plate must be pixel-identical to the master crop everywhere
+    # it is OPAQUE (alpha=255). Opaque-region delta should be 0.
     ref_arr = np.asarray(plate_before, dtype=np.float64)
-    edge_delta = np.abs(np.asarray(plate, dtype=np.float64) - ref_arr).mean(axis=0)
-    print("plate:", OUT_PLATE.name, plate.size)
+    plate_rgba = np.asarray(plate, dtype=np.float64)
+    opaque = alpha == 255
+    opaque_delta = np.abs(plate_rgba[..., :3][opaque] - ref_arr[opaque]).max()
+    print("plate:", OUT_PLATE.name, plate.size, "mode:", plate.mode)
     print("mask:", OUT_DIR / "screen-surface-mask.png")
     print("compare:", OUT_DIR / "screen-surface-compare.png")
-    print("highpass residual (ghost/stripe check):", stats)
-    print(f"edge-identity: border 24 cols/rows max ΔL={edge_delta[:BORDER].max():.2f} / "
-          f"{edge_delta[-BORDER:].max():.2f}, interior max ΔL={edge_delta.max():.2f}")
+    print(f"opaque-region max |Δ vs master|: {opaque_delta:.2f} (expect 0.00)")
+    print(f"transparent pixels: {int((~opaque).sum())} / {opaque.size}")
 
 
 if __name__ == "__main__":
