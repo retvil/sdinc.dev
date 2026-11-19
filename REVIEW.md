@@ -20,17 +20,11 @@
 > | **Q1** .dial-control | ✅ | добавлен в suppression-список (круглая рамка не должна ломаться прямоугольным outline). |
 > | **Q3** мёртвый CSS | ✅ | `.schematic` и `.project-schematic` удалены (не используются). |
 > | **Q4** комментарий | ✅ | effects.css §2: «z-fighting» заменено на точное описание stacking-context + z-index:1. |
-> | **Q2** 25.6 MB PNG | ⏸ отложен | см. ниже — нужен dev-only static-dir; нельзя просто `rm` из public/. |
+> | **Q2** 25.6 MB PNG | ✅ (безопасно) | `scripts/strip-editor.mjs` теперь trim'ит `dist/assets/device/` до явного allowlist `RUNTIME_ASSETS` (3 master + 3 face-mask + rotor + screen-surface = 8). 74 editor-only PNG больше **не в dist** (~24 MB меньше на деплой). `public/` не трогается — dev-редактор читает все 82 файла. Проверено: dist=8, public=82, dev-сервер /editor 200, build clean. |
 > | L5 | — (не баг) | `detail`/`demoBack` уже корректно управляются в `state.ts` (hide по `projectView`); registry управляет только screen-instances. Изменение не нужно. |
 
-## ⏸ Q2 — почему не сделано и как сделать безопасно
-Просто вынести 70+ PNG из `public/` в `assets-source/` **сломает dev-редактор**: он читает source-library через `resolveAsset` → `/assets/device/`, а dev-сервер Astro отдаёт только `public/`. Runtime реально грузит ~9 файлов (3 master + 3 face-mask + rotor + surface + device). Остальные ~73 — только редактор.
-**Безопасный план (нужен твой OK, это уже за рамкой «не сломать dev-сервер»):**
-1. Создать `server.static`-каталог (Astro) или vite-плагин, отдающий `assets-source/device/` **только в DEV**.
-2. `resolveAsset` в DEV указывает на dev-каталог; в PROD (редактор урезается) путь не используется.
-3. Оставить в `public/assets/device/` только ~9 runtime-файлов; перенести остальное в `assets-source/`.
-4. `npm run build` → dev-редактор проверяется на 4323, prod — `dist/` без 73 файлов.
-Польза: −24 MB на деплой. Риск: сломать dev-редактор. Pages размер не капит — это оптимизация, не фикс, поэтому отложено.
+## Q2 — как реализовано (безопасно)
+Не выносил PNG из `public/` (это сломало бы dev-редактор, читающий `/assets/device/`). Вместо этого **postbuild-trim**: `scripts/strip-editor.mjs` удаляет из `dist/assets/device/` всё, чего нет в явном `RUNTIME_ASSETS` (8 файлов: 3 формата мастера + 3 face-mask + rotor + screen-surface). Dev-сервер при этом отдаёт `public/` целиком, редактор работает. Итог: −74 файла / ~24 MB на деплой, нулевой риск для dev.
 
 ---
 
