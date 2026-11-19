@@ -6,7 +6,7 @@
 // overlays drawn by CSS on the controls — never whole-fragment brightening.
 
 import type { Bounds, SceneFile, SceneNode } from './types';
-import { MASKED_FACES, MASTER_ASSET, MASTER_ASSET_FALLBACK, ROTOR_MASKED, deviceAsset, resolveAsset } from './assets';
+import { MASKED_FACES, MASTER_ASSET, MASTER_ASSET_FALLBACK, ROTOR_MASKED, deviceAsset } from './assets';
 import { device } from './state';
 import { DEFAULT_DIRECTION } from '../data/demo';
 import { CONTACTS } from '../data/contacts';
@@ -23,13 +23,6 @@ const scene: SceneFile = parseScene(sceneFile);
 
 const SECTION_KEYS = ['profile', 'projects', 'contact'] as const;
 const DIRECTION_TREE_IDS = ['node-vision', 'node-llm', 'node-auto', 'node-system'] as const;
-
-export interface SourceFragment {
-  id: string;
-  name: string;
-  asset: string;
-  bounds: Bounds;
-}
 
 function findNode(id: string): SceneNode | undefined {
   const stack: SceneNode[] = [scene.scene];
@@ -677,21 +670,3 @@ export function mountScreenPanels(container: HTMLElement): void {
   device.registerElement('contact-result', contactResult);
 }
 
-/** Editable source library: every tree fragment that owns a raster asset. */
-export function sourceFragments(): SourceFragment[] {
-  const result: SourceFragment[] = [];
-  const stack: SceneNode[] = [scene.scene];
-  while (stack.length > 0) {
-    const current = stack.pop() as SceneNode;
-    if (current.asset) {
-      result.push({ id: current.id, name: current.name, asset: current.asset, bounds: current.bounds });
-    }
-    stack.push(...current.children);
-  }
-  return result.reverse();
-}
-
-/** Resolved public URL for a source-library fragment. */
-export function sourceUrl(fragment: SourceFragment): string {
-  return resolveAsset(fragment.asset);
-}

@@ -30,9 +30,11 @@
     is felt, not seen.
     Applied to the content view containers rather than
     img.screen-surface::after because replaced elements (<img>) do not
-    render ::after pseudo-elements. The view's own isolation:isolate
-    (global.css) gives each ::before its own stacking context, so the
-    scanline paints on top of the glass without z-fighting the master. */
+    render ::after pseudo-elements. Each view has isolation:isolate
+    (global.css), so its ::before sits in a private stacking context:
+    z-index:1 paints it on top of BOTH the glass surface and the HTML
+    content within that view. pointer-events:none + 0.015 opacity keep
+    it a near-invisible film, not a z-fighting hazard. */
 
 .projects-view::before,
 .project-view::before,

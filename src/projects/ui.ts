@@ -25,18 +25,27 @@ export function statusLine(): HTMLParagraphElement {
   return p;
 }
 
-/** Toggle button with a selected state kept in one place; plays the Pip-Boy tick on press. */
+/**
+ * Toggle button with a selected state kept in one place.
+ *
+ * SFX contract: `clickSfx` is the SINGLE owner of the Pip-Boy click tick.
+ * `selectButton` opts into playing it via `{ sfx: true }` (the default) for
+ * buttons that don't have their own handler wrapping. If a caller instead
+ * wraps `onClick` in `clickSfx`, pass `{ sfx: false }` to avoid a double tick.
+ */
 export function selectButton(
   label: string,
   ariaLabel: string,
   onClick: () => void,
+  options?: { sfx?: boolean },
 ): HTMLButtonElement {
   const b = el('button', 'dir-select') as HTMLButtonElement;
   b.type = 'button';
   b.textContent = label;
   b.setAttribute('aria-label', ariaLabel);
+  const playSfx = options?.sfx !== false;
   b.addEventListener('click', () => {
-    playScreenClick();
+    if (playSfx) playScreenClick();
     onClick();
   });
   return b;
@@ -57,9 +66,9 @@ export function markSelected(
 /**
  * Wraps a handler so that a click sound plays before it fires.
  *
- * NOTE: `selectButton` (below) also calls `playScreenClick()` directly, so
- * callers must NOT use both wrappers on the same button — that would play the
- * sound twice. Pick one wrapping strategy per click target.
+ * `clickSfx` is the single owner of the Pip-Boy click tick. Use it on raw
+ * buttons, or pass `{ sfx: false }` to `selectButton` when you wrap its
+ * `onClick` here — one strategy per click target, never both.
  */
 export function clickSfx(handler: () => void): () => void {
   return () => {

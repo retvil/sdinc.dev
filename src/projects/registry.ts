@@ -37,13 +37,17 @@ function instance(id: ProjectScreenId): ProjectScreen | null {
   return created;
 }
 
-/** Shows the requested screen; leaves the previous one. Demo must not call this. */
+/** Shows the requested screen; leaves the previous one. Demo must not call this.
+ * Throws if the id has no registered screen module — a future direction that
+ * points at a non-existent screen must fail loudly, not render an empty host. */
 export function activateScreen(id: ProjectScreenId): void {
   if (!host) return;
   if (activeId === id) return;
   if (activeId) instances.get(activeId)?.leave();
   const next = instance(id);
-  if (!next) return;
+  if (!next) {
+    throw new Error(`[registry] no screen registered for id "${id}" — add a module + registerScreen in src/projects/screens/index.ts`);
+  }
   for (const [key, screen] of instances) {
     const el = screenElement(screen);
     if (el) el.hidden = key !== id;

@@ -819,41 +819,5 @@
       }
     ],
     "asset": "assets/device.png"
-  },
-  "content": {
-    "screen_title": "SDINC / PERSONAL SYSTEM",
-    "serial": "S/N 0427-316",
-    "mod": "MOD 1.0",
-    "button_profile": "ПРОФИЛЬ",
-    "button_projects": "ПРОЕКТЫ",
-    "button_contact": "СВЯЗЬ",
-    "node_vision": "VISION",
-    "node_llm": "LLM",
-    "node_auto": "AUTO",
-    "node_system": "SYSTEM",
-    "card_title": "LLM SYSTEMS",
-    "card_description": "Языковые модели\nв прикладных системах",
-    "open_projects": "ПРОЕКТЫ",
-    "tab_profile": "ПРОФИЛЬ",
-    "tab_projects": "ПРОЕКТЫ",
-    "tab_contact": "СВЯЗЬ"
-  },
-  "nodes": {
-    "vision": {
-      "title": "VISION",
-      "description": "Компьютерное зрение.\nДемонстрационные данные."
-    },
-    "llm": {
-      "title": "LLM SYSTEMS",
-      "description": "Языковые модели\nв прикладных системах"
-    },
-    "auto": {
-      "title": "AUTOMATION",
-      "description": "Автоматизация процессов.\nДемонстрационные данные."
-    },
-    "system": {
-      "title": "SYSTEM DESIGN",
-      "description": "Архитектура систем.\nДемонстрационные данные."
-    }
   }
 }

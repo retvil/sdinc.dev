@@ -30,3 +30,12 @@ export interface LayerOverride {
   x: number;
   y: number;
 }
+
+/** Editable source-library fragment: a tree node that owns a raster asset.
+ * Consumed by the dev-only LayerEditor via src/scene/source-lib.ts. */
+export interface SourceFragment {
+  id: string;
+  name: string;
+  asset: string;
+  bounds: Bounds;
+}

@@ -7,6 +7,12 @@
 // this module adds the type contract and exports the arrays.
 
 import raw from './projects.json';
+// ProjectScreenId is the single source of truth for valid direction-screen
+// ids (defined in src/projects/types.ts, where the screen modules register).
+// data re-exports it as ProjectScreenRef so the two modules share ONE union —
+// adding a direction edits exactly one place.
+import type { ProjectScreenId } from '../projects/types';
+export type ProjectScreenRef = ProjectScreenId;
 
 export type ProjectKind = 'direction';
 
@@ -18,16 +24,9 @@ export interface ProjectComponent {
   description: string;
 }
 
-/** Dispatcher id for the open-project screen (stable, not array position). */
-export type ProjectScreenRef =
-  | 'media-analytics'
-  | 'game'
-  | 'open-source'
-  | 'rag'
-  | 'chatbot'
-  | 'call-analytics'
-  | 'short-video'
-  | 'restoration';
+/** Dispatcher id for the open-project screen (stable, not array position).
+ * Alias of ProjectScreenId — the single union owned by src/projects/types.ts. */
+// (ProjectScreenRef is re-exported above; keep the alias for back-compat.)
 
 /**
  * Level-2 project page copy (understand first, explore later). Only

@@ -316,10 +316,13 @@ button {
 
 /* Elements with shape-following focus frames (circle / rounded frame)
    must not also draw the rectangular outline around the crop bounds.
-   Kept last so no later rule re-enables the rectangle. */
+   The rotor's .dial-control is a cropped circle: the ring is its circular
+   shape, so it joins the suppression list. Kept last so no later rule
+   re-enables the rectangle. */
 .node-control:focus-visible,
 .open-control:focus-visible,
-.tab-control:focus-visible {
+.tab-control:focus-visible,
+.dial-control:focus-visible {
   outline: none;
 }
 
@@ -1340,10 +1343,6 @@ button {
   box-shadow: 0 0 9px #c3e2a855;
 }
 
-.schematic {
-  display: block;
-}
-
 .panel-button {
   align-self: flex-start;
   margin-top: auto;
@@ -1410,11 +1409,6 @@ button {
 
 .project-body[hidden] {
   display: none;
-}
-
-.project-schematic {
-  position: relative;
-  width: 55%;
 }
 
 .component-control {
