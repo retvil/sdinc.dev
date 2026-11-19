@@ -82,3 +82,23 @@ export function confirmActiveScreen(): void {
 export function isActiveScreen(id: ProjectScreenId): boolean {
   return activeId === id;
 }
+
+/**
+ * 3.7: release all cached screen instances for a SPA remount. Calls leave()
+ * on each, detaches its root from the host, and clears the instance map.
+ * Not called on the static site (the registry lives for the document
+ * lifetime). Idempotent: safe to call when nothing is mounted.
+ */
+export function disposeRegistry(): void {
+  for (const screen of instances.values()) {
+    try {
+      screen.leave();
+    } catch {
+      /* a screen's leave() must not break teardown */
+    }
+    const el = host ? screenElement(screen) : null;
+    if (el) el.remove();
+  }
+  instances.clear();
+  activeId = null;
+}

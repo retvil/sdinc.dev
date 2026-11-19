@@ -48,6 +48,34 @@ try {
 }
 
 /**
+ * 3.6: release the cached context when the page goes to the background so a
+ * hidden tab does not hold one of the browser's limited concurrent
+ * AudioContext slots indefinitely. A suspended context is cheap and wakes on
+ * the next gesture — beginSfx() already resumes it. Only installed once, in
+ * the browser; no-op in non-browser contexts (tests, build).
+ *
+ * Deferred (rAF-then-idle) so any SFX scheduled in the same tick finishes
+ * before the context suspends.
+ */
+let idleSuspendBound = false;
+function bindIdleSuspend(): void {
+  if (idleSuspendBound || typeof document === 'undefined') return;
+  idleSuspendBound = true;
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'hidden') return;
+    const ctx = cachedCtx;
+    if (!ctx || ctx.state !== 'running') return;
+    // Defer past the longest SFX (~0.9s vault rumble) so an in-flight cue
+    // finishes before we park the context. Guard: only suspend if this same
+    // context is still the live one and still running at that moment.
+    window.setTimeout(() => {
+      if (cachedCtx === ctx && ctx.state === 'running') void ctx.suspend();
+    }, 1000);
+  });
+}
+bindIdleSuspend();
+
+/**
  * Rotor detent click: a very short, quiet mechanical tick. Emitted on
  * every dial step (click / arrow keys / wheel) to make the rotary knob
  * feel like a physical detent mechanism. ~45 ms, barely audible.

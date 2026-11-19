@@ -84,6 +84,8 @@ export class DeviceState {
   /** Guards the document-level sdinc:navigate listener against double-binding
      when init() is called from more than one mount site. */
   private navigateBound = false;
+  /** Stored so dispose() can remove the exact document listener. */
+  private navigateHandler: ((event: Event) => void) | null = null;
 
   // --- stage D: display mode machine ---
   private mode: ScreenMode = 'profile';
@@ -677,11 +679,30 @@ export class DeviceState {
     // handler (which would double-fire every navigate).
     if (!this.navigateBound) {
       this.navigateBound = true;
-      document.addEventListener('sdinc:navigate', (event) => {
+      this.navigateHandler = (event) => {
         const action = (event as CustomEvent<{ action?: string }>).detail?.action;
         if (typeof action === 'string') this.handleAction(action);
-      });
+      };
+      document.addEventListener('sdinc:navigate', this.navigateHandler);
     }
+  }
+
+  /**
+   * 3.7: release page-lifetime bindings. Not called on the static site
+   * (document lifetime == app lifetime). For a future SPA that remounts the
+   * device, call dispose() before unmount so the document-level navigate
+   * listener and the element registry do not leak across mounts. Idempotent.
+   */
+  dispose(): void {
+    if (this.navigateBound && this.navigateHandler) {
+      document.removeEventListener('sdinc:navigate', this.navigateHandler);
+    }
+    this.navigateBound = false;
+    this.navigateHandler = null;
+    this.elements.clear();
+    this.nodes.clear();
+    this.layoutHooks.length = 0;
+    this.visibilityByMode = null; // rebuilt lazily on next init()/setMode()
   }
 }
 

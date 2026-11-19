@@ -12,6 +12,7 @@ import {
   stepActiveScreen,
   confirmActiveScreen,
   isActiveScreen,
+  disposeRegistry,
 } from '../src/projects/registry';
 import type { ProjectScreenId } from '../src/projects/types';
 
@@ -88,5 +89,20 @@ describe('direction screens smoke', () => {
   it('an unregistered screen id throws (L8 safety net)', () => {
     // Cast a bogus id: the registry must fail loudly, not render empty.
     expect(() => activateScreen('nonexistent' as ProjectScreenId)).toThrow(/no screen registered/);
+  });
+
+  it('disposeRegistry (3.7) tears down cached instances for a SPA remount', () => {
+    // Mount a couple of screens, then dispose: their roots must leave the
+    // host and the active pointer must clear. A subsequent re-activation
+    // rebuilds cleanly rather than reusing stale instances.
+    activateScreen('rag');
+    const ragRoot = host.querySelector('[data-screen-id="rag"]') as HTMLElement;
+    expect(ragRoot).toBeTruthy();
+    disposeRegistry();
+    expect(host.querySelector('[data-screen-id="rag"]')).toBeNull();
+    expect(isActiveScreen('rag')).toBe(false);
+    // Re-activation after dispose rebuilds the screen fresh.
+    activateScreen('rag');
+    expect(host.querySelector('[data-screen-id="rag"]')).toBeTruthy();
   });
 });
