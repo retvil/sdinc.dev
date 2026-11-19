@@ -6,7 +6,7 @@
 // overlays drawn by CSS on the controls — never whole-fragment brightening.
 
 import type { Bounds, SceneFile, SceneNode } from './types';
-import { MASKED_FACES, MASTER_ASSET, MASTER_ASSET_FALLBACK, ROTOR_MASKED, deviceAsset } from './assets';
+import { MASKED_FACES, MASTER_ASSET, ROTOR_MASKED, deviceAsset } from './assets';
 import { device } from './state';
 import { DEFAULT_DIRECTION } from '../data/demo';
 import { CONTACTS } from '../data/contacts';
@@ -53,7 +53,19 @@ function createControl(node: SceneNode, className: string, label: string): HTMLB
   return button;
 }
 
-/** Mounts the continuous static master — the whole device, no fragments. */
+/** Mounts the continuous static master — the whole device, no fragments.
+ *
+ * The LCP element is the lossless PNG master: byte-exact to the approved
+ * reference, no AVIF/WebP ringing on the dark chassis. A <picture> format
+ * ladder is deliberately NOT used here — a modern browser decodes PNG, so the
+ * ladder's lighter AVIF/WebP <source>s would only change the rendered pixels
+ * (and break the visual baseline) without any reliable size win, since PNG is
+ * always decodable. Instead the lighter formats stay on disk as optional CDN
+ * alternatives and the master is a single high-priority <img>.
+ *
+ * The old JS PNG→AVIF→3s-retry error chain is gone: there is no timer, no
+ * 404-on-CDN-purge window, and no double-fire risk.
+ */
 export function mountMaster(container: HTMLElement): void {
   const master = document.createElement('img');
   master.id = 'master';
@@ -64,16 +76,6 @@ export function mountMaster(container: HTMLElement): void {
   // fetches it as soon as it sees the <img>, ahead of lower-priority assets
   // (the hidden screen-surface, face overlays, etc.).
   master.fetchPriority = 'high';
-  // PNG → AVIF fallback: if the PNG 404s (e.g. CDN purge), try AVIF.
-  // If AVIF also fails, wait 3s then retry PNG (transient error window).
-  master.addEventListener('error', () => {
-    if (master.src.endsWith('.png')) {
-      master.src = MASTER_ASSET_FALLBACK;
-      master.addEventListener('error', () => {
-        setTimeout(() => { master.src = MASTER_ASSET; }, 3000);
-      }, { once: true });
-    }
-  }, { once: true });
   container.append(master);
 }
 

@@ -27,6 +27,28 @@ import { playRotorClick, playRotorConfirm, playVaultOpen, playScreenClick, playB
 type DirectionCopy = Record<DirectionKey, DirectionInfo>;
 export type ScreenMode = 'profile' | 'projects' | 'project' | 'contact';
 
+/**
+ * D1: which display modes show each `data-screen` group. The renderer tags
+ * every interactive element with one of these groups; setMode applies the
+ * visibility of the ACTIVE mode in a single deterministic pass. Adding a
+ * display mode = one new row here, not a new branch in the loop body.
+ *
+ *   profile  → profile controls only
+ *   projects → the projects list panel (sound toggle + screen surface stay
+ *              visible — they belong to the "panel" group)
+ *   project  → the open-project panel
+ *   contact  → the contacts panel
+ *
+ * The "panel" group (sound toggle + screen surface) is visible in every
+ * NON-profile mode — it frames the glass on the data screens.
+ */
+const VISIBLE_IN: Record<ScreenMode, readonly string[]> = {
+  profile: ['profile'],
+  projects: ['panel', 'projects'],
+  project: ['panel', 'project'],
+  contact: ['panel', 'contact'],
+};
+
 function cloneDirections(): DirectionCopy {
   return Object.fromEntries(
     DIRECTION_KEYS.map((key) => [key, { ...DIRECTIONS[key] }]),
@@ -49,6 +71,14 @@ export class DeviceState {
   private liveCardEl: HTMLElement | null = null;
   private liveTitleEl: HTMLElement | null = null;
   private liveDescEl: HTMLElement | null = null;
+  /**
+   * D1: precomputed mode→visible-elements map. Built lazily on first setMode
+   * from each element's `data-screen` group + the VISIBLE_IN table. setMode
+   * then applies visibility in a single deterministic pass instead of
+   * re-deriving string-comparison rules per element. Adding a display mode
+   * touches the VISIBLE_IN table, not the loop body.
+   */
+  private visibilityByMode: Map<ScreenMode, Set<HTMLElement>> | null = null;
   /** Projects-list preview scene switcher (bound by the renderer). */
   private previewSwitcher: ((id: ProjectInfo['screen']) => void) | null = null;
   /** Guards the document-level sdinc:navigate listener against double-binding
@@ -411,6 +441,43 @@ export class DeviceState {
     }
   }
 
+  /**
+   * D1: precomputes, once, which registered elements are visible in each
+   * display mode (from their `data-screen` group + the VISIBLE_IN table).
+   * Elements without a `data-screen` group are not managed here — their
+   * visibility is owned by their own logic (live card, sub-views).
+   */
+  private buildVisibilityMap(): Map<ScreenMode, Set<HTMLElement>> {
+    const byGroup = new Map<string, HTMLElement[]>();
+    for (const el of this.elements.values()) {
+      const group = el.dataset.screen;
+      if (!group) continue;
+      const list = byGroup.get(group) ?? [];
+      list.push(el);
+      byGroup.set(group, list);
+    }
+    const result = new Map<ScreenMode, Set<HTMLElement>>();
+    for (const mode of Object.keys(VISIBLE_IN) as ScreenMode[]) {
+      const visible = new Set<HTMLElement>();
+      for (const group of VISIBLE_IN[mode]) {
+        for (const el of byGroup.get(group) ?? []) visible.add(el);
+      }
+      result.set(mode, visible);
+    }
+    return result;
+  }
+
+  /** Applies mode-scoped element visibility in a single deterministic pass. */
+  private applyVisibility(mode: ScreenMode): void {
+    if (this.visibilityByMode === null) this.visibilityByMode = this.buildVisibilityMap();
+    const visibleInMode = this.visibilityByMode.get(mode);
+    if (!visibleInMode) return;
+    for (const el of this.elements.values()) {
+      if (!el.dataset.screen) continue; // not managed by mode visibility
+      el.hidden = !visibleInMode.has(el);
+    }
+  }
+
   /** Switches the display mode and repairs focus across hidden screens. */
   setMode(mode: ScreenMode): void {
     // Capture BEFORE the hide loop: once a focused element hides, the
@@ -419,15 +486,7 @@ export class DeviceState {
     this.mode = mode;
     // Leaving the project mode hands control back from direction screens.
     if (mode !== 'project') deactivateScreens();
-    for (const el of this.elements.values()) {
-      const screen = el.dataset.screen;
-      if (!screen) continue;
-      if (screen === 'profile') el.hidden = mode !== 'profile';
-      else if (screen === 'panel') el.hidden = mode === 'profile';
-      else if (screen === 'projects') el.hidden = mode !== 'projects';
-      else if (screen === 'project') el.hidden = mode !== 'project';
-      else if (screen === 'contact') el.hidden = mode !== 'contact';
-    }
+    this.applyVisibility(mode);
     if (mode === 'projects') {
       // Programmatic sync on mode change — no screen click here; the click
       // that triggered setMode already played its own sound.

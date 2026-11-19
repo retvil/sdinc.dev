@@ -16,10 +16,12 @@ const ASSET_BASE = import.meta.env.BASE_URL + 'assets/device/';
 const PACKAGE_PREFIX = 'assets/';
 
 /** Continuous static master: approved 4K reference, whole device.
- *  PNG is the LCP asset (lossless, no AVIF ringing on dark chassis).
- *  AVIF q95 (~1.39 MB) and WebP q90 (~0.57 MB) are lighter alternatives. */
+ *  PNG is the LCP asset — lossless, no AVIF ringing on the dark chassis,
+ *  pixel-identical to the approved visual baseline. The AVIF q95 (~1.39 MB)
+ *  and WebP q90 (~0.57 MB) files stay on disk as optional lighter CDN
+ *  alternatives (see index.astro og:image / asset mapping); they are NOT
+ *  force-loaded, so the rendered master stays the lossless PNG. */
 export const MASTER_ASSET = deviceAsset('SDINC_reference_4K_conservative.png');
-export const MASTER_ASSET_FALLBACK = deviceAsset('SDINC_reference_4K_conservative.avif');
 
 /** Masked moving overlays (V7): shown only during interaction. */
 export const MASKED_FACES: Record<'profile' | 'projects' | 'contact', string> = {

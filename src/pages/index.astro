@@ -13,9 +13,7 @@ import RotaryKnob from '../components/RotaryKnob.astro';
 // retvil.github.io, /assets/… on apex sdinc.dev). import.meta.env.BASE_URL
 // resolves to the configured `base` (default '/') at build time.
 const BASE = import.meta.env.BASE_URL;
-const MASTER_AVIF = `${BASE}assets/device/SDINC_reference_4K_conservative.avif`;
 const MASTER_PNG = `${BASE}assets/device/SDINC_reference_4K_conservative.png`;
-const MASTER_WEBP = `${BASE}assets/device/SDINC_reference_4K_conservative.webp`;
 ---
 
 <!doctype html>
@@ -33,11 +31,12 @@ const MASTER_WEBP = `${BASE}assets/device/SDINC_reference_4K_conservative.webp`;
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={MASTER_PNG} />
     <link rel="icon" href="data:," />
-    <!-- Preload the master device image (PNG, lossless): LCP element.
-         AVIF is the lighter fallback. -->
+    <!-- LCP preload: the master is the lossless PNG (see renderer.mountMaster).
+         A single high-priority preload for the element that will actually be
+         the LCP. The old triple PNG+AVIF+WEBP head load is dropped — the
+         lighter AVIF/WebP files remain on disk as optional CDN alternatives
+         but are not preloaded, so the rendered master stays pixel-exact. -->
     <link rel="preload" as="image" href={MASTER_PNG} fetchpriority="high" type="image/png" />
-    <link rel="preload" as="image" href={MASTER_AVIF} fetchpriority="low" type="image/avif" />
-    <link rel="preload" as="image" href={MASTER_WEBP} fetchpriority="low" type="image/webp" />
   </head>
   <body>
     <main>
