@@ -27,6 +27,9 @@ dist/
 preview.log
 preview-bg.log
 preview-bg-err.log
+
+# Daily picomatch auto-check log (T5)
+logs/picomatch-check.log
 preview-run.log
 preview-err.log
 
