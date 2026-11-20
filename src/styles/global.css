@@ -360,12 +360,6 @@ button {
   color: #83bd99;
   font-family: monospace;
   pointer-events: none;
-  /* Opaque neutral "empty glass" base so the profile raster (portrait +
-     green display) does not bleed through on the data tabs. Solid, in the
-     chassis black-green family (#0c1f14). The semi-transparent item cards
-     (rgba(53,95,66,0.16)) on top still read as raised panels over it.
-     Does not touch the approved master image. */
-  background: #0e2417;
 }
 
 .projects-view :is(button, a, input, textarea, select),
