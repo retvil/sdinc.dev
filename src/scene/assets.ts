@@ -23,6 +23,16 @@ const PACKAGE_PREFIX = 'assets/';
  *  force-loaded, so the rendered master stays the lossless PNG. */
 export const MASTER_ASSET = deviceAsset('SDINC_reference_4K_conservative.png');
 
+/** Data-tab masters: the same approved device with an EMPTY display — the
+ *  profile artwork (portrait, diagram, LLM card) is replaced by the reference's
+ *  own empty-glass tone (sampled per row from the source raster, see
+ *  scripts/make-tab-masters.py). Chassis/bezel/dials/tabs are byte-identical.
+ *  Lazy-loaded on tab activation: large 4K rasters, never preloaded. */
+export const MASTER_ASSETS: Record<'projects' | 'contact', string> = {
+  projects: deviceAsset('SDINC_reference_4K_conservative_projects.png'),
+  contact: deviceAsset('SDINC_reference_4K_conservative_contact.png'),
+};
+
 /** Masked moving overlays (V7): shown only during interaction. */
 export const MASKED_FACES: Record<'profile' | 'projects' | 'contact', string> = {
   profile: deviceAsset('profile-face-masked.png'),

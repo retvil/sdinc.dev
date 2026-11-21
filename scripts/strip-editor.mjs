@@ -35,6 +35,10 @@ const RUNTIME_ASSETS = new Set([
   'SDINC_reference_4K_conservative.png',
   'SDINC_reference_4K_conservative.avif',
   'SDINC_reference_4K_conservative.webp',
+  // Data-tab masters: same device with an empty display (profile artwork
+  // replaced by the reference's own glass tone). Lazy per-tab swap.
+  'SDINC_reference_4K_conservative_projects.png',
+  'SDINC_reference_4K_conservative_contact.png',
   // Mode-specific face overlays (shown during interaction).
   'profile-face-masked.png',
   'projects-face-masked.png',
