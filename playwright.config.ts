@@ -12,6 +12,10 @@ export default defineConfig({
       // ~1536px width can legitimately shift a few pixels. 0.05 keeps
       // genuine regressions failing without tripping on raster noise.
       maxDiffPixelRatio: 0.05,
+      // Finalise CSS animations/transitions before the capture instead of
+      // freezing them mid-flight. Several previews and the reveal/settle
+      // transitions are time-dependent, which made captures non-deterministic.
+      animations: 'disabled',
     },
   },
   projects: [

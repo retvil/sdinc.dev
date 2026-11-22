@@ -112,23 +112,13 @@
   box-shadow: 0 0 12px rgba(131, 189, 153, 0.2);
 }
 
-/* --- 10. Detail page section reveal --- */
-
-.project-view.is-opening .detail-essence,
-.project-view.is-opening .detail-section,
-.project-view.is-opening .detail-demo-open {
-  animation: section-in 0.3s ease-out backwards;
-}
-
-.project-view.is-opening .detail-section:nth-child(1) { animation-delay: 0.12s; }
-.project-view.is-opening .detail-section:nth-child(2) { animation-delay: 0.2s; }
-.project-view.is-opening .detail-section:nth-child(3) { animation-delay: 0.28s; }
-.project-view.is-opening .detail-section:nth-child(4) { animation-delay: 0.36s; }
-
-@keyframes section-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+/* --- 10. Detail page entry ---
+   The blocks INSIDE the description page are owned by src/scene/reveal.ts:
+   they settle in as they enter the scrollport, and a block that is already
+   visible is never armed. A per-section nth-child animation here would fight
+   that state (it would end and hand control back to a still-hidden block), so
+   the page entrances as a UNIT via vault-content-in in global.css and the
+   individual blocks are left to the reveal module. */
 
 /* --- 11. Smooth scroll for internal overflow areas --- */
 
@@ -175,6 +165,45 @@
 @keyframes panel-enter {
   from { opacity: 0; transform: translateY(5px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --- 13b. Scroll reveal for blocks inside the internal scrollers ---
+   Content below the fold of a scroll container (.project-detail, .project-list,
+   .contact-list, direction panes) settles in as it enters the scrollport.
+   Class + --reveal-i are applied by src/scene/reveal.ts, which is also the only
+   place that decides WHICH blocks qualify (blocks already on screen are never
+   armed, so appending a chat message does not flash).
+   Nothing is hidden without JS: .is-reveal is added at runtime only. */
+
+.is-reveal {
+  opacity: 0;
+  transform: translateY(7px);
+}
+
+.is-revealed {
+  animation: reveal-in 0.34s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+  /* Per-batch cascade, capped in JS. --reveal-i is 0 for a lone block. */
+  animation-delay: calc(var(--reveal-i, 0) * 70ms);
+}
+
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Reduced motion: the JS gate already skips arming, but a mid-session
+   preference change must not leave a block stuck transparent either. */
+@media (prefers-reduced-motion: reduce) {
+  .is-reveal {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* --- 14. Rotor detent visual: brief scale "snap" on step --- */

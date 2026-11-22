@@ -382,17 +382,22 @@ export class DeviceState {
     const project = PROJECTS[this.selectedProject];
     this.status(`Открыт ${project.title}. Описание и демонстрация отдельно.`);
     // Vault opening cue: synthesized rumble (no-op when muted / no Web Audio)
-    // plus a brief shutter-reveal animation on the project screen. The
-    // animation class is added AFTER the mode is visible so the shutter
-    // elements participate in layout; it is removed on the next frame so the
-    // CSS keyframe runs exactly once per open.
+    // plus a brief shutter-reveal animation on the project screen. The class is
+    // added AFTER the mode is visible so the shutter elements participate in
+    // layout, then removed once the whole sequence has finished — NOT on the
+    // next frame, which cancelled the 0.5s keyframes mid-flight and made the
+    // content snap in. The content animation (0.15s delay + 0.5s) ends last, so
+    // the timeout is that sum plus a small margin. Under reduced motion the
+    // global rule collapses the durations, and the same timeout still clears it
+    // so a later open can re-trigger the animation.
+    const VIEW_OPENING_MS = 750;
     const view = this.elements.get('project-view');
     if (view) {
       view.classList.remove('is-opening');
       // Force a style recalc so re-adding the class restarts the animation.
       void view.offsetWidth;
       view.classList.add('is-opening');
-      requestAnimationFrame(() => view.classList.remove('is-opening'));
+      window.setTimeout(() => view.classList.remove('is-opening'), VIEW_OPENING_MS);
     }
     playVaultOpen();
   }

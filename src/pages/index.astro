@@ -53,9 +53,13 @@ const MASTER_PNG = `${BASE}assets/device/SDINC_reference_4K_conservative.png`;
       // Runs after all component scripts (document order): controls are
       // mounted, overlays registered — safe to bind and init.
       import { device } from '../scene/state';
+      import { initScrollReveal } from '../scene/reveal';
 
       device.bindStatus(document.getElementById('status'));
       device.init();
+      // Blocks inside the internal scrollers settle in as they enter the
+      // scrollport. No-op without JS support or under prefers-reduced-motion.
+      initScrollReveal();
     </script>
   </body>
 </html>

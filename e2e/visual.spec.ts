@@ -33,8 +33,25 @@ async function selectAndCapture(
   await page.waitForTimeout(200);
   if (openDetail) {
     await page.locator('#project-open').click({ timeout: 10000 });
-    await page.waitForTimeout(200);
+    // The vault-open sequence runs ~650ms (0.15s content delay + 0.5s keyframe)
+    // and the class is cleared at 750ms. Capturing at 200ms recorded a frame
+    // from the middle of that animation, so the screenshot only ever matched
+    // the old code that cancelled the keyframes after one frame. Wait for the
+    // sequence to finish instead of guessing a delay.
+    await page.waitForFunction(
+      () => !document.querySelector('.project-view')?.classList.contains('is-opening'),
+      undefined,
+      { timeout: 5000 },
+    );
   }
+  // The device (3:2) is taller than the 720px test viewport, so the browser
+  // auto-scrolls the page to whatever control was just clicked and the resting
+  // scroll position varies between runs. Pin it before capturing, otherwise
+  // the screenshot depends on where the page happened to stop.
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForFunction(() => window.scrollY === 0, undefined, { timeout: 2000 });
+  // Let any pending reveal transition settle so the capture is a final state.
+  await page.waitForTimeout(150);
   await expect(page).toHaveScreenshot(shotName + '.png');
 }
 
