@@ -1091,6 +1091,43 @@ button {
   gap: 0.35cqw;
 }
 
+/* Chat branch options. Styled like .dir-select but compact — they sit in a
+   row under the log and must read as device controls, not as UA buttons.
+   Without this rule they paint with the browser default (light grey face,
+   2px outset ridge), which broke the display illusion outright. */
+.dir-chat-option {
+  text-align: left;
+  background: rgba(53, 95, 66, 0.16);
+  color: #9ccaab;
+  border: 1px solid #355f42;
+  border-radius: 0.4cqw;
+  padding: 0.3cqw 0.6cqw;
+  font: 0.9cqw/1.4 monospace;
+  cursor: pointer;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.dir-chat-option:hover {
+  border-color: #7ebc96aa;
+  box-shadow: 0 0 6px #74b98f40;
+}
+
+.dir-chat-option:active {
+  border-color: #b9e3c4;
+}
+
+.dir-chat-option.selected {
+  border-color: #a4d7aa;
+  box-shadow: 0 0 8px #87c69340;
+  color: #c1e2c8;
+}
+
+.dir-chat-option:focus-visible {
+  outline: none;
+  border-color: #d3dda5;
+  box-shadow: 0 0 9px #c3e2a855;
+}
+
 .dir-chat-branch {
   margin: 0;
   font: 0.95cqw/1.5 system-ui, sans-serif;
@@ -1319,10 +1356,59 @@ button {
   gap: 0.5cqw;
 }
 
+/* Split before/after slider. A native range paints a light platform track and
+   a glossy thumb — the single most out-of-place control on the display. The
+   track is drawn with a gradient and the thumb is restyled; behaviour stays
+   native (drag, arrows, Home/End all keep working). */
 .dir-rest-range {
   flex: 1;
-  accent-color: #a4d7aa;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 0.5cqw;
+  min-height: 6px;
+  background: linear-gradient(to right, #2c4f38, #4f8f63);
+  border: 1px solid #355f42;
+  border-radius: 0.5cqw;
   cursor: pointer;
+  accent-color: #a4d7aa;
+}
+
+.dir-rest-range::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.1cqw;
+  height: 1.1cqw;
+  min-width: 12px;
+  min-height: 12px;
+  border-radius: 50%;
+  background: #a4d7aa;
+  border: 1px solid #d3dda5;
+  box-shadow: 0 0 6px #87c69366;
+  cursor: pointer;
+}
+
+.dir-rest-range::-moz-range-thumb {
+  width: 1.1cqw;
+  height: 1.1cqw;
+  min-width: 12px;
+  min-height: 12px;
+  border-radius: 50%;
+  background: #a4d7aa;
+  border: 1px solid #d3dda5;
+  box-shadow: 0 0 6px #87c69366;
+  cursor: pointer;
+}
+
+.dir-rest-range::-moz-range-track {
+  height: 0.5cqw;
+  background: linear-gradient(to right, #2c4f38, #4f8f63);
+  border-radius: 0.5cqw;
+}
+
+.dir-rest-range:focus-visible {
+  outline: none;
+  border-color: #d3dda5;
+  box-shadow: 0 0 9px #c3e2a855;
 }
 
 .dir-rest-areas {
@@ -1511,6 +1597,7 @@ button {
    wheel, touchpad and keyboard scrolling all keep working. */
 .project-detail,
 .project-list,
+.project-screen-host,
 .projects-body,
 .dir-game-right,
 .dir-open-catalog,
@@ -1524,6 +1611,7 @@ button {
 
 .project-detail::-webkit-scrollbar,
 .project-list::-webkit-scrollbar,
+.project-screen-host::-webkit-scrollbar,
 .projects-body::-webkit-scrollbar,
 .dir-game-right::-webkit-scrollbar,
 .dir-open-catalog::-webkit-scrollbar,
@@ -1536,6 +1624,7 @@ button {
 
 .project-detail::-webkit-scrollbar-track,
 .project-list::-webkit-scrollbar-track,
+.project-screen-host::-webkit-scrollbar-track,
 .projects-body::-webkit-scrollbar-track,
 .dir-game-right::-webkit-scrollbar-track,
 .dir-open-catalog::-webkit-scrollbar-track,
@@ -1550,6 +1639,7 @@ button {
 
 .project-detail::-webkit-scrollbar-thumb,
 .project-list::-webkit-scrollbar-thumb,
+.project-screen-host::-webkit-scrollbar-thumb,
 .projects-body::-webkit-scrollbar-thumb,
 .dir-game-right::-webkit-scrollbar-thumb,
 .dir-open-catalog::-webkit-scrollbar-thumb,
@@ -1565,6 +1655,7 @@ button {
 
 .project-detail::-webkit-scrollbar-thumb:hover,
 .project-list::-webkit-scrollbar-thumb:hover,
+.project-screen-host::-webkit-scrollbar-thumb:hover,
 .projects-body::-webkit-scrollbar-thumb:hover,
 .dir-game-right::-webkit-scrollbar-thumb:hover,
 .dir-open-catalog::-webkit-scrollbar-thumb:hover,
@@ -1577,6 +1668,7 @@ button {
 
 .project-detail::-webkit-scrollbar-thumb:active,
 .project-list::-webkit-scrollbar-thumb:active,
+.project-screen-host::-webkit-scrollbar-thumb:active,
 .projects-body::-webkit-scrollbar-thumb:active,
 .dir-game-right::-webkit-scrollbar-thumb:active,
 .dir-open-catalog::-webkit-scrollbar-thumb:active,
