@@ -6,7 +6,7 @@
 // overlays drawn by CSS on the controls — never whole-fragment brightening.
 
 import type { Bounds, SceneFile, SceneNode } from './types';
-import { MASKED_FACES, MASTER_ASSET, MASTER_ASSETS, ROTOR_MASKED, deviceAsset } from './assets';
+import { MASKED_FACES, MASTER_ASSET, ROTOR_MASKED, deviceAsset } from './assets';
 import { device } from './state';
 import { DEFAULT_DIRECTION } from '../data/demo';
 import { CONTACTS } from '../data/contacts';
@@ -76,31 +76,7 @@ export function mountMaster(container: HTMLElement): void {
   // fetches it as soon as it sees the <img>, ahead of lower-priority assets
   // (the hidden screen-surface, face overlays, etc.).
   master.fetchPriority = 'high';
-  // Only the profile alt describes artwork; the data tabs show an empty screen.
-  const PROFILE_ALT = master.alt;
   container.append(master);
-  // Data tabs swap to an empty-display master so the profile artwork never
-  // shows through. Sources are assigned lazily here (first activation), so the
-  // extra 4K rasters never compete with the LCP image on a cold load.
-  const lazySources = new Map<string, string>();
-  let currentSource = MASTER_ASSET;
-  document.addEventListener('sdinc:mode', (event) => {
-    const mode = (event as CustomEvent<{ mode: string }>).detail.mode;
-    let next: string;
-    if (mode === 'profile') {
-      next = MASTER_ASSET;
-    } else {
-      const key = mode === 'contact' ? 'contact' : 'projects';
-      if (!lazySources.has(key)) lazySources.set(key, MASTER_ASSETS[key]);
-      next = lazySources.get(key) as string;
-    }
-    if (next === currentSource) return;
-    currentSource = next;
-    master.src = next;
-    master.alt = next === MASTER_ASSET ? PROFILE_ALT : '';
-    // Re-decode off the critical path; the swap is instant after the first use.
-    if (next !== MASTER_ASSET) master.decode().catch(() => {});
-  });
 }
 
 /**

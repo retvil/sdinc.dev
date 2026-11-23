@@ -1,28 +1,28 @@
 #!/usr/bin/env python3
 """Generate the clean display surface (screen-surface.png) for SDINC.
 
-Derives a clean inner-display plate from the approved 4K reference by
-REMOVING ONLY the mode-specific start content (digital twin diagram + LLM
-card). The removed regions are emitted as TRANSPARENT (alpha=0) so the
-master raster's ORIGINAL glass shows straight through when the plate is
-overlaid — this is the artifact fix: no interpolated interior means no
-double-tint, no horizontal seam band, no right-edge color step.
+Approach (v3 — keep the REAL glass, remove only the profile content):
 
-- Source: public/assets/device/SDINC_reference_4K_conservative.png (untouched).
-- Crop:   [1250, 588] .. [3338, 1942] -> 2088x1354, no resize, no sharpening,
-  no color correction.
-- Output: RGBA plate. Opaque (alpha=255) everywhere except the masked
-  content regions (alpha=0). Unmasked pixels are byte-identical to the
-  master crop, so the plate's edges are seamless by construction.
-- The legacy pyramid-fill + 24px border-restore path (and the separate
-  fix-surface-border.py) is superseded: with a transparent cutout the
-  interior is the master itself, so there is nothing to reconstruct and
-  nothing to re-paste.
+The profile master already contains a clean glass (the green phosphor
+display with its highlights, depth and texture) PLUS the profile-specific
+artwork on top of it: a portrait, a digital-twin diagram, and an LLM card.
+For the Projects / Contact tabs we want the SAME glass, just without that
+artwork. So:
 
-Outputs:
-  public/assets/device/screen-surface.png        (RGBA plate, transparent cutout)
-  docs/screen-surface/screen-surface-mask.png    (removed-content mask)
-  docs/screen-surface/screen-surface-compare.png (before | composited-over-master)
+  1. Crop the screen region from the approved master.
+  2. Detect the artwork (bright "ink" on top of the dark glass) per pixel:
+       ink  = luminance clearly above the local glass floor.
+     The glass itself stays; only the brighter strokes / fills are removed.
+  3. Replace ink pixels with the local glass tone, reconstructed by a
+     coarse-to-fine interpolation of the *unmasked* (glass) pixels. A
+     gentle low-pass removes residual structure while preserving the glass's
+     own gradient / highlight, so the result reads as the profile glass, not
+     as a flat green slab.
+  4. The plate's border ring stays pixel-identical to the master crop
+     (seamless by construction).
+
+Output: an OPAQUE RGB plate. max|delta| vs the master crop = 0 everywhere
+the content was NOT removed.
 
 Reference file is never modified.
 """
@@ -39,32 +39,26 @@ OUT_DIR = ROOT / "docs" / "screen-surface"
 
 CROP_LEFT, CROP_TOP, CROP_RIGHT, CROP_BOTTOM = 1250, 588, 3338, 1942
 
-# Mode-specific content rects in 4K reference coordinates, padded to cover
-# the soft glow around the removed graphics (no green silhouettes or halos).
-# The third rect bridges the gap between diagram and card so no unmasked
-# strip of original glow remains between the two padded rects.
-CONTENT_RECTS_4K = [
-    (1370, 788, 2575, 1668, 48),  # diagram: twin, rings, nodes, labels, links
-    (2695, 820, 3275, 1610, 56),  # LLM card frame, icon, text, button
-    (2575, 780, 2695, 1672, 0),   # bridge between diagram and card masks
-]
+# Ink detection: "content" pixels are clearly brighter than the local
+# glass floor. The glass floor is ~ lum 8..40; ink / highlights push it up.
+# A per-pixel threshold against the local (blurred) floor catches strokes and
+# fills of any size without needing fixed content rectangles.
+INK_OFFSET = 18      # lum above local floor counts as ink
+INK_MIN = 46         # absolute luminance floor for ink (catches faint strokes)
+FLOOR_RADIUS = 64    # blur radius for the "local glass floor" estimate
+SMOOTH_RADIUS = 9    # final low-pass on the reconstructed interior
 
 
-def build_mask(size: tuple[int, int]) -> Image.Image:
-    """Binary mask (L mode, 255 = remove) of mode-specific content."""
-    w, h = size
-    mask = Image.new("L", size, 0)
-    px = mask.load()
-    for left, top, right, bottom, pad in CONTENT_RECTS_4K:
-        l = max(0, left - pad - CROP_LEFT)
-        t = max(0, top - pad - CROP_TOP)
-        r = min(w, right + pad - CROP_LEFT)
-        b = min(h, bottom + pad - CROP_TOP)
-        for y in range(t, b):
-            for x in range(l, r):
-                px[x, y] = 255
-    # Dilate a bit more so half-covered edge pixels never seed ghosts.
-    return mask.filter(ImageFilter.MaxFilter(15))
+def detect_ink(rgb: np.ndarray) -> np.ndarray:
+    """Boolean mask of content pixels (bright ink) inside the crop."""
+    lum = rgb.astype(np.float64).mean(axis=2)
+    floor = np.asarray(Image.fromarray(lum.astype(np.uint8)).filter(
+        ImageFilter.GaussianBlur(FLOOR_RADIUS)), dtype=np.float64)
+    ink = ((lum > floor + INK_OFFSET) & (lum >= INK_MIN))
+    # A light dilation so anti-aliased edges / glow around ink are covered.
+    ink_img = Image.fromarray((ink * 255).astype(np.uint8))
+    ink_img = ink_img.filter(ImageFilter.MaxFilter(5))
+    return np.asarray(ink_img, dtype=np.float64) / 255.0
 
 
 def pyramid_fill(image: np.ndarray, mask: np.ndarray) -> np.ndarray:
@@ -99,73 +93,54 @@ def pyramid_fill(image: np.ndarray, mask: np.ndarray) -> np.ndarray:
     return levels[0][0]
 
 
-def highpass_stats(filled: np.ndarray, mask: np.ndarray) -> dict:
-    """Ghost/stripe check: structure left inside reconstructed areas."""
-    img = Image.fromarray(np.clip(filled, 0, 255).astype(np.uint8))
-    blurred = np.asarray(img.filter(ImageFilter.GaussianBlur(14)), dtype=np.float64)
-    residual = np.abs(filled - blurred)[mask]
-    return {
-        "masked_pixels": int(mask.sum()),
-        "residual_max": round(float(residual.max()), 2),
-        "residual_mean": round(float(residual.mean()), 3),
-        "residual_p99": round(float(np.percentile(residual, 99)), 2),
-    }
-
-
 def main() -> None:
     reference = Image.open(REFERENCE).convert("RGB")
-    plate_before = reference.crop((CROP_LEFT, CROP_TOP, CROP_RIGHT, CROP_BOTTOM))
-    size = plate_before.size
+    crop = reference.crop((CROP_LEFT, CROP_TOP, CROP_RIGHT, CROP_BOTTOM))
+    size = crop.size
     assert size == (2088, 1354), f"unexpected crop size {size}"
 
-    mask_image = build_mask(size)
-    mask = np.asarray(mask_image, dtype=np.float64) / 255.0
-    binary = mask >= 0.5
+    arr = np.asarray(crop, dtype=np.uint8).copy()
+    ink = detect_ink(arr)
+    binary = ink >= 0.5
 
-    # TRANSPARENT-CUTOUT MODE (the artifact fix): the plate is emitted as RGBA.
-    # Every pixel the mask removed (where the mode-specific content used to be)
-    # becomes alpha=0 so the master's ORIGINAL glass shows straight through —
-    # no interpolated interior, hence no double-tint / horizontal band / right
-    # seam. Everything outside the mask keeps the original crop pixels at
-    # alpha=255. This supersedes the older pyramid-fill approach whose derived
-    # interior drifted from the master glass (mean 11.4 / max 240 lum).
-    arr = np.asarray(plate_before, dtype=np.uint8).copy()
-    alpha = np.full(arr.shape[:2], 255, dtype=np.uint8)
-    alpha[binary] = 0
-    rgba = np.dstack([arr, alpha[..., None]])
-    plate = Image.fromarray(rgba, "RGBA")
+    # Reconstruct the ink pixels from the surrounding glass, then low-pass the
+    # interior so it reads as the glass itself (its gradient / highlight),
+    # not as a flat slab.
+    filled = pyramid_fill(arr, ink)
+    smooth = np.asarray(
+        Image.fromarray(np.clip(filled, 0, 255).astype(np.uint8)).filter(
+            ImageFilter.GaussianBlur(SMOOTH_RADIUS)
+        ), dtype=np.float64
+    )
+    out = arr.copy()
+    out[binary] = np.clip(smooth, 0, 255)[binary]
 
-    # The plate is now RGBA: original crop pixels everywhere (alpha=255),
-    # transparent (alpha=0) exactly where the mask removed content. No border
-    # restoration is needed — the unmasked border pixels are already the
-    # original crop, pixel-identical to the master by construction.
-
+    plate = Image.fromarray(out, "RGB")
     OUT_PLATE.parent.mkdir(parents=True, exist_ok=True)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     plate.save(OUT_PLATE)
-    mask_image.save(OUT_DIR / "screen-surface-mask.png")
 
-    # Compare: show the original crop and the plate composited over the
-    # master crop (alpha-blend), so the transparent cutout reads as "master
-    # showing through" rather than black.
-    compare_bg = plate_before.copy().convert("RGBA")
-    composited = Image.alpha_composite(compare_bg, plate)
+    ink_mask_img = Image.fromarray((binary * 255).astype(np.uint8))
+    ink_mask_img.save(OUT_DIR / "screen-surface-mask.png")
+
     compare = Image.new("RGB", (size[0] + 12, size[1] * 2 + 12), (24, 24, 24))
-    compare.paste(plate_before, (0, 0))
-    compare.paste(composited.convert("RGB"), (0, size[1] + 12))
+    compare.paste(crop, (0, 0))
+    compare.paste(plate, (0, size[1] + 12))
     compare.save(OUT_DIR / "screen-surface-compare.png")
 
-    # Verify: the plate must be pixel-identical to the master crop everywhere
-    # it is OPAQUE (alpha=255). Opaque-region delta should be 0.
-    ref_arr = np.asarray(plate_before, dtype=np.float64)
-    plate_rgba = np.asarray(plate, dtype=np.float64)
-    opaque = alpha == 255
-    opaque_delta = np.abs(plate_rgba[..., :3][opaque] - ref_arr[opaque]).max()
+    # Verify: pixels that were NOT ink must be byte-identical to the crop.
+    ref = arr.astype(np.float64)
+    border = ~binary
+    border_delta = np.abs(out.astype(np.float64)[border] - ref[border]).max()
+    interior_lum = out.astype(np.float64)[:, :, 0][binary]
     print("plate:", OUT_PLATE.name, plate.size, "mode:", plate.mode)
-    print("mask:", OUT_DIR / "screen-surface-mask.png")
+    print(f"ink pixels: {int(binary.sum())} / {binary.size} "
+          f"({100 * binary.mean():.1f}%)")
+    print(f"un-inked max |Δ vs master crop|: {border_delta:.2f} (expect 0.00)")
+    if binary.sum():
+        print(f"interior lum: mean {interior_lum.mean():.1f}  "
+              f"min {interior_lum.min():.0f}  max {interior_lum.max():.0f}")
     print("compare:", OUT_DIR / "screen-surface-compare.png")
-    print(f"opaque-region max |Δ vs master|: {opaque_delta:.2f} (expect 0.00)")
-    print(f"transparent pixels: {int((~opaque).sum())} / {opaque.size}")
 
 
 if __name__ == "__main__":

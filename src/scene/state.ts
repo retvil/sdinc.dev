@@ -491,10 +491,6 @@ export class DeviceState {
     // browser drops focus to body and the previous holder is lost.
     const previous = document.activeElement;
     this.mode = mode;
-    // Notify the renderer to swap the master raster so the profile artwork
-    // never shows behind the data tabs. DOM event keeps the modules decoupled
-    // (renderer imports device state, so a direct callback would be circular).
-    document.dispatchEvent(new CustomEvent('sdinc:mode', { detail: { mode }, bubbles: true }));
     // Leaving the project mode hands control back from direction screens.
     if (mode !== 'project') deactivateScreens();
     this.applyVisibility(mode);
