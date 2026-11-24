@@ -1759,36 +1759,41 @@ button {
   }
 }
 
-/* Mute toggle: a small control in the top-right corner of the device, above
-   the display content. Positioned via CSS (NOT place()) so it does not
-   overlap the content region. Compact fixed-ish size so it never intercepts
-   clicks on the project list or preview below it. */
+/* Mute toggle: a hardware-style button on the RIGHT GRIP (grip-right,
+   ref x 3595-3778). Sits in the upper part of the grip, styled like the
+   section buttons (bezel + LED) so it reads as part of the instrument,
+   not a floating UI element. The LED dot (::before on .sound-led) is
+   lit green when sound is on, dimmed when muted. */
 .sound-toggle {
   position: absolute;
-  right: 1.6cqw;
-  top: 3.2cqw;
+  /* Right grip: x 3595..3778 ref → 93.6%..98.4% of device width.
+     Place the button centered on the grip, ~12% down from its top. */
+  left: 95.4cqw;
+  top: 12cqw;
+  transform: translateX(-50%);
   z-index: 4;
-  width: 3cqw;
-  height: 3cqw;
-  min-width: 24px;
+  width: 1.8cqw;
+  height: 2.4cqw;
+  min-width: 18px;
   min-height: 24px;
   border: 1px solid #355f42;
-  border-radius: 0.3cqw;
-  background: rgba(53, 95, 66, 0.2);
+  border-radius: 0.25cqw;
+  background: linear-gradient(180deg, #1a2e22 0%, #0f1f16 100%);
   color: #9ccaab;
-  font: 600 0.8cqw monospace;
+  font: 600 0.7cqw monospace;
   cursor: pointer;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  transition: border-color 0.12s, background 0.12s;
+  gap: 0.25cqw;
+  transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
 }
 .sound-toggle[hidden] {
   display: none;
 }
 .sound-toggle[aria-pressed="true"] {
   border-color: #d3dda5;
-  background: rgba(211, 221, 165, 0.12);
   color: #d3dda5;
 }
 .sound-toggle:focus-visible {
@@ -1797,12 +1802,28 @@ button {
   box-shadow: 0 0 9px #c3e2a855;
 }
 .sound-toggle .sound-glyph {
-  font-size: 1.6cqw;
+  font-size: 0.9cqw;
   line-height: 1;
 }
 /* Muted state: dim the glyph */
 .sound-toggle[aria-pressed="true"] .sound-glyph {
-  opacity: 0.5;
+  opacity: 0.45;
+}
+/* Status LED: a small dot above the glyph. Lit green = sound on,
+   dimmed/dark = muted. Pure CSS, no extra DOM. */
+.sound-led {
+  width: 0.45cqw;
+  height: 0.45cqw;
+  min-width: 5px;
+  min-height: 5px;
+  border-radius: 50%;
+  background: #a4d7aa;
+  box-shadow: 0 0 6px #87c693;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.sound-toggle[aria-pressed="true"] .sound-led {
+  background: #2c4f38;
+  box-shadow: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

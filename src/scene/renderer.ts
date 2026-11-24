@@ -155,15 +155,20 @@ export function mountScreenControls(container: HTMLElement): void {
   soundGlyph.className = 'sound-glyph';
   soundGlyph.setAttribute('aria-hidden', 'true');
   soundGlyph.textContent = isMuted() ? '✕' : '♪';
-  soundToggle.append(soundGlyph);
+  // Instrument-style mute: a small hardware button on the RIGHT GRIP with a
+  // status LED (lit green = sound on, dimmed = muted). The glyph ♪/✕ is the
+  // button label; the LED dot is a separate ::before indicator.
+  const led = document.createElement('span');
+  led.className = 'sound-led';
+  led.setAttribute('aria-hidden', 'true');
+  soundToggle.append(led, soundGlyph);
   soundToggle.addEventListener('click', () => {
     const muted = toggleMuted();
     soundToggle.setAttribute('aria-pressed', String(muted));
     soundToggle.title = muted ? 'Звук выключен' : 'Звук включён';
     soundGlyph.textContent = muted ? '✕' : '♪';
   });
-  // Positioning lives in CSS (.sound-toggle: position absolute, top-right of
-  // #device). No inline placement so it does not overlap the content region.
+  // Positioning lives in CSS (.sound-toggle: absolute on the right grip).
   container.append(soundToggle);
   device.registerElement('sound-toggle', soundToggle);
 }
