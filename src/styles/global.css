@@ -799,6 +799,15 @@ button {
   color: #9cc4a6;
 }
 
+/* Playhead in the media-analytics SVG scene: a <g> group (holding a line at
+   x=0) translated to the selected event's position. transform (not SVG
+   attributes) so the position is compositor-animatable; the first paint is
+   placed without a transition via the data-seek guard in media-analytics.ts,
+   so it does not sweep in from x=0. */
+.dir-media-playhead {
+  transition: transform 0.25s ease;
+}
+
 /* 02 game */
 .dir-game-layout {
   display: flex;
@@ -1230,6 +1239,14 @@ button {
   margin: 0 0 0.3cqw;
   font: 0.95cqw/1.5 system-ui, sans-serif;
   color: #9cc4a6;
+}
+
+.dir-call-structure-title {
+  margin: 0.5cqw 0 0.3cqw;
+  font-size: 0.85cqw;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a4d7aa;
 }
 
 /* 07 pipeline */

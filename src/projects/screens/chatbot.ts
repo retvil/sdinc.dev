@@ -4,12 +4,15 @@
 
 import type { ProjectScreen } from '../types';
 import { el, originNote, statusLine, markSelected, clickSfx } from '../ui';
+import { CONTACTS } from '../../data/contacts';
 
 interface Option {
   label: string;
   next?: string;
   /** Explicit separate navigation action — never a side effect of a topic. */
   goto?: 'section:projects' | 'section:contact';
+  /** Synthetic copy-to-clipboard action (the value comes from contacts data). */
+  copy?: string;
   reset?: boolean;
 }
 
@@ -36,7 +39,7 @@ const SCRIPT: Readonly<Record<string, Node>> = {
     bot: 'В разделе «Проекты» восемь направлений — от медиааналитики до реставрации видео. Открыть список?',
     options: [
       { label: 'Какие бывают направления?', next: 'directions-list' },
-      { label: 'Открыть раздел «Проекты»', goto: 'section:projects' },
+      { label: 'Сейчас я открою раздел «Проекты»', next: 'directions-tool' },
       { label: 'Вернуться в начало', next: 'start' },
     ],
   },
@@ -55,7 +58,7 @@ const SCRIPT: Readonly<Record<string, Node>> = {
     bot: 'Способы связи собраны в разделе «Связь»: Email, Telegram, GitHub.',
     options: [
       { label: 'Где именно смотреть контакты?', next: 'contacts-detail' },
-      { label: 'Открыть раздел «Связь»', goto: 'section:contact' },
+      { label: 'Сейчас я открою раздел «Связь»', next: 'contacts-tool' },
       { label: 'Вернуться в начало', next: 'start' },
     ],
   },
@@ -64,6 +67,35 @@ const SCRIPT: Readonly<Record<string, Node>> = {
     branch: 'Способы связи',
     bot: 'Контакты не дублируются в диалоге — они живут в разделе «Связь» и обновляются там.',
     options: [
+      { label: 'Открыть раздел «Связь»', goto: 'section:contact' },
+      { label: 'Вернуться в начало', next: 'start' },
+    ],
+  },
+  'directions-tool': {
+    id: 'directions-tool',
+    branch: 'Направления работ',
+    bot: 'Сейчас я открою раздел «Проекты» — он находится в нижнем ряду кнопок дисплея.',
+    options: [
+      { label: 'Открыть раздел «Проекты»', goto: 'section:projects' },
+      { label: 'Вернуться в начало', next: 'start' },
+    ],
+  },
+  'contacts-tool': {
+    id: 'contacts-tool',
+    branch: 'Способы связи',
+    bot: 'Сейчас я открою раздел «Связь» или могу сразу скопировать мой контакт.',
+    options: [
+      { label: 'Открыть раздел «Связь»', goto: 'section:contact' },
+      { label: 'Скопировать мой контакт', next: 'copy-contact' },
+      { label: 'Вернуться в начало', next: 'start' },
+    ],
+  },
+  'copy-contact': {
+    id: 'copy-contact',
+    branch: 'Способы связи',
+    bot: `Скопируйте мой адрес: ${CONTACTS[0].display}.`,
+    options: [
+      { label: 'Скопировать адрес', copy: CONTACTS[0].copyValue },
       { label: 'Открыть раздел «Связь»', goto: 'section:contact' },
       { label: 'Вернуться в начало', next: 'start' },
     ],
@@ -106,7 +138,7 @@ export function createChatbotScreen(): ProjectScreen {
       const b = el('button', 'dir-chat-option') as HTMLButtonElement;
       b.type = 'button';
       b.textContent = o.label;
-      b.addEventListener('click', clickSfx(() => activateOption(o)));
+      b.addEventListener('click', clickSfx(() => { void activateOption(o); }));
       optionsRow?.append(b);
       return b;
     });
@@ -127,9 +159,34 @@ export function createChatbotScreen(): ProjectScreen {
     renderPanel();
   }
 
-  function activateOption(o: Option): void {
+  async function activateOption(o: Option): Promise<void> {
     if (o.reset) {
       reset();
+      return;
+    }
+    if (o.copy) {
+      // Synthetic copy-to-clipboard: the value comes from the real contact
+      // data, but no API call is made. On failure (denied/absent clipboard)
+      // the bot shows the value inline so the user can copy manually — the
+      // same contract as state.ts requestContactCopy.
+      history.push({ who: 'user', text: o.label });
+      const ok = await navigator.clipboard
+        .writeText(o.copy)
+        .then(() => true)
+        .catch(() => false);
+      history.push({
+        who: 'bot',
+        text: ok
+          ? `Адрес ${o.copy} скопирован в буфер обмена.`
+          : `Не удалось скопировать ${o.copy} — скопируйте вручную.`,
+      });
+      renderLog();
+      renderOptions();
+      sync();
+      if (status)
+        status.textContent = ok
+          ? 'Адрес скопирован в буфер.'
+          : 'Скопирование не удалось — значение показано в диалоге.';
       return;
     }
     if (o.goto) {

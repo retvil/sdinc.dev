@@ -71,6 +71,7 @@ export function createMediaAnalyticsScreen(): ProjectScreen {
   let emphasis: Emphasis = 'both';
   let sceneObjects: SVGGElement | null = null;
   let audioWaves: SVGGElement | null = null;
+  let playhead: SVGGElement | null = null;
   let eventButtons: HTMLButtonElement[] = [];
   let videoMarkers: HTMLButtonElement[] = [];
   let audioMarkers: HTMLButtonElement[] = [];
@@ -113,6 +114,25 @@ export function createMediaAnalyticsScreen(): ProjectScreen {
     if (descText) descText.textContent = ev.description;
   }
 
+  function syncPlayhead(): void {
+    if (!playhead) return;
+    const ev = event();
+    // Shared 0–100% timeline maps to the SVG viewBox x range 0–200. The
+    // playhead group is anchored at x=0 and translated, so the position
+    // animates with a compositor-safe CSS transform (attribute x1/x2 would
+    // not transition).
+    const x = (ev.pos / 100) * 200;
+    playhead.style.transform = `translateX(${x}px)`;
+    // First paint after mount/enter: place without animating from x=0.
+    if (!playhead.hasAttribute('data-seek')) {
+      playhead.setAttribute('data-seek', 'true');
+      playhead.style.transition = 'none';
+      requestAnimationFrame(() => {
+        playhead!.style.transition = '';
+      });
+    }
+  }
+
   function sync(): void {
     const ev = event();
     markSelected(eventButtons, eventButtons[EVENTS.indexOf(ev)], 'aria-pressed');
@@ -124,6 +144,7 @@ export function createMediaAnalyticsScreen(): ProjectScreen {
     syncScene();
     syncMarkers();
     syncDescription();
+    syncPlayhead();
   }
 
   function selectEvent(id: string, announce: string): void {
@@ -186,6 +207,23 @@ export function createMediaAnalyticsScreen(): ProjectScreen {
         audioWaves.append(arc);
       }
       svg.append(frame, sceneObjects, audioWaves);
+
+      // Playhead: a <g> group holding a vertical line at x=0, translated
+      // horizontally by syncPlayhead(). Grouped (not a bare <line>) so the
+      // CSS transform animates the position — SVG attribute x1/x2 would not
+      // transition. Added after audioWaves so it renders on top.
+      playhead = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      playhead.classList.add('dir-media-playhead');
+      const playheadLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      playheadLine.setAttribute('x1', '0');
+      playheadLine.setAttribute('x2', '0');
+      playheadLine.setAttribute('y1', '2');
+      playheadLine.setAttribute('y2', '88');
+      playheadLine.setAttribute('stroke', '#d3dda5');
+      playheadLine.setAttribute('stroke-width', '1.5');
+      playheadLine.setAttribute('opacity', '0.8');
+      playhead.append(playheadLine);
+      svg.append(playhead);
       scene.append(svg);
 
       const tracks = el('div', 'dir-media-tracks');

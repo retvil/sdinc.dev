@@ -38,12 +38,11 @@ interface SummaryRow {
   basisLineId?: string;
 }
 
-const SUMMARY: readonly SummaryRow[] = [
-  { label: 'Тема', value: 'Уточнение статуса условного обращения' },
-  { label: 'Запрос клиента', value: 'Узнать статус вопроса', basisLineId: 'l2' },
-  { label: 'Согласованное действие', value: 'Сообщить результат дополнительно', basisLineId: 'l4' },
-  { label: 'Подтверждение', value: 'Клиент подтвердил договорённость', basisLineId: 'l7' },
-  { label: 'Открытый вопрос', value: 'В тексте разговора нет' },
+const STRUCTURE: readonly SummaryRow[] = [
+  { label: 'Состав разговора', value: 'оператор + клиент, 7 реплик', basisLineId: 'l2' },
+  { label: 'Последовательность', value: 'приветствие → запрос → проверка → предложение → подтверждение', basisLineId: 'l1' },
+  { label: 'Тон', value: 'нейтральный, без возражений' },
+  { label: 'Итог', value: 'вопрос решён, клиент подтвердил договорённость', basisLineId: 'l7' },
 ];
 
 export function createCallAnalyticsScreen(): ProjectScreen {
@@ -139,8 +138,9 @@ export function createCallAnalyticsScreen(): ProjectScreen {
 
   function buildSummary(): HTMLElement {
     const box = el('div', 'dir-call-summary');
-    box.append(el('h4', 'dir-subtitle', 'Итог разговора'));
-    for (const row of SUMMARY) {
+    box.append(el('h4', 'dir-subtitle', 'Структура разговора'));
+    box.append(el('h5', 'dir-call-structure-title', 'Разбор по этапам'));
+    for (const row of STRUCTURE) {
       const p = el('p', 'dir-call-summary-row');
       p.append(el('strong', undefined, `${row.label}: `), el('span', undefined, row.value));
       if (row.basisLineId) {
