@@ -147,7 +147,9 @@ export function mountScreenControls(container: HTMLElement): void {
   soundToggle.type = 'button';
   soundToggle.className = 'sound-toggle';
   soundToggle.id = 'sound-toggle';
-  soundToggle.dataset.screen = 'panel';
+  // No data-screen: the mute button is a persistent system control, visible in
+  // every mode (profile + data tabs). It is NOT part of the "panel" group
+  // (which is hidden in profile) nor the "profile" group (hidden in data tabs).
   soundToggle.setAttribute('aria-label', 'Звук открытия проекта');
   soundToggle.setAttribute('aria-pressed', String(isMuted()));
   soundToggle.title = 'Звук открытия';
