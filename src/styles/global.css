@@ -1759,34 +1759,36 @@ button {
   }
 }
 
-/* Mute toggle: a hardware-style button on the RIGHT GRIP (grip-right,
-   ref x 3595-3778). Sits in the upper part of the grip, styled like the
-   section buttons (bezel + LED) so it reads as part of the instrument,
-   not a floating UI element. The LED dot (::before on .sound-led) is
-   lit green when sound is on, dimmed when muted. */
+/* Mute toggle: a compact hardware-style button on the display's bottom tab
+   row, to the RIGHT of the «СВЯЗЬ» tab (variant I). Reads as part of the
+   instrument's display chrome — a small mute switch living in the tab row.
+   The LED dot (.sound-led) is lit green when sound is on, dimmed when muted.
+   Sized to fit the tab row (1.6cqw × 2.2cqw) so it never overlaps the tabs. */
 .sound-toggle {
   position: absolute;
-  /* Right grip: x 3595..3778 ref → 93.6%..98.4% of device width.
-     Place the button centered on the grip, ~12% down from its top. */
-  left: 95.4cqw;
-  top: 12cqw;
-  transform: translateX(-50%);
+  /* Just right of the «СВЯЗЬ» tab, vertically aligned with the tab row.
+     tab-contact sits at topCqw ≈ 46.3, leftCqw ≈ 72.2 (width 8.07cqw,
+     so its right edge ≈ 80.3cqw). Place the button in the small gap
+     between the contact tab and the glass right edge (~81cqw), on the
+     same row. */
+  left: 81cqw;
+  top: 46.3cqw;
   z-index: 4;
-  width: 1.8cqw;
-  height: 2.4cqw;
-  min-width: 18px;
-  min-height: 24px;
+  width: 1.6cqw;
+  height: 2.2cqw;
+  min-width: 16px;
+  min-height: 22px;
   border: 1px solid #355f42;
   border-radius: 0.25cqw;
   background: linear-gradient(180deg, #1a2e22 0%, #0f1f16 100%);
   color: #9ccaab;
-  font: 600 0.7cqw monospace;
+  font: 600 0.65cqw monospace;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.25cqw;
+  gap: 0.2cqw;
   transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
 }
 .sound-toggle[hidden] {
