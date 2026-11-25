@@ -85,6 +85,19 @@ export function mountMaster(container: HTMLElement): void {
  * whose card stays raster in the master).
  */
 export function mountScreenControls(container: HTMLElement): void {
+  // Tab-switch shutters: two persistent dark cloth panels that sweep across
+  // the display on a profile ↔ projects ↔ contact mode switch (the light
+  // Pip-Boy section transition). They are NOT part of any data-screen group
+  // (unlike the vault shutters in project-view), so applyVisibility never
+  // touches them. state.runTabShutter() toggles .tab-cover/.tab-open on the
+  // device root to drive the CSS animation.
+  for (const cls of ['tab-shutter tab-shutter--top', 'tab-shutter tab-shutter--bottom']) {
+    const s = document.createElement('div');
+    s.className = cls;
+    s.setAttribute('aria-hidden', 'true');
+    container.append(s);
+  }
+
   for (const treeId of DIRECTION_TREE_IDS) {
     const node = findNode(treeId);
     if (!node) throw new Error(`Scene node not found: ${treeId}`);

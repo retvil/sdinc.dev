@@ -277,3 +277,54 @@
 #device .contact-copy {
   font-size: clamp(11px, 0.95cqw, 18px);
 }
+
+/* --- 17. Tab-switch shutter (Pip-Boy mechanical section change) ---
+   On a profile ↔ projects ↔ contact switch, two dark cloth shutters
+   (.tab-shutter--top / --bottom) sweep across the display to COVER the
+   outgoing section, then sweep back to REVEAL the incoming one. The
+   content swap (applyVisibility) happens in the brief fully-covered
+   moment, so the user only sees "old section → shutters close → shutters
+   open → new section". Distinct from the heavier vault-shutter
+   (global.css) that opens a single project.
+
+   Driven by two classes on #device, toggled by state.runTabShutter():
+     .tab-cover  → shutters animate to closed (tab-shutter-cover)
+     .tab-open   → shutters animate to open  (tab-shutter-open)
+   Resting state: shutters fully open (scaleY 0.06), invisible. */
+
+.tab-shutter {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  z-index: 3;                 /* above surface(1)/panels(2), below nothing critical */
+  background: rgba(17, 18, 16, 0.94);
+  pointer-events: none;       /* shutters never intercept clicks */
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.tab-shutter--top    { top: 0;    transform-origin: top center;    transform: scaleY(0.06); }
+.tab-shutter--bottom { bottom: 0;  transform-origin: bottom center; transform: scaleY(0.06); }
+
+#device.tab-cover .tab-shutter {
+  opacity: 1;
+  animation: tab-shutter-cover 0.21s ease-in forwards;
+}
+#device.tab-open .tab-shutter {
+  opacity: 1;
+  animation: tab-shutter-open 0.21s ease-in forwards;
+}
+
+@keyframes tab-shutter-cover {
+  from { transform: scaleY(0.06); }  /* open (resting) */
+  to   { transform: scaleY(1); }     /* closed (covers the display) */
+}
+@keyframes tab-shutter-open {
+  from { transform: scaleY(1); }     /* closed */
+  to   { transform: scaleY(0.06); }  /* open (reveals new section) */
+}
+
+/* reduced-motion: the global rule (global.css) already forces
+   animation-duration to 0.01ms, so the shutters flash instantly and the
+   content swap is visible without any perceptible motion. The opacity
+   still applies, so the shutters do not sit permanently over the screen. */
