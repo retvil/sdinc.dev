@@ -591,9 +591,17 @@ button {
   outline: none;
   border-color: #d3dda5;
   box-shadow: 0 0 9px #c3e2a855;
-  /* Ensure the focus glow is not clipped by overflow:hidden when the
-     title is truncated — add right padding to accommodate the glow. */
-  padding-right: calc(1cqw + 4px);
+  /* The focus glow is drawn around the item; when the title is long and
+     ellipsized, the box's right edge can clip the glow. Give the item extra
+     right padding on focus so the glow has room, and stop the title from
+     ellipsizing while focused (it reads fully under the glow). */
+  padding-right: calc(1cqw + 6px);
+}
+/* Under focus, let the title show fully (no ellipsis) so the glow doesn't
+   sit over a truncated word. Normal (non-focus) state keeps ellipsis. */
+.project-item:focus-visible .pi-title {
+  text-overflow: clip;
+  overflow: visible;
 }
 
 .project-preview {
