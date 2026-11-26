@@ -76,88 +76,163 @@ function bindIdleSuspend(): void {
 bindIdleSuspend();
 
 /**
- * Rotor detent click: a very short, quiet mechanical tick. Emitted on
- * every dial step (click / arrow keys / wheel) to make the rotary knob
- * feel like a physical detent mechanism. ~45 ms, barely audible.
+ * Fallout 3 Pip-Boy authentic SFX helpers.
+ *
+ * The reference (Fallout 3 Pip-Boy UI) uses short, crisp, slightly warm
+ * mechanical clicks with a metallic "resonant" character — like tapping a
+ * brushed-aluminium instrument housing, not a plastic key. Two building
+ * blocks capture that:
+ *
+ *   - a very short high-frequency noise transient (the "snap" of contact),
+ *     band-passed so it reads as a click rather than a thump;
+ *   - one or two detuned sine pings (the housing ringing) at mid/high
+ *     frequencies with fast exponential decay.
+ *
+ * Both are quiet by design and layered so the result feels "metallic +
+ * warm". A shared lowpass (the "Pip-Boy filter") softens the very top of
+ * the spectrum so the cue never sounds harsh or digital — it sits in the
+ * same 100 Hz–6 kHz window as the game's UI kit.
+ */
+
+/** Apply the shared "Pip-Boy" character filter to a gain node's output. */
+function pipboyBus(ctx: AudioContext, gain: GainNode): AudioNode {
+  // A gentle lowpass keeps the metallic pings from going glassy/harsh.
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.value = 6500;
+  lp.Q.value = 0.7;
+  gain.connect(lp);
+  return lp;
+}
+
+/** A short, decaying noise burst ("snap" of a mechanical contact). */
+function snapNoise(
+  ctx: AudioContext,
+  now: number,
+  durSec: number,
+  bandHz: number,
+  peakGain: number,
+  decay = 28,
+): AudioNode {
+  const frames = Math.floor(ctx.sampleRate * durSec);
+  const buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < frames; i += 1) {
+    const t = i / frames;
+    data[i] = (Math.random() * 2 - 1) * Math.exp(-t * decay);
+  }
+  const noise = ctx.createBufferSource();
+  noise.buffer = buffer;
+  const band = ctx.createBiquadFilter();
+  band.type = 'bandpass';
+  band.frequency.value = bandHz;
+  band.Q.value = 4;
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(peakGain, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + durSec);
+  noise.connect(band).connect(gain);
+  noise.start(now);
+  noise.stop(now + durSec + 0.01);
+  return gain;
+}
+
+/** A short metallic "ring" (sine ping with a detuned overtone). */
+function metalPing(
+  ctx: AudioContext,
+  now: number,
+  freqHz: number,
+  overtoneRatio: number,
+  durSec: number,
+  peakGain: number,
+): AudioNode {
+  const master = ctx.createGain();
+  for (const [ratio, amp] of [
+    [1, 1],
+    [overtoneRatio, 0.35],
+  ] as const) {
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = freqHz * ratio;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(peakGain * amp, now + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + durSec);
+    osc.connect(g).connect(master);
+    osc.start(now);
+    osc.stop(now + durSec + 0.02);
+  }
+  return master;
+}
+
+/**
+ * Rotor detent click: a crisp, warm mechanical tick — the rotor "snapping"
+ * into a detent as the dial turns. Fallout 3 Pip-Boy character: a short
+ * mid-band noise snap (the cam engaging) layered with a quiet 1.6 kHz
+ * metallic ring (the housing ringing). ~45 ms, quiet by design.
  */
 export function playRotorClick(): void {
   const sfx = beginSfx();
   if (!sfx) return;
   const { ctx, now } = sfx;
 
-  // A short high-frequency "tick" from a band-passed noise burst.
-  const dur = 0.045;
-  const frames = Math.floor(ctx.sampleRate * dur);
-  const buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < frames; i += 1) {
-    const t = i / frames;
-    // Fast-decaying white-noise burst shaped into a click.
-    data[i] = (Math.random() * 2 - 1) * Math.exp(-t * 30);
-  }
-  const noise = ctx.createBufferSource();
-  noise.buffer = buffer;
-  const band = ctx.createBiquadFilter();
-  band.type = 'bandpass';
-  band.frequency.value = 2400;
-  band.Q.value = 3;
-  const gain = ctx.createGain();
-  gain.gain.setValueAtTime(0.08, now);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-  noise.connect(band).connect(gain).connect(ctx.destination);
-  noise.start(now);
-  noise.stop(now + dur);
+  const snap = snapNoise(ctx, now, 0.035, 2600, 0.09, 32);
+  const ring = metalPing(ctx, now, 1600, 2.3, 0.07, 0.05);
+  const bus = pipboyBus(ctx, ctx.createGain());
+  const master = ctx.createGain();
+  master.gain.value = 0.7;
+  snap.connect(master);
+  ring.connect(master);
+  master.connect(bus);
+  bus.connect(ctx.destination);
 }
 
 /**
- * Rotor confirm: a slightly deeper, shorter "snap" — the detent locking
- * into place when the user presses Enter/Space on the dial. ~70 ms, a
- * touch louder than a plain step click but still quiet.
+ * Rotor confirm / selection lock-in: the detent locking into place when the
+ * user presses Enter/Space on the dial. Fallout 3 Pip-Boy character: a
+ * heavier, warmer "thock" than the plain step tick — a low metallic thump
+ * (the cam seating) plus a short mid-band snap and a faint 880 Hz housing
+ * ring. ~90 ms, a touch louder than the step click but still quiet.
  */
 export function playRotorConfirm(): void {
   const sfx = beginSfx();
   if (!sfx) return;
   const { ctx, now } = sfx;
 
-  // A low blip (the lock engaging) layered over the tick.
-  const blip = ctx.createOscillator();
-  const blipGain = ctx.createGain();
-  blip.type = 'sine';
-  blip.frequency.setValueAtTime(220, now);
-  blip.frequency.exponentialRampToValueAtTime(90, now + 0.07);
-  blipGain.gain.setValueAtTime(0.0001, now);
-  blipGain.gain.exponentialRampToValueAtTime(0.12, now + 0.006);
-  blipGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
-  blip.connect(blipGain).connect(ctx.destination);
-  blip.start(now);
-  blip.stop(now + 0.1);
+  // 1. Low metallic "thock" (the lock seating) — a short sine drop.
+  const thock = ctx.createOscillator();
+  thock.type = 'sine';
+  thock.frequency.setValueAtTime(180, now);
+  thock.frequency.exponentialRampToValueAtTime(70, now + 0.08);
+  const thockGain = ctx.createGain();
+  thockGain.gain.setValueAtTime(0.0001, now);
+  thockGain.gain.exponentialRampToValueAtTime(0.16, now + 0.008);
+  thockGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
+  thock.connect(thockGain);
+  thock.start(now);
+  thock.stop(now + 0.1);
 
-  // A soft tick so the confirm reads as a detent, not a pure tone.
-  const dur = 0.05;
-  const frames = Math.floor(ctx.sampleRate * dur);
-  const buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < frames; i += 1) {
-    const t = i / frames;
-    data[i] = (Math.random() * 2 - 1) * Math.exp(-t * 30);
-  }
-  const noise = ctx.createBufferSource();
-  noise.buffer = buffer;
-  const band = ctx.createBiquadFilter();
-  band.type = 'bandpass';
-  band.frequency.value = 1800;
-  band.Q.value = 3;
-  const gain = ctx.createGain();
-  gain.gain.setValueAtTime(0.06, now);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-  noise.connect(band).connect(gain).connect(ctx.destination);
-  noise.start(now);
-  noise.stop(now + dur);
+  // 2. Snap + housing ring (the detent cam engaging).
+  const snap = snapNoise(ctx, now, 0.04, 2200, 0.08, 30);
+  const ring = metalPing(ctx, now, 880, 2.7, 0.09, 0.06);
+
+  const master = ctx.createGain();
+  master.gain.value = 0.85;
+  thockGain.connect(master);
+  snap.connect(master);
+  ring.connect(master);
+  const bus = pipboyBus(ctx, ctx.createGain());
+  master.connect(bus);
+  bus.connect(ctx.destination);
 }
 
 /**
- * Vault-door opening rumble: sub-bass thump + filtered brown-noise sweep
- * + a slow "door grinding" resonant sweep. ~0.9s, quiet by design.
+ * Vault / project-open rumble: the heavy mechanical "vault door" cue —
+ * Fallout 3 Pip-Boy character for opening a data section. ~0.95 s:
+ *   1. a sub-bass thump (the lock disengaging),
+ *   2. a long brown-noise grind through a descending lowpass (the door
+ *      sliding / hydraulics),
+ *   3. a detuned metallic "shutter" sweep (the hatch catching),
+ *   4. a final soft metallic "clack" when it seats.
  */
 export function playVaultOpen(): void {
   const sfx = beginSfx();
@@ -215,39 +290,39 @@ export function playVaultOpen(): void {
   slide.connect(slideGain).connect(ctx.destination);
   slide.start(now + 0.1);
   slide.stop(now + 0.6);
+
+  // 4. Final "clack" when the door seats (a quiet metallic snap).
+  const clack = snapNoise(ctx, now + 0.6, 0.05, 1400, 0.1, 26);
+  const clackRing = metalPing(ctx, now + 0.6, 520, 2.4, 0.1, 0.07);
+  const clackMaster = ctx.createGain();
+  clackMaster.gain.value = 0.6;
+  clack.connect(clackMaster);
+  clackRing.connect(clackMaster);
+  const clackBus = pipboyBus(ctx, ctx.createGain());
+  clackMaster.connect(clackBus);
+  clackBus.connect(ctx.destination);
 }
 
 /**
- * Pip-Boy screen click: a short, crisp mechanical tick, band-passed around
- * 3.2 kHz. Emitted on every screen button press — direction nodes, section
- * tabs, project list items — to make on-screen interaction feel like
- * pressing a physical Pip-Boy button. ~45 ms, quiet by design.
+ * Pip-Boy screen button press: a warm, crisp metallic click — like pressing
+ * a Pip-Boy membrane button. Fallout 3 character: a short ~3 kHz snap (the
+ * contact) plus a 2.4 kHz housing ring, both run through the shared
+ * lowpass so it sits warm, never harsh. ~50 ms, quiet by design.
  */
 export function playScreenClick(): void {
   const sfx = beginSfx();
   if (!sfx) return;
   const { ctx, now } = sfx;
 
-  const dur = 0.045;
-  const frames = Math.floor(ctx.sampleRate * dur);
-  const buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < frames; i += 1) {
-    const t = i / frames;
-    data[i] = (Math.random() * 2 - 1) * Math.exp(-t * 28);
-  }
-  const noise = ctx.createBufferSource();
-  noise.buffer = buffer;
-  const band = ctx.createBiquadFilter();
-  band.type = 'bandpass';
-  band.frequency.value = 3200;
-  band.Q.value = 4;
-  const gain = ctx.createGain();
-  gain.gain.setValueAtTime(0.09, now);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-  noise.connect(band).connect(gain).connect(ctx.destination);
-  noise.start(now);
-  noise.stop(now + dur);
+  const snap = snapNoise(ctx, now, 0.04, 3000, 0.1, 30);
+  const ring = metalPing(ctx, now, 2400, 2.1, 0.06, 0.06);
+  const master = ctx.createGain();
+  master.gain.value = 0.75;
+  snap.connect(master);
+  ring.connect(master);
+  const bus = pipboyBus(ctx, ctx.createGain());
+  master.connect(bus);
+  bus.connect(ctx.destination);
 }
 
 /**
