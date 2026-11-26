@@ -22,7 +22,7 @@ import {
   stepActiveScreen,
 } from '../projects/registry';
 import '../projects/screens';
-import { playRotorClick, playRotorConfirm, playVaultOpen, playScreenClick, playButtonPress, playTabSwitch } from './sound';
+import { playRotorClick, playRotorConfirm, playVaultOpen, playScreenClick, playButtonPress } from './sound';
 
 type DirectionCopy = Record<DirectionKey, DirectionInfo>;
 export type ScreenMode = 'profile' | 'projects' | 'project' | 'contact';
@@ -86,10 +86,6 @@ export class DeviceState {
   private navigateBound = false;
   /** Stored so dispose() can remove the exact document listener. */
   private navigateHandler: ((event: Event) => void) | null = null;
-  /** Guards the tab-shutter animation against overlapping runs (rapid clicks). */
-  private tabShutterRunning = false;
-  /** Pending tab-shutter timers so dispose() can cancel them. */
-  private tabShutterTimers: number[] = [];
 
   // --- stage D: display mode machine ---
   private mode: ScreenMode = 'profile';
@@ -520,47 +516,7 @@ export class DeviceState {
       this.selectNode(this.active, false);
       this.refocusAfterModeChange(previous, `node-${this.active}`);
     }
-    // Light Pip-Boy shutter for section switches (profile ↔ projects ↔
-    // contact). The 'project' mode has its own heavier vault-shutter and
-    // does not run this. Content is already swapped by applyVisibility;
-    // the shutters mask the swap. No-op if already running (rapid clicks).
-    if (mode !== 'project') this.runTabShutter();
     this.syncLiveCard();
-  }
-
-  /**
-   * Runs the light Pip-Boy tab-switch shutter: two dark cloth panels sweep
-   * across the display (cover), and the content is already swapped by the
-   * caller (applyVisibility), so the user sees "old → shutters close →
-   * shutters open → new". ~0.42 s total. No-op if a shutter is already
-   * running (rapid clicks) or the device root is absent (editor/tests).
-   *
-   * The content swap (applyVisibility) happens synchronously in setMode
-   * BEFORE this method runs, so the new section is already in the DOM; the
-   * shutters simply mask the swap. playTabSwitch() adds the mechanical
-   * click + cloth swish cue (no-op when muted).
-   */
-  runTabShutter(): void {
-    const dev = document.getElementById('device');
-    if (!dev || this.tabShutterRunning) return;
-    this.tabShutterRunning = true;
-    playTabSwitch();
-    dev.classList.add('tab-cover');
-    // Phase 1 (cover): the cloth rolls down over the glass.
-    this.tabShutterTimers.push(
-      window.setTimeout(() => {
-        dev.classList.remove('tab-cover');
-        dev.classList.add('tab-open');
-      }, 220),
-    );
-    // Phase 2 (open): the cloth rolls back up, revealing the new section.
-    this.tabShutterTimers.push(
-      window.setTimeout(() => {
-        dev.classList.remove('tab-open');
-        this.tabShutterRunning = false;
-        this.tabShutterTimers = [];
-      }, 440),
-    );
   }
 
   /**
@@ -748,9 +704,6 @@ export class DeviceState {
     }
     this.navigateBound = false;
     this.navigateHandler = null;
-    for (const id of this.tabShutterTimers) window.clearTimeout(id);
-    this.tabShutterTimers = [];
-    this.tabShutterRunning = false;
     this.elements.clear();
     this.nodes.clear();
     this.layoutHooks.length = 0;

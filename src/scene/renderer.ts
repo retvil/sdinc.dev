@@ -85,17 +85,6 @@ export function mountMaster(container: HTMLElement): void {
  * whose card stays raster in the master).
  */
 export function mountScreenControls(container: HTMLElement): void {
-  // Tab-switch shutters: a dark cloth roller + a phosphor sweep line, both
-  // clipped to the display glass (CSS .tab-shutter bounds = screen node),
-  // so the cabinet is never covered. Persistent (no data-screen), driven by
-  // #device.tab-cover / .tab-open from state.runTabShutter().
-  for (const cls of ['tab-shutter tab-shutter--cloth', 'tab-shutter tab-shutter--sweep']) {
-    const s = document.createElement('div');
-    s.className = cls;
-    s.setAttribute('aria-hidden', 'true');
-    container.append(s);
-  }
-
   for (const treeId of DIRECTION_TREE_IDS) {
     const node = findNode(treeId);
     if (!node) throw new Error(`Scene node not found: ${treeId}`);
