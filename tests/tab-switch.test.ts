@@ -1,13 +1,12 @@
 // Unit tests for the Pip-Boy tab-switch shutter (T34).
 //
 // Verifies:
-//  - runTabShutter toggles .tab-cover/.tab-open on #device and plays the cue
+//  - runTabShutter toggles .tab-cover/.tab-open on #device
 //  - rapid clicks are guarded (no overlapping runs)
 //  - playTabSwitch exists and is a no-op when muted (does not throw)
 //
-// jsdom: no real #device or Web Audio; we stub what's needed. The shutter
-// logic itself only touches classList + setTimeout + the sound function,
-// all of which are safe to exercise under jsdom.
+// jsdom: no real #device or Web Audio; the shutter logic only touches
+// classList + setTimeout + the sound function, all safe under jsdom.
 
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { device } from '../src/scene/state';
@@ -17,8 +16,8 @@ describe('tab-switch shutter', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.useRealTimers();
-    // Reset the running flag if a test left it set.
     (device as unknown as { tabShutterRunning?: boolean }).tabShutterRunning = false;
+    document.getElementById('device')?.remove();
   });
 
   it('runTabShutter toggles .tab-cover then .tab-open on #device', () => {
@@ -31,13 +30,14 @@ describe('tab-switch shutter', () => {
     expect(dev.classList.contains('tab-cover')).toBe(true);
     expect(dev.classList.contains('tab-open')).toBe(false);
 
-    vi.advanceTimersByTime(210);
+    // Phase 1 (cover, 220ms) → phase 2 (open).
+    vi.advanceTimersByTime(220);
     expect(dev.classList.contains('tab-cover')).toBe(false);
     expect(dev.classList.contains('tab-open')).toBe(true);
 
-    vi.advanceTimersByTime(210);
+    // Settled (440ms total): both cleared.
+    vi.advanceTimersByTime(220);
     expect(dev.classList.contains('tab-open')).toBe(false);
-    dev.remove();
   });
 
   it('guards against overlapping runs (rapid clicks)', () => {
@@ -47,21 +47,19 @@ describe('tab-switch shutter', () => {
     document.body.append(dev);
 
     device.runTabShutter();
-    // Immediately re-run: should be a no-op (already running).
+    // Immediately re-run: no-op (already running).
     device.runTabShutter();
     expect(dev.classList.contains('tab-cover')).toBe(true);
 
-    vi.advanceTimersByTime(420);
+    vi.advanceTimersByTime(440);
     // Now free: a fresh run works again.
     device.runTabShutter();
     expect(dev.classList.contains('tab-cover')).toBe(true);
-    vi.advanceTimersByTime(420);
+    vi.advanceTimersByTime(440);
     expect(dev.classList.contains('tab-cover')).toBe(false);
-    dev.remove();
   });
 
   it('is a no-op when #device is absent (editor/tests)', () => {
-    // No #device in the document: runTabShutter must not throw.
     expect(() => device.runTabShutter()).not.toThrow();
   });
 

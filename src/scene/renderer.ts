@@ -85,13 +85,11 @@ export function mountMaster(container: HTMLElement): void {
  * whose card stays raster in the master).
  */
 export function mountScreenControls(container: HTMLElement): void {
-  // Tab-switch shutters: two persistent dark cloth panels that sweep across
-  // the display on a profile ↔ projects ↔ contact mode switch (the light
-  // Pip-Boy section transition). They are NOT part of any data-screen group
-  // (unlike the vault shutters in project-view), so applyVisibility never
-  // touches them. state.runTabShutter() toggles .tab-cover/.tab-open on the
-  // device root to drive the CSS animation.
-  for (const cls of ['tab-shutter tab-shutter--top', 'tab-shutter tab-shutter--bottom']) {
+  // Tab-switch shutters: a dark cloth roller + a phosphor sweep line, both
+  // clipped to the display glass (CSS .tab-shutter bounds = screen node),
+  // so the cabinet is never covered. Persistent (no data-screen), driven by
+  // #device.tab-cover / .tab-open from state.runTabShutter().
+  for (const cls of ['tab-shutter tab-shutter--cloth', 'tab-shutter tab-shutter--sweep']) {
     const s = document.createElement('div');
     s.className = cls;
     s.setAttribute('aria-hidden', 'true');

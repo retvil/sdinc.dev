@@ -355,9 +355,10 @@ export function playTabSwitch(): void {
   ping.start(now);
   ping.stop(now + 0.06);
 
-  // 3. Quiet cloth swish: brown noise through a descending lowpass,
-  //    slightly delayed so it overlaps the shutter's slide. ~0.18 s.
-  const swishDur = 0.18;
+  // 3. Cloth "scrape" / friction: brown noise through a descending lowpass,
+  //    louder and a bit longer than a plain swish so it reads as cloth
+  //    rubbing across the display (~0.22 s, overlapping the shutter roll).
+  const swishDur = 0.22;
   const swishFrames = Math.floor(ctx.sampleRate * swishDur);
   const swishBuffer = ctx.createBuffer(1, swishFrames, ctx.sampleRate);
   const swishData = swishBuffer.getChannelData(0);
@@ -371,12 +372,12 @@ export function playTabSwitch(): void {
   swishNoise.buffer = swishBuffer;
   const swishLp = ctx.createBiquadFilter();
   swishLp.type = 'lowpass';
-  swishLp.frequency.setValueAtTime(600, now + 0.02);
-  swishLp.frequency.exponentialRampToValueAtTime(150, now + swishDur);
+  swishLp.frequency.setValueAtTime(800, now + 0.02);
+  swishLp.frequency.exponentialRampToValueAtTime(130, now + swishDur);
   swishLp.Q.value = 4;
   const swishGain = ctx.createGain();
   swishGain.gain.setValueAtTime(0.0001, now + 0.02);
-  swishGain.gain.exponentialRampToValueAtTime(0.1, now + 0.08);
+  swishGain.gain.exponentialRampToValueAtTime(0.16, now + 0.1);
   swishGain.gain.exponentialRampToValueAtTime(0.0001, now + swishDur);
   swishNoise.connect(swishLp).connect(swishGain).connect(ctx.destination);
   swishNoise.start(now + 0.02);

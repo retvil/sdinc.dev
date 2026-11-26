@@ -546,20 +546,20 @@ export class DeviceState {
     this.tabShutterRunning = true;
     playTabSwitch();
     dev.classList.add('tab-cover');
-    // Phase 1 (cover): shutters close over the old content.
+    // Phase 1 (cover): the cloth rolls down over the glass.
     this.tabShutterTimers.push(
       window.setTimeout(() => {
         dev.classList.remove('tab-cover');
         dev.classList.add('tab-open');
-      }, 210),
+      }, 220),
     );
-    // Phase 2 (open): shutters reveal the new content.
+    // Phase 2 (open): the cloth rolls back up, revealing the new section.
     this.tabShutterTimers.push(
       window.setTimeout(() => {
         dev.classList.remove('tab-open');
         this.tabShutterRunning = false;
         this.tabShutterTimers = [];
-      }, 420),
+      }, 440),
     );
   }
 
