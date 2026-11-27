@@ -385,6 +385,120 @@ export function playButtonPress(): void {
   tick.stop(now + 0.05);
 }
 
+/**
+ * Tab-switch cue: a short, crisp "section page turn" — a Pip-Boy button snap
+ * plus a quiet cloth/air swish. Used when switching between the major
+ * sections (profile ↔ projects ↔ contact). ~0.2 s, quiet by design.
+ */
+export function playTabSwitch(): void {
+  const sfx = beginSfx();
+  if (!sfx) return;
+  const { ctx, now } = sfx;
+
+  // 1. Crisp snap (the section button engaging).
+  const snap = snapNoise(ctx, now, 0.03, 2800, 0.1, 32);
+  // 2. Quiet cloth/air swish (brown noise through a low, descending lowpass).
+  const swishDur = 0.18;
+  const swishFrames = Math.floor(ctx.sampleRate * swishDur);
+  const swishBuf = ctx.createBuffer(1, swishFrames, ctx.sampleRate);
+  const sdata = swishBuf.getChannelData(0);
+  let lastOut = 0;
+  for (let i = 0; i < swishFrames; i += 1) {
+    const white = Math.random() * 2 - 1;
+    lastOut = (lastOut + 0.02 * white) / 1.02;
+    sdata[i] = lastOut * 2.4;
+  }
+  const swish = ctx.createBufferSource();
+  swish.buffer = swishBuf;
+  const swishLp = ctx.createBiquadFilter();
+  swishLp.type = 'lowpass';
+  swishLp.frequency.setValueAtTime(500, now + 0.01);
+  swishLp.frequency.exponentialRampToValueAtTime(120, now + swishDur);
+  swishLp.Q.value = 3;
+  const swishGain = ctx.createGain();
+  swishGain.gain.setValueAtTime(0.0001, now + 0.01);
+  swishGain.gain.exponentialRampToValueAtTime(0.09, now + 0.06);
+  swishGain.gain.exponentialRampToValueAtTime(0.0001, now + swishDur);
+  swish.connect(swishLp).connect(swishGain);
+  swish.start(now + 0.01);
+  swish.stop(now + swishDur);
+  const master = ctx.createGain();
+  master.gain.value = 0.8;
+  snap.connect(master);
+  swishGain.connect(master);
+  const bus = pipboyBus(ctx, ctx.createGain());
+  master.connect(bus);
+  bus.connect(ctx.destination);
+}
+
+/**
+ * Page-entry / "power on" cue: a very quiet, brief phosphor-charge hum — the
+ * Pip-Boy display waking up when the page first loads. ~0.4 s, near-silent
+ * (only audible on a quiet device), gated by the mute. Fired once on mount.
+ */
+export function playPageEntry(): void {
+  const sfx = beginSfx();
+  if (!sfx) return;
+  const { ctx, now } = sfx;
+
+  // A soft rising "power" tone (the CRT warming up) + a faint hum.
+  const hum = ctx.createOscillator();
+  hum.type = 'sine';
+  hum.frequency.setValueAtTime(60, now);
+  hum.frequency.linearRampToValueAtTime(90, now + 0.35);
+  const humGain = ctx.createGain();
+  humGain.gain.setValueAtTime(0.0001, now);
+  humGain.gain.exponentialRampToValueAtTime(0.05, now + 0.15);
+  humGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+  hum.connect(humGain);
+  hum.start(now);
+  hum.stop(now + 0.45);
+
+  const ring = metalPing(ctx, now, 1200, 2.5, 0.3, 0.03);
+  const master = ctx.createGain();
+  master.gain.value = 0.5;
+  humGain.connect(master);
+  ring.connect(master);
+  const bus = pipboyBus(ctx, ctx.createGain());
+  master.connect(bus);
+  bus.connect(ctx.destination);
+}
+
+/* --- Ambient display hum (optional, very quiet "on" state) ---
+   A continuous, extremely low sine hum (the CRT's power-on whine) that runs
+   while the page is active. Started/stopped by the page lifecycle. It is
+   near-inaudible on most hardware (gain ~0.02) and is fully gated by the
+   mute; stopAmbientHum() is called on page hide / unmount.
+   Kept separate from the one-shot cues above. */
+let ambientNode: { osc: OscillatorNode; gain: GainNode; ctx: AudioContext } | null = null;
+
+export function startAmbientHum(): void {
+  if (muted || ambientNode) return;
+  const ctx = audioContext();
+  if (!ctx) return;
+  if (ctx.state === 'suspended') void ctx.resume();
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.value = 55; // sub-C1, the "mains" hum of an old CRT
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.018, ctx.currentTime + 0.6);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start();
+  ambientNode = { osc, gain, ctx };
+}
+
+export function stopAmbientHum(): void {
+  if (!ambientNode) return;
+  const { osc, gain, ctx } = ambientNode;
+  const now = ctx.currentTime;
+  gain.gain.cancelScheduledValues(now);
+  gain.gain.setValueAtTime(gain.gain.value, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
+  osc.stop(now + 0.35);
+  ambientNode = null;
+}
+
 export function isMuted(): boolean {
   return muted;
 }

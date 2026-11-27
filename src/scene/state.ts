@@ -22,7 +22,7 @@ import {
   stepActiveScreen,
 } from '../projects/registry';
 import '../projects/screens';
-import { playRotorClick, playRotorConfirm, playVaultOpen, playScreenClick, playButtonPress } from './sound';
+import { playRotorClick, playRotorConfirm, playVaultOpen, playScreenClick, playButtonPress, playTabSwitch } from './sound';
 
 type DirectionCopy = Record<DirectionKey, DirectionInfo>;
 export type ScreenMode = 'profile' | 'projects' | 'project' | 'contact';
@@ -516,6 +516,9 @@ export class DeviceState {
       this.selectNode(this.active, false);
       this.refocusAfterModeChange(previous, `node-${this.active}`);
     }
+    // Section switch cue (profile ↔ projects ↔ contact). The 'project' mode
+    // has its own heavier vault-open sound, so it does not play the tab cue.
+    if (mode !== 'project') playTabSwitch();
     this.syncLiveCard();
   }
 
